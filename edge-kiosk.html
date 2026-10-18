@@ -82,14 +82,6 @@
     </div>
   </main>
 
-  <footer style="padding:12px 24px;border-top:1px solid var(--line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
-    <span class="dim mono" style="font-size:10.5px">ZXSPRD EDGE POD · OFFLINE-CAPABLE PWA · <span id="fSw"></span></span>
-    <nav class="role-switch">
-      <a href="index.html" class="role-btn"><svg class="icon"><use href="#i-grid"/></svg> Launcher</a>
-      <a href="client-admin.html" class="role-btn"><svg class="icon"><use href="#i-building"/></svg> Admin</a>
-      <a href="public-display.html" class="role-btn"><svg class="icon"><use href="#i-tv"/></svg> Display</a>
-    </nav>
-  </footer>
 </div>
 
 <!-- Check-in Modal -->
@@ -170,7 +162,7 @@ function render() {
   // Broadcast banner (internal pod channel)
   const bc = s.broadcasts.internalPod.filter(b => b.tenantId === t.id && b.active).slice(-1)[0];
   document.getElementById("bcBanner").innerHTML = bc ? `<div class="broadcast-banner">📢 ${zxesc(bc.message)}<span class="dim mono" style="font-size:10px">${bc.timestamp}</span></div>` : "";
-  document.getElementById("fSw").textContent = ZXStore.storageOK ? "STATE SYNC OK (localStorage + BroadcastChannel)" : "IN-MEMORY MODE (storage blocked)";
+  const fSw = document.getElementById("fSw"); if (fSw) fSw.textContent = ZXStore.storageOK ? "STATE SYNC OK (localStorage + BroadcastChannel)" : "IN-MEMORY MODE (storage blocked)";
 }
 
 const SIM_LINES = [

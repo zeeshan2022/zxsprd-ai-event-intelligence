@@ -220,6 +220,9 @@ const ZXSeed = {
 
   tempGuestSessions: [],
 
+  // Predefined topics — guests just click to select (Arabic demo)
+  interestTopics: ["حوكمة الذكاء الاصطناعي", "الأمن السيبراني", "أمن السحابة", "الاستدلال على الحافة", "تحليلات الحدود", "المدن الذكية", "البلوك تشين", "إنترنت الأشياء", "البيانات الضخمة", "الذكاء الاصطناعي التوليدي"],
+
   documents: [],
   voiceQueries: [],
   auditLog: [
@@ -392,6 +395,18 @@ const ZXStore = (() => {
     },
 
     /* ===== CROWD ENGINE (v8 — 2D venue map, auto-simulation, graphs) ===== */
+    _spawnAgents(cm) {
+      // generate moving people-flow dots across the venue map (normalized coords)
+      const zones = (cm.venueMap && cm.venueMap.zones) || [];
+      if (!zones.length) return [];
+      const n = 90;
+      const agents = [];
+      for (let i = 0; i < n; i++) {
+        const z = zones[i % zones.length];
+        agents.push({ x: z.x + Math.random() * z.w, y: z.y + Math.random() * z.h, vx: (Math.random() - .5) * .012, vy: (Math.random() - .5) * .012, zone: z.id });
+      }
+      return agents;
+    },
     crowdStep() {
       const tenant = this.tenant(); if (!tenant) return;
       const cm = state.crowdMetrics || {};
@@ -413,10 +428,21 @@ const ZXStore = (() => {
       const eg = Math.max(0, (cm.egressLastHour || 0) + Math.floor(Math.random() * 24) - 12);
       const hist = [...(cm.occupancyHistory || []), occ].slice(-48);
       const ingHist = [...(cm.ingressHistory || []), ing].slice(-48);
+      // animate agents (people-flow dots) — bounce inside their zone rect
+      let agents = (cm.agents && cm.agents.length) ? cm.agents : this._spawnAgents(cm);
+      agents = agents.map(a => {
+        const z = zones.find(zz => zz.id === a.zone) || zones[0];
+        let { x, y, vx, vy } = a;
+        x += vx; y += vy;
+        if (x < z.x) { x = z.x; vx = Math.abs(vx); } if (x > z.x + z.w) { x = z.x + z.w; vx = -Math.abs(vx); }
+        if (y < z.y) { y = z.y; vy = Math.abs(vy); } if (y > z.y + z.h) { y = z.y + z.h; vy = -Math.abs(vy); }
+        if (Math.random() < .06) { vx = (Math.random() - .5) * .012; vy = (Math.random() - .5) * .012; }
+        return { ...a, x, y, vx, vy };
+      });
       this.set({
         tenants: state.tenants.map(t => t.id === tenant.id ? { ...t, currentOccupancy: occ } : t),
         pods,
-        crowdMetrics: { ...cm, currentOccupancy: occ, ingressLastHour: ing, egressLastHour: eg, hotZones, occupancyHistory: hist, ingressHistory: ingHist }
+        crowdMetrics: { ...cm, currentOccupancy: occ, ingressLastHour: ing, egressLastHour: eg, hotZones, occupancyHistory: hist, ingressHistory: ingHist, agents }
       });
     },
     simulateCrowdShift() { this.crowdStep(); },
@@ -564,6 +590,38 @@ window.ZX_I18N = ZX_I18N;
       bars += `<rect x="${(pad + i * bw + bw * 0.15).toFixed(1)}" y="${(h - pad - bh).toFixed(1)}" width="${(bw * 0.7).toFixed(1)}" height="${bh.toFixed(1)}" rx="1.5" fill="${color}" opacity="${0.45 + 0.55 * (v / max)}"/>`;
     });
     return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px;display:block">${bars}</svg>`;
+  };
+
+  /* ---------- Shared 2D venue map renderer (used by Public Display + Client Admin) ---------- */
+  window.zxVenueMapHTML = function (opts = {}) {
+    const cm = ZXStore.state.crowdMetrics || {};
+    const vm = cm.venueMap || { zones: [] };
+    const W = opts.w || 640, H = opts.h || 360;
+    const densFor = (label) => { const hz = (cm.hotZones || []).find(z => label.includes(z.zone.split(" - ")[0]) || z.zone.includes(label.split(" — ")[0])); return hz ? hz.density : null; };
+    let svg = `<svg viewBox="0 0 ${W} ${H}" style="position:absolute;inset:0;width:100%;height:100%">`;
+    // corridors between zones
+    svg += `<path d="M ${W*0.25} ${H*0.47} L ${W*0.25} ${H*0.53} M ${W*0.5} ${H*0.1} L ${W*0.5} ${H*0.9} M ${W*0.53} ${H*0.5} L ${W*0.81} ${H*0.5}" stroke="var(--line)" stroke-width="3" stroke-dasharray="6 5" fill="none" opacity=".7"/>`;
+    (vm.zones || []).forEach(z => {
+      const d = densFor(z.label);
+      const col = d === null ? "var(--tenant-accent)" : d > 85 ? "#ef4444" : d > 55 ? "#f59e0b" : "#22c55e";
+      const op = d === null ? .10 : 0.12 + (d / 100) * 0.35;
+      svg += `<rect x="${(z.x*W).toFixed(1)}" y="${(z.y*H).toFixed(1)}" width="${(z.w*W).toFixed(1)}" height="${(z.h*H).toFixed(1)}" rx="10" fill="${col}" fill-opacity="${op.toFixed(2)}" stroke="${col}" stroke-width="1.5"/>`;
+      svg += `<text x="${(z.x*W+8).toFixed(1)}" y="${(z.y*H+18).toFixed(1)}" font-size="${opts.fs||13}" fill="var(--text)" font-weight="700">${zxesc(z.label)}</text>`;
+      if (d !== null) svg += `<text x="${(z.x*W+8).toFixed(1)}" y="${(z.y*H+36).toFixed(1)}" font-size="${(opts.fs||13)-2}" fill="${col}" font-weight="800">${d}% · ${z.capacity||""}</text>`;
+    });
+    // pods markers
+    ZXStore.pods().forEach((p, i) => {
+      const z = (vm.zones || [])[i % (vm.zones || []).length];
+      if (!z) return;
+      const px = (z.x + z.w * 0.8) * W, py = (z.y + z.h * 0.85) * H;
+      svg += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="7" fill="var(--tenant-accent)" stroke="#fff" stroke-width="2"/>`;
+      svg += `<text x="${px.toFixed(1)}" y="${(py-12).toFixed(1)}" font-size="${(opts.fs||13)-2}" text-anchor="middle" fill="var(--muted)">${p.id} (${p.currentHeadcount})</text>`;
+    });
+    svg += `</svg>`;
+    // animated people-flow dots (CSS transition for smooth movement)
+    const agents = (cm.agents || []).map(a =>
+      `<span class="agent-dot" style="left:${(a.x*100).toFixed(2)}%;top:${(a.y*100).toFixed(2)}%"></span>`).join("");
+    return svg + agents;
   };
 
   // Service worker registration (graceful when opened via file://)
