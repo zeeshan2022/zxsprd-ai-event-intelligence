@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ZXSPRD AI — Client Admin Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+
+<style>
+  /* Page-specific overrides for Client Admin */
+  .admin-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+  .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--line-soft);
+    flex-wrap: wrap; gap: 12px;
+  }
+  .panel-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .panel-title svg.icon { width: 18px; height: 18px; color: var(--indigo); }
+  .panel-subtitle { font-size: 11px; color: var(--dim); margin-top: 2px; }
+
+  /* Quota Banner */
+  .quota-banner {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+    font-size: 12px; color: #FCD34D;
+  }
+  .quota-banner.critical {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.25);
+    color: #FCA5A5;
+  }
+  .quota-banner strong { font-weight: 700; }
+
+  /* Data Table */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .data-table th {
+    text-align: left; padding: 10px 12px; font-size: 10px; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--dim); font-weight: 600; border-bottom: 1px solid var(--line);
+    background: var(--inset);
+  }
+  .data-table td { padding: 14px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* Audio Meters */
+  .meter-container { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+  .meter-row { display: flex; align-items: center; gap: 12px; }
+  .meter-label { font-size: 11px; color: var(--muted); width: 120px; font-weight: 500; }
+  .meter-track {
+    flex: 1; height: 8px; background: var(--inset); border-radius: 4px;
+    overflow: hidden; border: 1px solid var(--line-soft);
+  }
+  .meter-fill {
+    height: 100%; width: 0%; border-radius: 4px;
+    background: linear-gradient(90deg, #10B981 0%, #F59E0B 70%, #EF4444 100%);
+    transition: width 0.15s ease-out;
+  }
+  .meter-value { font-family: var(--mono); font-size: 11px; color: var(--dim); width: 40px; text-align: right; }
+
+  /* Dropzone */
+  .dropzone {
+    border: 2px dashed var(--line);
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+    background: var(--inset);
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--blue);
+    background: rgba(59, 130, 246, 0.05);
+  }
+  .dropzone-icon { color: var(--blue); margin-bottom: 12px; }
+  .dropzone-text { font-size: 13px; font-weight: 600; color: var(--text); }
+  .dropzone-hint { font-size: 11px; color: var(--dim); margin-top: 4px; }
+
+  /* Doc Progress List */
+  .doc-list { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto; }
+  .doc-item {
+    background: var(--inset); border: 1px solid var(--line-soft);
+    border-radius: 8px; padding: 12px;
+  }
+  .doc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .doc-name { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+  .doc-status { font-size: 10px; font-family: var(--mono); color: var(--muted); }
+  .doc-status.ready { color: var(--green); }
+  .doc-track { height: 4px; background: var(--panel); border-radius: 2px; overflow: hidden; }
+  .doc-fill { height: 100%; background: var(--blue); transition: width 0.3s ease; }
+  .doc-meta { display: flex; justify-content: space-between; font-size: 10px; color: var(--dim); margin-top: 6px; font-family: var(--mono); }
+
+  /* Schedule Timeline */
+  .session-list { display: flex; flex-direction: column; gap: 12px; max-height: 300px; overflow-y: auto; }
+  .session-card {
+    background: var(--inset); border: 1px solid var(--line-soft);
+    border-radius: 10px; padding: 14px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .session-info { display: flex; flex-direction: column; gap: 4px; }
+  .session-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .session-meta { font-size: 11px; color: var(--dim); display: flex; gap: 12px; }
+  .session-actions { display: flex; gap: 8px; }
+
+  /* Form Controls */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--dim); font-weight: 600; }
+  .form-input, .form-select, .form-textarea {
+    background: var(--inset); border: 1px solid var(--line);
+    border-radius: 8px; padding: 10px 12px; font-size: 12px; color: var(--text);
+    transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none; border-color: var(--blue);
+  }
+  .form-textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+
+  @media(max-width: 900px) {
+    .grid-2col { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SVG Sprite -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></symbol>
+  <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
+  <symbol id="i-megaphone" viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 11z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.9L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+</svg>
+
+<!-- ================= GLOBAL ROLE / TENANT SHELL ================= -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark"><svg class="icon"><use href="#i-activity"/></svg></div>
+    <div>
+      <div class="brand-name">ZXSPRD<span style="color:#60A5FA"> AI</span></div>
+      <div class="brand-sub">Event Intelligence Platform</div>
+    </div>
+    <div class="topbar-divider"></div>
+    <span class="dim" style="font-size:10px;font-family:var(--mono)">CLIENT ADMIN CONSOLE</span>
+  </div>
+
+  <nav class="role-switch" aria-label="Operational context switcher">
+    <a href="super-admin.html" class="role-btn" data-role="SUPER_ADMIN" aria-pressed="false">
+      <svg class="icon"><use href="#i-shield"/></svg> Super Admin
+    </a>
+    <a href="index.html?role=CLIENT_ADMIN" class="role-btn" data-role="CLIENT_ADMIN" aria-pressed="true">
+      <svg class="icon"><use href="#i-building"/></svg> Client Admin
+    </a>
+    <a href="edge-kiosk.html" class="role-btn" data-role="EDGE_KIOSK" aria-pressed="false">
+      <svg class="icon"><use href="#i-tablet"/></svg> Tablet Kiosk
+    </a>
+  </nav>
+
+  <div class="tenant-picker">
+    <label for="tenantSelect">Active Tenant</label>
+    <select id="tenantSelect" class="control" aria-label="Select active tenant"></select>
+  </div>
+</header>
+
+<div id="impersonationBanner" class="impersonation" hidden>
+  <div class="left">
+    <svg class="icon"><use href="#i-alert"/></svg>
+    <span>Impersonating <strong id="impersonationName"></strong> — Client Admin context is active.</span>
+  </div>
+  <a href="super-admin.html" class="link-btn">Return to Super Admin →</a>
+</div>
+
+<!-- ================= MAIN CONTENT ================= -->
+<main>
+  <div class="admin-grid">
+
+    <!-- 1. POD PROVISIONING -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title"><svg class="icon"><use href="#i-tablet"/></svg> Physical Edge Pod Provisioning</div>
+          <div class="panel-subtitle">Register hardware tablets and assign venue locations. Quotas are strictly enforced.</div>
+        </div>
+      </div>
+      
+      <div id="quotaBanner" class="quota-banner" hidden>
+        <div><strong>Quota Limit Reached:</strong> Your current tier permits a maximum of <span id="quotaMax"></span> pods. Upgrade tier in Super Admin Console.</div>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Registration Form -->
+        <div style="background: var(--inset); border: 1px solid var(--line-soft); border-radius: 12px; padding: 20px;">
+          <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <svg class="icon" style="width:16px;height:16px;color:var(--blue)"><use href="#i-plus"/></svg> Register New Tablet Pod
+          </h3>
+          <form id="podForm" class="form-grid">
+            <div class="form-group full">
+              <label class="form-label">Venue Location Name</label>
+              <input type="text" id="podLocation" class="form-input" placeholder="e.g. Hall A1 - Workshop Pod 06" required />
+            </div>
+            <div class="form-group full">
+              <label class="form-label">Hardware MAC Address</label>
+              <input type="text" id="podMac" class="form-input mono" placeholder="AC:DE:48:00:XX:XX" required />
+            </div>
+            <button type="submit" id="btnCreatePod" class="btn btn-blue" style="grid-column: 1 / -1;">
+              <svg class="icon"><use href="#i-plus"/></svg> Provision Pod Hardware
+            </button>
+          </form>
+        </div>
+
+        <!-- Provisioned Hardware Table -->
+        <div style="overflow-x: auto;">
+          <table class="data-table" id="podTable">
+            <thead>
+              <tr>
+                <th>Pod ID</th>
+                <th>Location</th>
+                <th>MAC Address</th>
+                <th>Status</th>
+                <th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="podTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. MULTI-MIC ROLE MAPPING -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title"><svg class="icon"><use href="#i-mic"/></svg> Multi-Mic Channel Mapping</div>
+          <div class="panel-subtitle">Assign physical boundary microphones to live transcript speaker roles.</div>
+        </div>
+        <select id="micPodSelect" class="control" style="min-width: 200px;"></select>
+      </div>
+
+      <div class="grid-2col">
+        <div>
+          <div class="form-group">
+            <label class="form-label">Microphone Hardware 1 (XLR/USB Port 01)</label>
+            <select id="mic1Role" class="form-select">
+              <option value="Host (Speaker 1)">Host (Speaker 1)</option>
+              <option value="Guest (Speaker 2)">Guest (Speaker 2)</option>
+              <option value="Audience Q&A">Audience Q&A</option>
+              <option value="Unassigned">Unassigned</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-top: 16px;">
+            <label class="form-label">Microphone Hardware 2 (XLR/USB Port 02)</label>
+            <select id="mic2Role" class="form-select">
+              <option value="Guest (Speaker 2)">Guest (Speaker 2)</option>
+              <option value="Host (Speaker 1)">Host (Speaker 1)</option>
+              <option value="Audience Q&A">Audience Q&A</option>
+              <option value="Unassigned">Unassigned</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div style="font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; margin-bottom: 8px;">Live Audio Signal Meters</div>
+          <div class="meter-container">
+            <div class="meter-row">
+              <span class="meter-label">Mic 1 Signal</span>
+              <div class="meter-track"><div class="meter-fill" id="meter1"></div></div>
+              <span class="meter-value" id="meter1Val">0 dB</span>
+            </div>
+            <div class="meter-row">
+              <span class="meter-label">Mic 2 Signal</span>
+              <div class="meter-track"><div class="meter-fill" id="meter2"></div></div>
+              <span class="meter-value" id="meter2Val">0 dB</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid-2col">
+      <!-- 3. AGENDA & SCHEDULE -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title"><svg class="icon"><use href="#i-calendar"/></svg> Agenda & Session Planner</div>
+            <div class="panel-subtitle">Schedule keynotes and trigger live speech processing feeds.</div>
+          </div>
+        </div>
+
+        <form id="sessionForm" class="form-grid" style="margin-bottom: 20px;">
+          <div class="form-group full">
+            <label class="form-label">Session Title</label>
+            <input type="text" id="sessTitle" class="form-input" placeholder="e.g. AI Governance Keynote" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Host (Mic 1)</label>
+            <input type="text" id="sessHost" class="form-input" placeholder="Dr. Aris Thorne" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Guest (Mic 2)</label>
+            <input type="text" id="sessGuest" class="form-input" placeholder="Elena Rostova" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Start Time</label>
+            <input type="text" id="sessStart" class="form-input" placeholder="10:00 AM" value="10:00 AM" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Time</label>
+            <input type="text" id="sessEnd" class="form-input" placeholder="10:45 AM" value="10:45 AM" required />
+          </div>
+          <button type="submit" class="btn btn-indigo" style="grid-column: 1 / -1;">
+            <svg class="icon"><use href="#i-plus"/></svg> Add Session to Schedule
+          </button>
+        </form>
+
+        <div style="font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; margin-bottom: 10px;">Active Timeline</div>
+        <div class="session-list" id="sessionList"></div>
+      </section>
+
+      <!-- 4. KNOWLEDGE BASE & BROADCAST -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title"><svg class="icon"><use href="#i-file"/></svg> Knowledge Base & Broadcasts</div>
+            <div class="panel-subtitle">Ingest documents for AI Concierge or push instant alerts to tablets.</div>
+          </div>
+        </div>
+
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-icon"><svg class="icon" style="width:32px;height:32px;margin:0 auto"><use href="#i-file"/></svg></div>
+          <div class="dropzone-text">Click or Drag PDF/DOCX to Ingest</div>
+          <div class="dropzone-hint">Automatic 1536-dim embedding generation</div>
+          <input type="file" id="fileInput" accept=".pdf,.docx,.txt" style="display:none" />
+        </div>
+
+        <div class="doc-list" id="docList"></div>
+
+        <div style="margin-top: 24px; border-top: 1px solid var(--line-soft); padding-top: 20px;">
+          <div style="font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <svg class="icon" style="width:14px;height:14px;color:var(--amber)"><use href="#i-megaphone"/></svg> Instant Tablet Broadcast
+          </div>
+          <textarea id="broadcastMsg" class="form-textarea" placeholder="Type high-priority announcement (e.g., 'Keynote delayed by 10 minutes...')"></textarea>
+          <button id="btnBroadcast" class="btn btn-amber" style="margin-top: 10px; background: #D97706; color: #fff;">
+            <svg class="icon"><use href="#i-megaphone"/></svg> Broadcast Now
+          </button>
+        </div>
+      </section>
+    </div>
+
+  </div>
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg class="icon"><use id="toastIcon" href="#i-check"/></svg>
+  <span id="toastText"></span>
+</div>
+
+<script>
+/* ================= MINIMAL STORE & SEED (Standalone) ================= */
+const ZXSeed = {
+  version: 1, activeRole: "CLIENT_ADMIN", activeTenantId: "tenant-wps-2026", activePodId: "POD-01",
+  tenants: [
+    { id: "tenant-wps-2026", name: "World Police Summit 2026", subdomain: "wps2026", tier: "Enterprise", maxPods: 20, assignedPods: 5, networkMode: "PRIVATE_OCI_VCN", llmProvider: "OCI Llama 3 70B (Private)", ttsProvider: "ElevenLabs Neural v2", temperature: 0.2, status: "Active", primaryColor: "#0F172A" },
+    { id: "tenant-tech-expo", name: "Global Tech Innovation Expo", subdomain: "techexpo", tier: "Pro", maxPods: 2, assignedPods: 2, networkMode: "PUBLIC_SAAS", llmProvider: "OpenAI GPT-4o", ttsProvider: "Azure Neural TTS", temperature: 0.7, status: "Active", primaryColor: "#2563EB" }
+  ],
+  pods: [
+    { id:"POD-01", tenantId:"tenant-wps-2026", macAddress:"AC:DE:48:00:11:22", location:"DWTC Hall A1 — Zone 1", pingMs:18, cpuUsage:22, memoryUsageGb:3.8, status:"Online", mic1Role:"Host (Speaker 1)", mic2Role:"Guest (Speaker 2)", mic1Gain:65, mic2Gain:42 },
+    { id:"POD-02", tenantId:"tenant-wps-2026", macAddress:"AC:DE:48:00:11:23", location:"DWTC Hall A1 — Zone 2", pingMs:24, cpuUsage:19, memoryUsageGb:3.5, status:"Online", mic1Role:"Host (Speaker 1)", mic2Role:"Audience Q&A", mic1Gain:70, mic2Gain:12 },
+    { id:"POD-06", tenantId:"tenant-tech-expo", macAddress:"AC:DE:48:00:22:10", location:"Expo Hall 3 — Startup", pingMs:36, cpuUsage:28, memoryUsageGb:3.9, status:"Online", mic1Role:"Host (Speaker 1)", mic2Role:"Guest (Speaker 2)", mic1Gain:60, mic2Gain:48 }
+  ],
+  sessions: [
+    { id:"sess-101", tenantId:"tenant-wps-2026", podId:"POD-01", title:"AI Governance in Sovereign Law Enforcement", startTime:"10:00 AM", endTime:"10:45 AM", speakerHost:"Dr. Aris Thorne", speakerGuest:"Elena Rostova", status:"Live", hitlApproved:false, summaryText:"Key Takeaways: 100% UAE local data residency confirmed." }
+  ],
+  documents: [],
+  broadcasts: []
+};
+
+const ZXStore = (() => {
+  const KEY = "zxsprd-global-state-v1";
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const listeners = new Set();
+  let state = JSON.parse(localStorage.getItem(KEY)) || clone(ZXSeed);
+  if (state.version !== ZXSeed.version) state = clone(ZXSeed);
+
+  function persist() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+  function notify() { listeners.forEach(fn => fn(state)); }
+
+  return {
+    get state() { return state; },
+    set(patch) { state = { ...state, ...patch }; persist(); notify(); },
+    subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
+    tenant(id = state.activeTenantId) { return state.tenants.find(t => t.id === id); },
+    pods(tenantId = state.activeTenantId) { return state.pods.filter(p => p.tenantId === tenantId); },
+    sessions(tenantId = state.activeTenantId) { return state.sessions.filter(s => s.tenantId === tenantId); },
+    docs(tenantId = state.activeTenantId) { return state.documents.filter(d => d.tenantId === tenantId); }
+  };
+})();
+
+/* ================= CLIENT ADMIN PAGE LOGIC ================= */
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+  // Toast
+  let toastTimer;
+  function toast(msg, kind = "success") {
+    const el = $("#toast");
+    $("#toastText").textContent = msg;
+    $("#toastIcon").setAttribute("href", kind === "error" ? "#i-alert" : "#i-check");
+    el.className = `toast show ${kind}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 3000);
+  }
+
+  // --- Renderers ---
+  function renderContext() {
+    const sel = $("#tenantSelect");
+    sel.innerHTML = ZXStore.state.tenants.map(t => `<option value="${esc(t.id)}">${esc(t.name)}</option>`).join("");
+    sel.value = ZXStore.state.activeTenantId;
+
+    const tenant = ZXStore.tenant();
+    const banner = $("#impersonationBanner");
+    banner.hidden = !(ZXStore.state.activeRole === "CLIENT_ADMIN" && tenant);
+    if (tenant) $("#impersonationName").textContent = tenant.name;
+  }
+
+  function renderPods() {
+    const tenant = ZXStore.tenant();
+    const pods = ZXStore.pods();
+    const quotaFull = tenant.assignedPods >= tenant.maxPods;
+
+    // Quota Banner
+    const banner = $("#quotaBanner");
+    if (quotaFull) {
+      banner.hidden = false;
+      banner.classList.add("critical");
+      $("#quotaMax").textContent = tenant.maxPods;
+      $("#btnCreatePod").disabled = true;
+      $("#btnCreatePod").title = "Tenant Quota Reached";
+    } else {
+      banner.hidden = true;
+      $("#btnCreatePod").disabled = false;
+      $("#btnCreatePod").title = "";
+    }
+
+    // Table
+    $("#podTableBody").innerHTML = pods.map(p => `
+      <tr>
+        <td><span class="mono" style="font-weight:600; color:var(--text)">${esc(p.id)}</span></td>
+        <td style="color:var(--muted)">${esc(p.location)}</td>
+        <td><span class="mono" style="font-size:11px; color:var(--dim)">${esc(p.macAddress)}</span></td>
+        <td><span class="badge badge-green"><span class="status-dot online"></span> ${esc(p.status)}</span></td>
+        <td style="text-align:right">
+          <button class="btn btn-ghost" data-delete-pod="${p.id}" style="padding: 6px 10px;">
+            <svg class="icon" style="width:14px;height:14px;color:var(--red)"><use href="#i-trash"/></svg>
+          </button>
+        </td>
+      </tr>
+    `).join("");
+
+    // Mic Pod Selector
+    const micSel = $("#micPodSelect");
+    micSel.innerHTML = pods.map(p => `<option value="${p.id}">${esc(p.id)} — ${esc(p.location)}</option>`).join("");
+    if (pods.length > 0) loadMicMapping(pods[0].id);
+  }
+
+  function loadMicMapping(podId) {
+    const pod = ZXStore.state.pods.find(p => p.id === podId);
+    if (!pod) return;
+    $("#mic1Role").value = pod.mic1Role;
+    $("#mic2Role").value = pod.mic2Role;
+  }
+
+  function renderSessions() {
+    const sessions = ZXStore.sessions();
+    $("#sessionList").innerHTML = sessions.map(s => `
+      <div class="session-card">
+        <div class="session-info">
+          <div class="session-title">${esc(s.title)}</div>
+          <div class="session-meta">
+            <span>${esc(s.startTime)} - ${esc(s.endTime)}</span>
+            <span>Host: ${esc(s.speakerHost)}</span>
+            <span class="badge badge-${s.status === 'Live' ? 'red' : s.status === 'Completed' ? 'slate' : 'blue'}" style="font-size:9px; padding: 2px 6px;">${esc(s.status)}</span>
+          </div>
+        </div>
+        <div class="session-actions">
+          ${s.status === 'Scheduled' ? `<button class="btn btn-green" style="padding: 6px 12px; font-size: 11px;" data-go-live="${s.id}"><svg class="icon" style="width:12px;height:12px"><use href="#i-play"/></svg> Go Live</button>` : ''}
+          ${s.status === 'Live' ? `<button class="btn btn-ghost" style="padding: 6px 12px; font-size: 11px; border-color: var(--red); color: var(--red);" data-end-session="${s.id}"><svg class="icon" style="width:12px;height:12px"><use href="#i-stop"/></svg> End</button>` : ''}
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function renderDocs() {
+    const docs = ZXStore.docs();
+    $("#docList").innerHTML = docs.map(d => `
+      <div class="doc-item">
+        <div class="doc-header">
+          <span class="doc-name">${esc(d.fileName)}</span>
+          <span class="doc-status ${d.status === 'Ready' ? 'ready' : ''}">${esc(d.status)} (${d.progress}%)</span>
+        </div>
+        <div class="doc-track"><div class="doc-fill" style="width: ${d.progress}%"></div></div>
+        <div class="doc-meta">
+          <span>${d.fileSizeMb} MB</span>
+          <span>${d.vectorCount} Vectors</span>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  // --- Audio Meter Simulation ---
+  let meterInterval;
+  function startMeters() {
+    if (meterInterval) clearInterval(meterInterval);
+    meterInterval = setInterval(() => {
+      const podId = $("#micPodSelect").value;
+      const pod = ZXStore.state.pods.find(p => p.id === podId);
+      if (!pod) return;
+
+      const g1 = Math.floor(Math.random() * 70) + 15;
+      const g2 = Math.floor(Math.random() * 70) + 15;
+      
+      $("#meter1").style.width = g1 + "%";
+      $("#meter1Val").textContent = g1 + " dB";
+      $("#meter2").style.width = g2 + "%";
+      $("#meter2Val").textContent = g2 + " dB";
+
+      // Update store silently for telemetry consistency
+      ZXStore.state.pods = ZXStore.state.pods.map(p => 
+        p.id === podId ? { ...p, mic1Gain: g1, mic2Gain: g2 } : p
+      );
+    }, 200);
+  }
+
+  // --- Document Ingestion Simulation ---
+  function simulateIngestion(docId, sizeMb) {
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.floor(Math.random() * 15) + 5;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(interval);
+        ZXStore.set({
+          documents: ZXStore.state.documents.map(d => 
+            d.id === docId ? { ...d, progress: 100, status: "Ready", vectorCount: Math.floor(sizeMb * 450) } : d
+          )
+        });
+        toast("Document vectorization complete", "success");
+      } else {
+        let status = "Uploading";
+        if (progress > 30) status = "Parsing";
+        if (progress > 65) status = "Vectorizing";
+        
+        ZXStore.set({
+          documents: ZXStore.state.documents.map(d => 
+            d.id === docId ? { ...d, progress, status } : d
+          )
+        });
+      }
+    }, 600);
+  }
+
+  // --- Initial Render ---
+  renderContext();
+  renderPods();
+  renderSessions();
+  renderDocs();
+  startMeters();
+
+  // --- Event Listeners ---
+  $("#tenantSelect").addEventListener("change", e => {
+    ZXStore.set({ activeTenantId: e.target.value });
+    renderContext(); renderPods(); renderSessions(); renderDocs();
+  });
+
+  // Pod Creation
+  $("#podForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const tenant = ZXStore.tenant();
+    if (tenant.assignedPods >= tenant.maxPods) {
+      toast("Quota limit reached. Cannot create pod.", "error");
+      return;
+    }
+
+    const loc = $("#podLocation").value.trim();
+    const mac = $("#podMac").value.trim();
+    if (!loc || !mac) return;
+
+    const newPod = {
+      id: `POD-${String(ZXStore.state.pods.length + 1).padStart(2, '0')}`,
+      tenantId: tenant.id,
+      macAddress: mac,
+      location: loc,
+      pingMs: 20, cpuUsage: 15, memoryUsageGb: 3.2, status: "Online",
+      mic1Role: "Host (Speaker 1)", mic2Role: "Guest (Speaker 2)", mic1Gain: 50, mic2Gain: 50
+    };
+
+    ZXStore.set({
+      pods: [...ZXStore.state.pods, newPod],
+      tenants: ZXStore.state.tenants.map(t => t.id === tenant.id ? { ...t, assignedPods: t.assignedPods + 1 } : t)
+    });
+
+    e.target.reset();
+    $("#podMac").value = "AC:DE:48:00:" + Math.floor(Math.random() * 89 + 10) + ":" + Math.floor(Math.random() * 89 + 10);
+    toast("Pod hardware provisioned successfully", "success");
+  });
+
+  // Pod Deletion
+  $("#podTableBody").addEventListener("click", e => {
+    const btn = e.target.closest("[data-delete-pod]");
+    if (!btn) return;
+    const id = btn.dataset.deletePod;
+    const pod = ZXStore.state.pods.find(p => p.id === id);
+    
+    ZXStore.set({
+      pods: ZXStore.state.pods.filter(p => p.id !== id),
+      tenants: ZXStore.state.tenants.map(t => t.id === pod.tenantId ? { ...t, assignedPods: Math.max(0, t.assignedPods - 1) } : t)
+    });
+    toast("Pod de-provisioned. Quota released.", "info");
+  });
+
+  // Mic Mapping
+  $("#micPodSelect").addEventListener("change", e => loadMicMapping(e.target.value));
+  
+  ["#mic1Role", "#mic2Role"].forEach(sel => {
+    $(sel).addEventListener("change", () => {
+      const podId = $("#micPodSelect").value;
+      const m1 = $("#mic1Role").value;
+      const m2 = $("#mic2Role").value;
+      ZXStore.set({
+        pods: ZXStore.state.pods.map(p => p.id === podId ? { ...p, mic1Role: m1, mic2Role: m2 } : p)
+      });
+      toast("Microphone channels remapped", "success");
+    });
+  });
+
+  // Session Creation
+  $("#sessionForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const tenant = ZXStore.tenant();
+    const pods = ZXStore.pods();
+    if (pods.length === 0) { toast("Provision a pod before creating sessions.", "error"); return; }
+
+    const newSess = {
+      id: `sess-${Date.now()}`,
+      tenantId: tenant.id,
+      podId: pods[0].id, // Default to first pod for simplicity in this mock
+      title: $("#sessTitle").value.trim(),
+      startTime: $("#sessStart").value.trim(),
+      endTime: $("#sessEnd").value.trim(),
+      speakerHost: $("#sessHost").value.trim(),
+      speakerGuest: $("#sessGuest").value.trim() || "Panelist",
+      status: "Scheduled",
+      hitlApproved: false,
+      summaryText: "Draft AI Summary: Session covered key strategic directives and edge AI deployment metrics."
+    };
+
+    ZXStore.set({ sessions: [...ZXStore.state.sessions, newSess] });
+    e.target.reset();
+    $("#sessStart").value = "10:00 AM"; $("#sessEnd").value = "10:45 AM";
+    toast("Session added to agenda", "success");
+  });
+
+  // Session Actions
+  $("#sessionList").addEventListener("click", e => {
+    const liveBtn = e.target.closest("[data-go-live]");
+    const endBtn = e.target.closest("[data-end-session]");
+    
+    if (liveBtn) {
+      const id = liveBtn.dataset.goLive;
+      ZXStore.set({ sessions: ZXStore.state.sessions.map(s => s.id === id ? { ...s, status: "Live" } : s) });
+      toast("Session is now LIVE. Edge Kiosk updated.", "success");
+    }
+    if (endBtn) {
+      const id = endBtn.dataset.endSession;
+      ZXStore.set({ sessions: ZXStore.state.sessions.map(s => s.id === id ? { ...s, status: "Completed" } : s) });
+      toast("Session ended.", "info");
+    }
+  });
+
+  // File Dropzone
+  const dropzone = $("#dropzone");
+  const fileInput = $("#fileInput");
+
+  dropzone.addEventListener("click", () => fileInput.click());
+  dropzone.addEventListener("dragover", e => { e.preventDefault(); dropzone.classList.add("dragover"); });
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+  dropzone.addEventListener("drop", e => {
+    e.preventDefault();
+    dropzone.classList.remove("dragover");
+    if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener("change", e => {
+    if (e.target.files.length > 0) handleFile(e.target.files[0]);
+  });
+
+  function handleFile(file) {
+    const sizeMb = Number((file.size / (1024 * 1024)).toFixed(1)) || 2.4;
+    const newDoc = {
+      id: `doc-${Date.now()}`,
+      tenantId: ZXStore.state.activeTenantId,
+      fileName: file.name,
+      fileSizeMb: sizeMb,
+      status: "Uploading",
+      progress: 0,
+      vectorCount: 0
+    };
+    ZXStore.set({ documents: [...ZXStore.state.documents, newDoc] });
+    simulateIngestion(newDoc.id, sizeMb);
+    toast("Ingestion pipeline started...", "info");
+  }
+
+  // Broadcast
+  $("#btnBroadcast").addEventListener("click", () => {
+    const msg = $("#broadcastMsg").value.trim();
+    if (!msg) { toast("Please enter a broadcast message.", "error"); return; }
+
+    const newBc = {
+      id: `bc-${Date.now()}`,
+      tenantId: ZXStore.state.activeTenantId,
+      message: msg,
+      timestamp: new Date().toLocaleTimeString(),
+      active: true
+    };
+
+    // Deactivate previous broadcasts for this tenant
+    const updatedBcs = ZXStore.state.broadcasts
+      .map(b => b.tenantId === newBc.tenantId ? { ...b, active: false } : b)
+      .concat(newBc);
+
+    ZXStore.set({ broadcasts: updatedBcs });
+    $("#broadcastMsg").value = "";
+    toast("Broadcast pushed to all Edge Tablets", "success");
+  });
+
+  // Sync state if changed in another tab
+  ZXStore.subscribe(() => {
+    renderContext();
+    renderPods();
+    renderSessions();
+    renderDocs();
+  });
+})();
+</script>
+</body>
+</html>

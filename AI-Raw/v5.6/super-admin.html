@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ZXSPRD AI — Super Admin Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+
+<style>
+  /* Page-specific overrides for Super Admin */
+  .admin-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+  
+  /* Modal Styles */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(4,7,15,0.8); backdrop-filter: blur(8px);
+    z-index: 100; display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-overlay.active { opacity: 1; pointer-events: auto; }
+  .modal-card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 20px;
+    width: 90%; max-width: 560px; padding: 32px; box-shadow: var(--shadow-lg);
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .modal-title { font-size: 18px; font-weight: 700; }
+  .close-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 8px; }
+  .close-btn:hover { color: var(--text); background: var(--panel-2); }
+
+  /* Sponsor Add Form */
+  .sponsor-add-form {
+    display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end;
+    margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line-soft);
+  }
+  @media(max-width: 768px) {
+    .sponsor-add-form { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SVG Sprite -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></symbol>
+  <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-smartphone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.9L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5M3 12a9 3 0 0 0 18 0"/></symbol>
+  <symbol id="i-router" viewBox="0 0 24 24"><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6.01 18h.01M10.01 18h.01M15 10v4M9 10v4M12 2v8"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-trending" viewBox="0 0 24 24"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+</svg>
+
+<!-- Topbar -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark"><svg class="icon"><use href="#i-activity"/></svg></div>
+    <div>
+      <div class="brand-name">ZXSPRD<span style="color:#60A5FA"> AI</span></div>
+      <div class="brand-sub">Super Admin Console</div>
+    </div>
+  </div>
+  <nav class="role-switch">
+    <a href="index.html?role=SUPER_ADMIN" class="role-btn" aria-pressed="true"><svg class="icon"><use href="#i-shield"/></svg> Super Admin</a>
+    <a href="client-admin.html" class="role-btn" aria-pressed="false"><svg class="icon"><use href="#i-building"/></svg> Client Admin</a>
+    <a href="edge-kiosk.html" class="role-btn" aria-pressed="false"><svg class="icon"><use href="#i-tablet"/></svg> Edge Kiosk</a>
+    <a href="public-display.html" class="role-btn" aria-pressed="false"><svg class="icon"><use href="#i-tv"/></svg> Public Display</a>
+    <a href="guest-portal.html" class="role-btn" aria-pressed="false"><svg class="icon"><use href="#i-smartphone"/></svg> Guest Portal</a>
+  </nav>
+</header>
+
+<main>
+  <div class="admin-grid">
+
+    <!-- 1. TENANT MANAGEMENT & WHITE-LABELING -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title"><svg class="icon"><use href="#i-database"/></svg> Tenant Management & White-Labeling</div>
+          <div class="panel-subtitle">Manage client instances, adjust pod quotas, venue capacity, and custom branding.</div>
+        </div>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table" id="tenantTable">
+          <thead>
+            <tr>
+              <th>Organization</th>
+              <th>Tier</th>
+              <th>Pod Quota</th>
+              <th>Venue Capacity</th>
+              <th>Default LLM</th>
+              <th>Status</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tenantTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 2. CROWD MANAGEMENT & SPATIAL ANALYTICS -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title"><svg class="icon"><use href="#i-users"/></svg> Crowd Management & Spatial Analytics</div>
+          <div class="panel-subtitle">Real-time venue occupancy, ingress/egress flow, and pod density heatmapping.</div>
+        </div>
+        <span class="badge badge-green"><span class="status-dot online"></span> Live Spatial Tracking</span>
+      </div>
+      
+      <div class="crowd-grid">
+        <!-- Left: Occupancy & Flow -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div class="occupancy-card">
+            <div class="stat-label">Global Venue Occupancy</div>
+            <div class="occupancy-ring" id="occupancyRing" style="--pct: 68;">
+              <div class="occupancy-ring-inner">
+                <div class="occupancy-number" id="occNumber">3,420</div>
+                <div class="occupancy-caption">of 5,000 capacity</div>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: center; gap: 24px; margin-top: 10px;">
+              <div class="flow-row" style="border: none; padding: 0; flex-direction: column; align-items: center;">
+                <div class="flow-label">Ingress (1h)</div>
+                <div class="flow-value in" id="flowIn">+450</div>
+              </div>
+              <div class="flow-row" style="border: none; padding: 0; flex-direction: column; align-items: center;">
+                <div class="flow-label">Egress (1h)</div>
+                <div class="flow-value out" id="flowOut">-120</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hot Zones -->
+          <div style="background: var(--inset); border: 1px solid var(--line-soft); border-radius: 14px; padding: 18px;">
+            <div class="pane-title"><svg class="icon"><use href="#i-trending"/></svg> Hot Zones & Pod Density</div>
+            <div id="hotZonesList"></div>
+          </div>
+        </div>
+
+        <!-- Right: Heatmap & Peak Chart -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+          <div>
+            <div class="pane-title" style="margin-bottom: 12px;">Spatial Density Heatmap</div>
+            <div class="heatmap" id="heatmapGrid"></div>
+            <div class="heat-legend">
+              <span><i style="background: var(--line);"></i> Empty</span>
+              <span><i style="background: rgba(16,185,129,.45);"></i> Low</span>
+              <span><i style="background: rgba(245,158,11,.6);"></i> Medium</span>
+              <span><i style="background: rgba(239,68,68,.8);"></i> Critical</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="pane-title" style="margin-bottom: 12px;">Peak Hour Forecast</div>
+            <div class="peak-chart" id="peakChart"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. SPONSOR & PARTNER CONTENT INJECTION -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title"><svg class="icon"><use href="#i-building"/></svg> Sponsor & Partner Content Injection</div>
+          <div class="panel-subtitle">Manage branded messages injected into the Public Display rotation and Guest Portal feed.</div>
+        </div>
+      </div>
+      <div id="sponsorList"></div>
+      
+      <form class="sponsor-add-form" id="sponsorForm">
+        <div class="form-group">
+          <label class="form-label">Sponsor Name</label>
+          <input type="text" id="spName" class="form-input" placeholder="e.g. Oracle Cloud" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message / Call to Action</label>
+          <input type="text" id="spMsg" class="form-input" placeholder="e.g. Visit Booth 42..." required />
+        </div>
+        <button type="submit" class="btn btn-blue" style="height: 42px;">
+          <svg class="icon"><use href="#i-plus"/></svg> Add Sponsor
+        </button>
+      </form>
+    </section>
+
+    <!-- 4. POD-LEVEL LLM OVERRIDES & HARDWARE CONFIG -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title"><svg class="icon"><use href="#i-router"/></svg> Pod-Level AI Routing & Hardware Overrides</div>
+          <div class="panel-subtitle">Override global tenant defaults for specific physical pods.</div>
+        </div>
+        <select id="podTenantFilter" class="control" style="min-width: 220px;"></select>
+      </div>
+      <div class="pod-config-grid" id="podConfigGrid"></div>
+    </section>
+
+    <!-- 5. LIVE TELEMETRY -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title"><svg class="icon"><use href="#i-cpu"/></svg> Live Edge Device Telemetry</div>
+          <div class="panel-subtitle">Real-time hardware monitoring across all physical event pods.</div>
+        </div>
+        <span class="badge badge-green"><span class="status-dot online"></span> Stream Active</span>
+      </div>
+      <div class="grid-3col" id="telemetryGrid"></div>
+    </section>
+
+  </div>
+</main>
+
+<!-- Tenant Edit Modal -->
+<div class="modal-overlay" id="tenantModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">Edit Tenant Configuration</div>
+      <button class="close-btn" id="closeModal"><svg class="icon"><use href="#i-x"/></svg></button>
+    </div>
+    <form id="tenantForm" class="form-grid">
+      <input type="hidden" id="editTenantId" />
+      
+      <div class="form-group full">
+        <label class="form-label">Organization Name</label>
+        <input type="text" id="editName" class="form-input" required />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Max Pod Quota</label>
+        <input type="number" id="editMaxPods" class="form-input" min="1" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Venue Capacity</label>
+        <input type="number" id="editCapacity" class="form-input" min="1" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service Tier</label>
+        <select id="editTier" class="form-select">
+          <option value="Standard">Standard</option>
+          <option value="Pro">Pro</option>
+          <option value="Enterprise">Enterprise</option>
+        </select>
+      </div>
+
+      <div class="form-group full" style="border-top: 1px solid var(--line-soft); padding-top: 16px; margin-top: 8px;">
+        <label class="form-label" style="color: var(--blue);">White-Label Branding</label>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Logo URL</label>
+        <input type="url" id="editLogo" class="form-input" placeholder="https://..." />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Primary Brand Color</label>
+        <input type="color" id="editColor" class="form-input" style="height: 42px; padding: 4px;" />
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Header Text</label>
+        <input type="text" id="editHeader" class="form-input" />
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Footer Text</label>
+        <input type="text" id="editFooter" class="form-input" />
+      </div>
+
+      <div class="form-group full" style="margin-top: 16px;">
+        <button type="submit" class="btn btn-blue btn-block">Save Configuration</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg class="icon"><use id="toastIcon" href="#i-check"/></svg>
+  <span id="toastText"></span>
+</div>
+
+<script src="mock-data.js"></script>
+<script src="store.js"></script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+  let toastTimer;
+  function toast(msg, kind = "success") {
+    $("#toastText").textContent = msg;
+    $("#toastIcon").setAttribute("href", kind === "error" ? "#i-alert" : "#i-check");
+    $("#toast").className = `toast show ${kind}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 3000);
+  }
+
+  // --- Renderers ---
+  function renderTenantTable() {
+    const tbody = $("#tenantTableBody");
+    tbody.innerHTML = ZXStore.state.tenants.map(t => {
+      const pct = Math.round((t.assignedPods / t.maxPods) * 100);
+      const isSuspended = t.status === "Suspended";
+      return `
+        <tr>
+          <td>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <img src="${esc(t.logoUrl)}" class="tenant-logo-sm" onerror="this.style.visibility='hidden'" />
+              <div>
+                <div style="font-weight:600; color:var(--text); font-size:13px;">${esc(t.name)}</div>
+                <div style="font-family:var(--font-mono); font-size:10px; color:var(--dim);">${esc(t.subdomain)}.zxsprd.ai</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="badge badge-slate">${esc(t.tier)}</span></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="track" style="flex:1;height:6px;">
+                <div class="fill ${pct>=100?'full':pct>=75?'warn':''}" style="width:${Math.min(100,pct)}%; background:${t.primaryColor || 'var(--green)'}"></div>
+              </div>
+              <span class="mono" style="font-size:11px;color:var(--muted);min-width:45px;">${t.assignedPods}/${t.maxPods}</span>
+            </div>
+          </td>
+          <td><span class="mono" style="font-size:11px; color:var(--text);">${t.currentOccupancy || 0} / ${t.venueCapacity || 0}</span></td>
+          <td><span class="badge badge-blue">${esc(t.defaultLlm.split(' ')[0])}</span></td>
+          <td>
+            <button class="btn btn-ghost btn-sm" style="border-color: ${isSuspended ? 'var(--red)' : 'var(--green)'}; color: ${isSuspended ? 'var(--red)' : 'var(--green)'};" data-toggle-status="${t.id}">
+              ${isSuspended ? 'Suspended' : 'Active'}
+            </button>
+          </td>
+          <td style="text-align:right">
+            <button class="btn btn-ghost btn-sm" data-edit-tenant="${t.id}">
+              <svg class="icon"><use href="#i-edit"/></svg> Edit & Brand
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  function renderCrowdAnalytics() {
+    const cm = ZXStore.state.crowdMetrics;
+    const tenant = ZXStore.tenant();
+    const cap = tenant?.venueCapacity || 5000;
+    const occ = cm.currentOccupancy;
+    const pct = Math.round((occ / cap) * 100);
+
+    $("#occupancyRing").style.setProperty("--pct", pct);
+    $("#occNumber").textContent = occ.toLocaleString();
+    $("#flowIn").textContent = `+${cm.ingressLastHour}`;
+    $("#flowOut").textContent = `-${cm.egressLastHour}`;
+
+    // Hot Zones
+    $("#hotZonesList").innerHTML = cm.hotZones.map(z => `
+      <div class="zone-row">
+        <div class="zone-name">${esc(z.zone)}</div>
+        <div class="zone-bar"><div class="fill accent" style="width: ${z.density}%; background: ${z.status === 'Critical' ? 'var(--red)' : z.status === 'Moderate' ? 'var(--amber)' : 'var(--green)'}"></div></div>
+        <div class="zone-pct">${z.density}%</div>
+      </div>
+    `).join("");
+
+    // Heatmap (Generate 60 cells)
+    const heatGrid = $("#heatmapGrid");
+    if (heatGrid.children.length === 0) {
+      for (let i = 0; i < 60; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'heat-cell';
+        cell.dataset.level = Math.floor(Math.random() * 5) + 1;
+        heatGrid.appendChild(cell);
+      }
+    } else {
+      // Randomly update some cells
+      heatGrid.querySelectorAll('.heat-cell').forEach(cell => {
+        if (Math.random() > 0.7) {
+          cell.dataset.level = Math.floor(Math.random() * 5) + 1;
+        }
+      });
+    }
+
+    // Peak Chart (12 hours)
+    const peakChart = $("#peakChart");
+    if (peakChart.children.length === 0) {
+      for (let i = 0; i < 12; i++) {
+        const col = document.createElement('div');
+        col.className = 'peak-col';
+        const bar = document.createElement('div');
+        bar.className = 'peak-bar';
+        const label = document.createElement('div');
+        label.className = 'peak-label';
+        label.textContent = `${9 + i}AM`;
+        col.appendChild(bar);
+        col.appendChild(label);
+        peakChart.appendChild(col);
+      }
+    }
+    peakChart.querySelectorAll('.peak-bar').forEach((bar, i) => {
+      const h = Math.floor(Math.random() * 80) + 20;
+      bar.style.height = `${h}%`;
+      bar.classList.toggle('is-peak', h > 85);
+    });
+  }
+
+  function renderSponsors() {
+    const list = $("#sponsorList");
+    const sponsors = ZXStore.state.sponsors;
+    list.innerHTML = sponsors.length ? sponsors.map(s => `
+      <div class="sponsor-row">
+        <div class="sponsor-logo">
+          <img src="${esc(s.logoUrl)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'" />
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div class="sponsor-name">${esc(s.name)}</div>
+          <div class="sponsor-msg truncate">${esc(s.message)}</div>
+        </div>
+        <button class="btn btn-red btn-sm" data-del-sponsor="${s.id}">
+          <svg class="icon"><use href="#i-trash"/></svg> Remove
+        </button>
+      </div>
+    `).join("") : `<div class="empty-state">No sponsors added yet.</div>`;
+  }
+
+  function renderPodConfig() {
+    const tenantId = $("#podTenantFilter").value;
+    const tenant = ZXStore.tenant(tenantId);
+    const pods = ZXStore.pods(tenantId);
+    const grid = $("#podConfigGrid");
+
+    if (!tenant || pods.length === 0) {
+      grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; color: var(--dim);">No pods provisioned for this tenant.</div>`;
+      return;
+    }
+
+    grid.innerHTML = pods.map(p => `
+      <div class="pod-config-card">
+        <div class="pod-config-header">
+          <div>
+            <div class="pod-id-tag">${esc(p.id)}</div>
+            <div class="pod-loc-tag">${esc(p.location)}</div>
+          </div>
+          <span class="badge badge-${p.status === 'Online' ? 'green' : 'amber'}" style="font-size:10px;">${esc(p.status)}</span>
+        </div>
+
+        <div class="override-group">
+          <div class="override-label">
+            <span>LLM Engine Override</span>
+            <span class="default-tag">Default: ${esc(tenant.defaultLlm.split(' ')[0])}</span>
+          </div>
+          <select class="form-select" style="width:100%; font-size:11px; padding: 8px;" data-pod-override="${p.id}" data-field="llmOverride">
+            <option value="" ${!p.llmOverride ? 'selected' : ''}>Inherit Tenant Default</option>
+            <option value="OpenAI GPT-4o" ${p.llmOverride === 'OpenAI GPT-4o' ? 'selected' : ''}>OpenAI GPT-4o</option>
+            <option value="OCI Llama 3 70B (Private)" ${p.llmOverride === 'OCI Llama 3 70B (Private)' ? 'selected' : ''}>OCI Llama 3 70B (Private)</option>
+            <option value="Anthropic Claude 3.5" ${p.llmOverride === 'Anthropic Claude 3.5' ? 'selected' : ''}>Anthropic Claude 3.5</option>
+          </select>
+        </div>
+
+        <div class="override-group">
+          <div class="override-label">
+            <span>TTS Voice Override</span>
+            <span class="default-tag">Default: ${esc(tenant.defaultTts.split(' ')[0])}</span>
+          </div>
+          <select class="form-select" style="width:100%; font-size:11px; padding: 8px;" data-pod-override="${p.id}" data-field="ttsOverride">
+            <option value="" ${!p.ttsOverride ? 'selected' : ''}>Inherit Tenant Default</option>
+            <option value="ElevenLabs Neural v2" ${p.ttsOverride === 'ElevenLabs Neural v2' ? 'selected' : ''}>ElevenLabs Neural v2</option>
+            <option value="Deepgram Aura" ${p.ttsOverride === 'Deepgram Aura' ? 'selected' : ''}>Deepgram Aura</option>
+            <option value="Azure Neural TTS" ${p.ttsOverride === 'Azure Neural TTS' ? 'selected' : ''}>Azure Neural TTS</option>
+          </select>
+        </div>
+
+        <div class="override-group" style="margin-bottom:0;">
+          <div class="override-label"><span>Standby Timeout (Mins)</span></div>
+          <input type="number" class="form-input" style="width:100%; font-size:11px; padding: 8px;" value="${p.standbyTimeoutMins}" data-pod-override="${p.id}" data-field="standbyTimeoutMins" min="1" max="60" />
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function renderTelemetry() {
+    const grid = $("#telemetryGrid");
+    grid.innerHTML = ZXStore.state.pods.map(p => {
+      const cpuClass = p.cpuUsage > 80 ? 'crit' : p.cpuUsage > 60 ? 'warn' : '';
+      return `
+        <div class="pod-tile">
+          <div class="pod-tile-head">
+            <div>
+              <div class="pod-tile-id">${esc(p.id)}</div>
+              <div class="pod-tile-loc">${esc(p.location)}</div>
+            </div>
+            <span class="badge badge-${p.status === 'Online' ? 'green' : 'amber'}">
+              <span class="status-dot ${p.status === 'Online' ? 'online' : 'degraded'}"></span> ${esc(p.status)}
+            </span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px;">
+            <div class="stat-card" style="padding: 10px;">
+              <div class="stat-label">Ping</div>
+              <div class="stat-value" style="font-size: 18px;">${p.pingMs}<span style="font-size:10px;color:var(--dim)">ms</span></div>
+            </div>
+            <div class="stat-card" style="padding: 10px;">
+              <div class="stat-label">CPU</div>
+              <div class="stat-value ${cpuClass}" style="font-size: 18px;">${p.cpuUsage}<span style="font-size:10px;color:var(--dim)">%</span></div>
+            </div>
+          </div>
+          <div class="pod-tile-foot">
+            <span class="density-badge ${p.densityLevel}">${esc(p.densityLevel)} Density</span>
+            <span class="mono" style="font-size:10px; color:var(--dim);">${p.currentHeadcount} ppl</span>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderPodFilter() {
+    const sel = $("#podTenantFilter");
+    sel.innerHTML = ZXStore.state.tenants.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join("");
+  }
+
+  // Telemetry & Crowd Simulation Loop
+  setInterval(() => {
+    ZXStore.simulateCrowdShift();
+    
+    const updatedPods = ZXStore.state.pods.map(p => ({
+      ...p,
+      pingMs: Math.floor(Math.random() * 80) + 15,
+      cpuUsage: Math.floor(Math.random() * 70) + 15,
+      memoryUsageGb: parseFloat((Math.random() * 3 + 3).toFixed(1)),
+      batteryPct: Math.max(20, p.batteryPct - (Math.random() > 0.8 ? 1 : 0))
+    }));
+    ZXStore.set({ pods: updatedPods });
+  }, 4000);
+
+  // Initial Render
+  renderPodFilter();
+  renderTenantTable();
+  renderCrowdAnalytics();
+  renderSponsors();
+  renderPodConfig();
+  renderTelemetry();
+
+  // --- Event Listeners ---
+  
+  $("#podTenantFilter").addEventListener("change", renderPodConfig);
+
+  $("#tenantTableBody").addEventListener("click", e => {
+    const toggleBtn = e.target.closest("[data-toggle-status]");
+    if (toggleBtn) {
+      const id = toggleBtn.dataset.toggleStatus;
+      const t = ZXStore.tenant(id);
+      ZXStore.set({ tenants: ZXStore.state.tenants.map(x => x.id === id ? { ...x, status: x.status === 'Active' ? 'Suspended' : 'Active' } : x) });
+      toast(`${t.name} status updated`, "info");
+      return;
+    }
+
+    const editBtn = e.target.closest("[data-edit-tenant]");
+    if (editBtn) {
+      const id = editBtn.dataset.editTenant;
+      const t = ZXStore.tenant(id);
+      $("#editTenantId").value = t.id;
+      $("#editName").value = t.name;
+      $("#editMaxPods").value = t.maxPods;
+      $("#editCapacity").value = t.venueCapacity;
+      $("#editTier").value = t.tier;
+      $("#editLogo").value = t.logoUrl;
+      $("#editColor").value = t.primaryColor;
+      $("#editHeader").value = t.headerText;
+      $("#editFooter").value = t.footerText;
+      $("#tenantModal").classList.add("active");
+    }
+  });
+
+  $("#podConfigGrid").addEventListener("change", e => {
+    const input = e.target.closest("[data-pod-override]");
+    if (input) {
+      const podId = input.dataset.podOverride;
+      const field = input.dataset.field;
+      let val = input.value;
+      if (field === 'standbyTimeoutMins') val = parseInt(val);
+      
+      ZXStore.updatePodOverrides(podId, { [field]: val });
+      toast(`Pod ${podId} configuration updated`, "success");
+    }
+  });
+
+  $("#sponsorList").addEventListener("click", e => {
+    const btn = e.target.closest("[data-del-sponsor]");
+    if (btn) {
+      ZXStore.removeSponsor(btn.dataset.delSponsor);
+      toast("Sponsor removed", "info");
+    }
+  });
+
+  $("#sponsorForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const name = $("#spName").value.trim();
+    const msg = $("#spMsg").value.trim();
+    if (!name || !msg) return;
+    
+    ZXStore.addSponsor({
+      name, message: msg,
+      logoUrl: `https://api.dicebear.com/7.0/identicon/${name}.svg`
+    });
+    e.target.reset();
+    toast("Sponsor added to rotation", "success");
+  });
+
+  // Modal Close
+  $("#closeModal").addEventListener("click", () => $("#tenantModal").classList.remove("active"));
+  $("#tenantModal").addEventListener("click", e => { if (e.target === $("#tenantModal")) $("#tenantModal").classList.remove("active"); });
+
+  // Tenant Form Submit
+  $("#tenantForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const id = $("#editTenantId").value;
+    const updates = {
+      name: $("#editName").value,
+      maxPods: parseInt($("#editMaxPods").value),
+      venueCapacity: parseInt($("#editCapacity").value),
+      tier: $("#editTier").value,
+      logoUrl: $("#editLogo").value,
+      primaryColor: $("#editColor").value,
+      headerText: $("#editHeader").value,
+      footerText: $("#editFooter").value
+    };
+    
+    const t = ZXStore.tenant(id);
+    if (updates.maxPods < t.assignedPods) {
+      toast("Max pods cannot be less than currently assigned pods.", "error");
+      return;
+    }
+
+    ZXStore.updateTenantBranding(id, updates);
+    $("#tenantModal").classList.remove("active");
+    toast("Tenant configuration & branding saved", "success");
+  });
+
+  // Sync state
+  ZXStore.subscribe(() => {
+    renderTenantTable();
+    renderCrowdAnalytics();
+    renderSponsors();
+    renderPodConfig();
+    renderTelemetry();
+  });
+})();
+</script>
+</body>
+</html>

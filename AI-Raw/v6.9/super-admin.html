@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ZXSPRD AI — Super Admin Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+
+<style>
+  /* Page-specific overrides for Super Admin */
+  .admin-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+  
+  /* Tenant Table Enhancements */
+  .tenant-logo-sm { width: 32px; height: 32px; border-radius: 8px; background: var(--inset); object-fit: cover; border: 1px solid var(--line-soft); }
+  
+  /* Modal Styles */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(4,7,15,0.8); backdrop-filter: blur(8px);
+    z-index: 100; display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-overlay.active { opacity: 1; pointer-events: auto; }
+  .modal-card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 20px;
+    width: 90%; max-width: 600px; padding: 32px; box-shadow: var(--shadow-lg);
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .modal-title { font-size: 18px; font-weight: 700; }
+  .close-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 8px; }
+  .close-btn:hover { color: var(--text); background: var(--panel-2); }
+
+  /* Telemetry Grid */
+  .telemetry-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .tel-card {
+    background: var(--inset); border: 1px solid var(--line-soft); border-radius: 12px; padding: 16px;
+  }
+  .tel-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .tel-card-id { font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
+  .tel-card-loc { font-size: 10px; color: var(--dim); margin-top: 2px; }
+  .tel-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tel-metric { background: var(--panel); border: 1px solid var(--line-soft); border-radius: 8px; padding: 8px; text-align: center; }
+  .tel-metric-label { font-size: 9px; text-transform: uppercase; color: var(--dim); letter-spacing: 0.05em; }
+  .tel-metric-val { font-family: var(--font-mono); font-size: 14px; font-weight: 700; margin-top: 2px; }
+  .tel-metric-val.warn { color: var(--amber); }
+  .tel-metric-val.crit { color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- SVG Sprite -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></symbol>
+  <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-smartphone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.9L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5M3 12a9 3 0 0 0 18 0"/></symbol>
+  <symbol id="i-router" viewBox="0 0 24 24"><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6.01 18h.01M10.01 18h.01M15 10v4M9 10v4M12 2v8"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+</svg>
+
+<!-- Topbar -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark"><svg class="icon"><use href="#i-activity"/></svg></div>
+    <div>
+      <div class="brand-name">ZXSPRD<span style="color:#60A5FA"> AI</span></div>
+      <div class="brand-sub">Super Admin Console</div>
+    </div>
+  </div>
+  <nav class="role-switch">
+    <a href="index.html?role=SUPER_ADMIN" class="role-btn" aria-pressed="true"><svg class="icon"><use href="#i-shield"/></svg> Super Admin</a>
+    <a href="client-admin.html" class="role-btn" aria-pressed="false"><svg class="icon"><use href="#i-building"/></svg> Client Admin</a>
+    <a href="edge-kiosk.html" class="role-btn" aria-pressed="false"><svg class="icon"><use href="#i-tablet"/></svg> Edge Kiosk</a>
+    <a href="public-display.html" class="role-btn" aria-pressed="false"><svg class="icon"><use href="#i-tv"/></svg> Public Display</a>
+    <a href="guest-portal.html" class="role-btn" aria-pressed="false"><svg class="icon"><use href="#i-smartphone"/></svg> Guest Portal</a>
+  </nav>
+</header>
+
+<main>
+  <div class="admin-grid">
+
+    <!-- 1. TENANT MANAGEMENT ENGINE -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title"><svg class="icon"><use href="#i-database"/></svg> Tenant & Client Management Engine</div>
+          <div class="panel-subtitle">Manage SaaS client instances, enforce pod quotas, and configure white-label branding.</div>
+        </div>
+        <button class="btn btn-blue" id="btnAddTenant">
+          <svg class="icon"><use href="#i-plus"/></svg> Provision New Tenant
+        </button>
+      </div>
+      
+      <div class="table-scroll">
+        <table class="data-table" id="tenantTable">
+          <thead>
+            <tr>
+              <th>Organization</th>
+              <th>Tier</th>
+              <th>Pod Quota Allocation</th>
+              <th>Default LLM Engine</th>
+              <th>Status</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tenantTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 2. GLOBAL MODEL ROUTER -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title"><svg class="icon"><use href="#i-router"/></svg> Global Model Router & LLM Configurator</div>
+          <div class="panel-subtitle">Assign sovereign LLM instances, TTS voice engines, and fallback policies per tenant.</div>
+        </div>
+      </div>
+      
+      <div class="table-scroll">
+        <table class="data-table" id="routerTable">
+          <thead>
+            <tr>
+              <th>Tenant Name</th>
+              <th>Primary LLM Engine</th>
+              <th>TTS Voice Pipeline</th>
+              <th>Temperature (Creativity)</th>
+              <th>Cloud Fallback</th>
+            </tr>
+          </thead>
+          <tbody id="routerTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 3. LIVE INFRASTRUCTURE TELEMETRY -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title"><svg class="icon"><use href="#i-cpu"/></svg> Live Edge Infrastructure Telemetry</div>
+          <div class="panel-subtitle">Real-time hardware monitoring across all physical event pods globally.</div>
+        </div>
+        <span class="badge badge-green"><span class="status-dot online"></span> Stream Active (2.5s)</span>
+      </div>
+      <div class="telemetry-grid" id="telemetryGrid"></div>
+    </section>
+
+  </div>
+</main>
+
+<!-- Add/Edit Tenant Modal -->
+<div class="modal-overlay" id="tenantModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Provision New Tenant</div>
+      <button class="close-btn" id="closeModal"><svg class="icon"><use href="#i-x"/></svg></button>
+    </div>
+    <form id="tenantForm" class="form-grid">
+      <input type="hidden" id="editTenantId" />
+      
+      <div class="form-group full">
+        <label class="form-label">Organization Name</label>
+        <input type="text" id="editName" class="form-input" placeholder="e.g. World Police Summit 2026" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Subdomain</label>
+        <input type="text" id="editSubdomain" class="form-input mono" placeholder="e.g. wps2026" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Service Tier</label>
+        <select id="editTier" class="form-select">
+          <option value="Standard">Standard</option>
+          <option value="Pro">Pro</option>
+          <option value="Enterprise">Enterprise</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Max Pod Quota</label>
+        <input type="number" id="editMaxPods" class="form-input" min="1" value="10" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Venue Capacity</label>
+        <input type="number" id="editCapacity" class="form-input" min="1" value="1000" required />
+      </div>
+
+      <div class="form-group full" style="border-top: 1px solid var(--line-soft); padding-top: 16px; margin-top: 8px;">
+        <label class="form-label" style="color: var(--blue);">White-Label Branding & Routing</label>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Logo URL</label>
+        <input type="url" id="editLogo" class="form-input" placeholder="https://..." />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Primary Brand Color</label>
+        <input type="color" id="editColor" class="form-input" value="#3B82F6" style="height: 42px; padding: 4px;" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Default LLM Engine</label>
+        <select id="editLlm" class="form-select">
+          <option value="OpenAI GPT-4o">OpenAI GPT-4o</option>
+          <option value="OCI Llama 3 70B (Private)">OCI Llama 3 70B (Private)</option>
+          <option value="Anthropic Claude 3.5">Anthropic Claude 3.5</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Default TTS Engine</label>
+        <select id="editTts" class="form-select">
+          <option value="ElevenLabs Neural v2">ElevenLabs Neural v2</option>
+          <option value="Deepgram Aura">Deepgram Aura</option>
+          <option value="Azure Neural TTS">Azure Neural TTS</option>
+        </select>
+      </div>
+
+      <div class="form-group full" style="margin-top: 16px;">
+        <button type="submit" class="btn btn-blue btn-block">Save & Provision Tenant</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg class="icon"><use id="toastIcon" href="#i-check"/></svg>
+  <span id="toastText"></span>
+</div>
+
+<script src="mock-data.js"></script>
+<script src="store.js"></script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+  let toastTimer;
+  function toast(msg, kind = "success") {
+    $("#toastText").textContent = msg;
+    $("#toastIcon").setAttribute("href", kind === "error" ? "#i-alert" : "#i-check");
+    $("#toast").className = `toast show ${kind}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 3000);
+  }
+
+  // --- Renderers ---
+  function renderTenantTable() {
+    const tbody = $("#tenantTableBody");
+    tbody.innerHTML = ZXStore.state.tenants.map(t => {
+      const pct = t.maxPods > 0 ? Math.round((t.assignedPods / t.maxPods) * 100) : 0;
+      const isSuspended = t.status === "Suspended";
+      return `
+        <tr>
+          <td>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <img src="${esc(t.logoUrl)}" class="tenant-logo-sm" onerror="this.style.visibility='hidden'" />
+              <div>
+                <div style="font-weight:600; color:var(--text); font-size:13px;">${esc(t.name)}</div>
+                <div style="font-family:var(--font-mono); font-size:10px; color:var(--dim);">${esc(t.subdomain)}.zxsprd.ai</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="badge badge-slate">${esc(t.tier)}</span></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px; min-width: 140px;">
+              <div class="track" style="flex:1;height:6px;">
+                <div class="fill ${pct>=100?'full':pct>=75?'warn':''}" style="width:${Math.min(100,pct)}%; background:${t.primaryColor || 'var(--green)'}"></div>
+              </div>
+              <span class="mono" style="font-size:11px;color:var(--muted);min-width:45px;">${t.assignedPods}/${t.maxPods}</span>
+            </div>
+          </td>
+          <td><span class="badge badge-blue">${esc(t.defaultLlm.split(' ')[0])}</span></td>
+          <td>
+            <button class="btn btn-ghost btn-sm" style="border-color: ${isSuspended ? 'var(--red)' : 'var(--green)'}; color: ${isSuspended ? 'var(--red)' : 'var(--green)'};" data-toggle-status="${t.id}">
+              ${isSuspended ? 'Suspended' : 'Active'}
+            </button>
+          </td>
+          <td style="text-align:right">
+            <div style="display:flex; gap:6px; justify-content:flex-end;">
+              <button class="btn btn-ghost btn-sm" data-edit-tenant="${t.id}">
+                <svg class="icon"><use href="#i-edit"/></svg> Edit
+              </button>
+              <button class="btn btn-blue btn-sm" data-impersonate="${t.id}" ${isSuspended ? 'disabled' : ''}>
+                <svg class="icon"><use href="#i-eye"/></svg> Impersonate
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  function renderRouterTable() {
+    const tbody = $("#routerTableBody");
+    tbody.innerHTML = ZXStore.state.tenants.map(t => `
+      <tr>
+        <td style="font-weight:600;">${esc(t.name)}</td>
+        <td>
+          <select class="form-select" style="width:100%; font-size:11px; padding: 8px;" data-router-field="defaultLlm" data-router-id="${t.id}">
+            <option value="OpenAI GPT-4o" ${t.defaultLlm === 'OpenAI GPT-4o' ? 'selected' : ''}>OpenAI GPT-4o</option>
+            <option value="OCI Llama 3 70B (Private)" ${t.defaultLlm === 'OCI Llama 3 70B (Private)' ? 'selected' : ''}>OCI Llama 3 70B (Private)</option>
+            <option value="Anthropic Claude 3.5" ${t.defaultLlm === 'Anthropic Claude 3.5' ? 'selected' : ''}>Anthropic Claude 3.5</option>
+          </select>
+        </td>
+        <td>
+          <select class="form-select" style="width:100%; font-size:11px; padding: 8px;" data-router-field="defaultTts" data-router-id="${t.id}">
+            <option value="ElevenLabs Neural v2" ${t.defaultTts === 'ElevenLabs Neural v2' ? 'selected' : ''}>ElevenLabs Neural v2</option>
+            <option value="Deepgram Aura" ${t.defaultTts === 'Deepgram Aura' ? 'selected' : ''}>Deepgram Aura</option>
+            <option value="Azure Neural TTS" ${t.defaultTts === 'Azure Neural TTS' ? 'selected' : ''}>Azure Neural TTS</option>
+          </select>
+        </td>
+        <td style="width: 180px;">
+          <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--dim); margin-bottom:4px;">
+            <span>0.0</span><span class="mono" style="color:var(--blue); font-weight:700;">0.7</span><span>1.0</span>
+          </div>
+          <input type="range" min="0" max="1" step="0.1" value="0.7" style="width:100%;" disabled title="Global temperature locked at 0.7 for demo" />
+        </td>
+        <td>
+          <div class="switch" aria-checked="true" role="switch" tabindex="0"></div>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  function renderTelemetry() {
+    const grid = $("#telemetryGrid");
+    // Show all pods across all tenants for the Super Admin global view
+    const allPods = ZXStore.state.pods; 
+    if (allPods.length === 0) {
+      grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:40px; color:var(--dim);">No edge pods provisioned globally.</div>`;
+      return;
+    }
+
+    grid.innerHTML = allPods.map(p => {
+      const cpuClass = p.cpuUsage > 80 ? 'crit' : p.cpuUsage > 60 ? 'warn' : '';
+      return `
+        <div class="tel-card">
+          <div class="tel-card-head">
+            <div>
+              <div class="tel-card-id">${esc(p.id)}</div>
+              <div class="tel-card-loc">${esc(p.location)}</div>
+            </div>
+            <span class="badge badge-${p.status === 'Online' ? 'green' : 'amber'}" style="font-size:9px;">
+              <span class="status-dot ${p.status === 'Online' ? 'online' : 'degraded'}"></span> ${esc(p.status)}
+            </span>
+          </div>
+          <div class="tel-metrics">
+            <div class="tel-metric">
+              <div class="tel-metric-label">Ping</div>
+              <div class="tel-metric-val">${p.pingMs}<span style="font-size:9px;color:var(--dim)">ms</span></div>
+            </div>
+            <div class="tel-metric">
+              <div class="tel-metric-label">CPU</div>
+              <div class="tel-metric-val ${cpuClass}">${p.cpuUsage}<span style="font-size:9px;color:var(--dim)">%</span></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  // Telemetry Simulation Loop (Background thread mock)
+  setInterval(() => {
+    const updatedPods = ZXStore.state.pods.map(p => ({
+      ...p,
+      pingMs: Math.floor(Math.random() * 80) + 15,
+      cpuUsage: Math.floor(Math.random() * 70) + 15,
+      memoryUsageGb: parseFloat((Math.random() * 3 + 3).toFixed(1)),
+      batteryPct: Math.max(20, p.batteryPct - (Math.random() > 0.8 ? 1 : 0))
+    }));
+    ZXStore.set({ pods: updatedPods });
+  }, 2500);
+
+  // Initial Render
+  renderTenantTable();
+  renderRouterTable();
+  renderTelemetry();
+
+  // --- Event Listeners ---
+  
+  // Tenant Table Actions
+  $("#tenantTableBody").addEventListener("click", e => {
+    const toggleBtn = e.target.closest("[data-toggle-status]");
+    if (toggleBtn) {
+      const id = toggleBtn.dataset.toggleStatus;
+      ZXStore.toggleTenantStatus(id);
+      toast("Tenant status updated", "info");
+      return;
+    }
+
+    const editBtn = e.target.closest("[data-edit-tenant]");
+    if (editBtn) {
+      const id = editBtn.dataset.editTenant;
+      const t = ZXStore.tenant(id);
+      $("#modalTitle").textContent = "Edit Tenant Configuration";
+      $("#editTenantId").value = t.id;
+      $("#editName").value = t.name;
+      $("#editSubdomain").value = t.subdomain;
+      $("#editTier").value = t.tier;
+      $("#editMaxPods").value = t.maxPods;
+      $("#editCapacity").value = t.venueCapacity;
+      $("#editLogo").value = t.logoUrl;
+      $("#editColor").value = t.primaryColor;
+      $("#editLlm").value = t.defaultLlm;
+      $("#editTts").value = t.defaultTts;
+      $("#tenantModal").classList.add("active");
+      return;
+    }
+
+    const impBtn = e.target.closest("[data-impersonate]");
+    if (impBtn && !impBtn.disabled) {
+      const id = impBtn.dataset.impersonate;
+      ZXStore.setTenant(id);
+      ZXStore.setRole("CLIENT_ADMIN");
+      toast("Switching to Client Admin context...", "success");
+      setTimeout(() => location.href = `client-admin.html`, 800);
+    }
+  });
+
+  // Router Table Actions
+  $("#routerTableBody").addEventListener("change", e => {
+    const sel = e.target.closest("[data-router-field]");
+    if (sel) {
+      const id = sel.dataset.routerId;
+      const field = sel.dataset.routerField;
+      ZXStore.updateTenant(id, { [field]: sel.value });
+      toast("Global routing updated", "success");
+    }
+  });
+
+  // Add Tenant Button
+  $("#btnAddTenant").addEventListener("click", () => {
+    $("#modalTitle").textContent = "Provision New Tenant";
+    $("#tenantForm").reset();
+    $("#editTenantId").value = "";
+    $("#editMaxPods").value = 10;
+    $("#editCapacity").value = 1000;
+    $("#tenantModal").classList.add("active");
+  });
+
+  // Modal Close
+  $("#closeModal").addEventListener("click", () => $("#tenantModal").classList.remove("active"));
+  $("#tenantModal").addEventListener("click", e => { if (e.target === $("#tenantModal")) $("#tenantModal").classList.remove("active"); });
+
+  // Tenant Form Submit (Add or Edit)
+  $("#tenantForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const editId = $("#editTenantId").value;
+    
+    const data = {
+      name: $("#editName").value.trim(),
+      subdomain: $("#editSubdomain").value.trim().toLowerCase(),
+      tier: $("#editTier").value,
+      maxPods: parseInt($("#editMaxPods").value),
+      venueCapacity: parseInt($("#editCapacity").value),
+      logoUrl: $("#editLogo").value || `https://api.dicebear.com/7.0/identicon/${$("#editName").value}.svg`,
+      primaryColor: $("#editColor").value,
+      defaultLlm: $("#editLlm").value,
+      defaultTts: $("#editTts").value,
+      headerText: $("#editName").value + " Intelligence Hub",
+      footerText: "© 2026 " + $("#editName").value
+    };
+
+    if (editId) {
+      // Update existing
+      ZXStore.updateTenant(editId, data);
+      toast("Tenant configuration saved", "success");
+    } else {
+      // Add new
+      if (data.maxPods < 1) {
+        toast("Max pods must be at least 1.", "error");
+        return;
+      }
+      ZXStore.addTenant(data);
+      toast("New tenant provisioned successfully", "success");
+    }
+    
+    $("#tenantModal").classList.remove("active");
+  });
+
+  // Sync state
+  ZXStore.subscribe(() => {
+    renderTenantTable();
+    renderRouterTable();
+    renderTelemetry();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ZXSPRD AI — Client Admin Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+
+<style>
+  :root { --brand: #3B82F6; }
+  body { --tenant-accent: var(--brand); }
+
+  /* White-label client header */
+  .client-hero {
+    background: linear-gradient(120deg, var(--panel), var(--inset));
+    border: 1px solid var(--line); border-radius: 18px; padding: 24px 28px;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;
+    position: relative; overflow: hidden;
+  }
+  .client-hero::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+    background: var(--tenant-accent);
+  }
+  .client-ident { display: flex; align-items: center; gap: 16px; }
+  .client-logo {
+    width: 60px; height: 60px; border-radius: 14px; background: var(--inset);
+    border: 1px solid var(--line-soft); overflow: hidden; flex-shrink: 0;
+    display: grid; place-items: center;
+  }
+  .client-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .client-name { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+  .client-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  /* Stat cards */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .stat-card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px;
+  }
+  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--dim); font-weight: 600; }
+  .stat-value { font-size: 28px; font-weight: 800; font-family: var(--font-mono); margin-top: 6px; }
+  .stat-note { font-size: 11px; color: var(--dim); margin-top: 4px; }
+
+  /* HITL cards */
+  .hitl-card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 22px;
+    border-left: 3px solid var(--amber);
+  }
+  .hitl-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+  .hitl-title { font-size: 15px; font-weight: 700; }
+  .hitl-meta { font-size: 11px; color: var(--dim); font-family: var(--font-mono); margin-top: 4px; }
+
+  .split-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .pane {
+    background: var(--inset); border: 1px solid var(--line-soft); border-radius: 12px; padding: 16px;
+  }
+  .pane-title {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700;
+    color: var(--dim); margin-bottom: 12px; display: flex; align-items: center; gap: 7px;
+  }
+  .pane-title svg { width: 13px; height: 13px; }
+
+  .transcript-scroll { max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .transcript-scroll::-webkit-scrollbar { width: 5px; }
+  .transcript-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+  .t-line { background: var(--panel); border: 1px solid var(--line-soft); border-radius: 9px; padding: 10px 12px; }
+  .t-meta { display: flex; gap: 8px; font-family: var(--font-mono); font-size: 10px; color: var(--dim); margin-bottom: 4px; }
+  .t-spk { color: var(--tenant-accent); font-weight: 700; }
+  .t-txt { font-size: 12px; color: var(--text); line-height: 1.6; }
+
+  .summary-box {
+    width: 100%; min-height: 130px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 12px; font-size: 12.5px; line-height: 1.7; color: var(--text);
+    resize: vertical; font-family: var(--font-sans);
+  }
+  .summary-box:focus { outline: none; border-color: var(--tenant-accent); }
+
+  .action-chips { display: flex; flex-direction: column; gap: 7px; margin-top: 12px; }
+  .action-chip {
+    background: var(--panel); border: 1px solid var(--line-soft); border-radius: 8px;
+    padding: 8px 11px; font-size: 11.5px; color: var(--muted); display: flex; gap: 8px; align-items: flex-start;
+  }
+  .action-chip::before { content: "▸"; color: var(--tenant-accent); font-weight: 700; }
+
+  .sentiment-wrap { margin-top: 14px; }
+  .sentiment-head { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+
+  .hitl-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; flex-wrap: wrap; }
+
+  /* Guest roster */
+  .guest-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--inset); border: 1px solid var(--line-soft); border-radius: 10px; padding: 11px 14px;
+  }
+  .guest-row + .guest-row { margin-top: 8px; }
+  .guest-name { font-size: 12.5px; font-weight: 600; }
+  .guest-contact { font-size: 10.5px; color: var(--dim); font-family: var(--font-mono); margin-top: 2px; }
+
+  .approved-item {
+    background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--green);
+    border-radius: 12px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 14px;
+  }
+  .approved-item + .approved-item { margin-top: 10px; }
+
+  @media(max-width: 900px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .split-panel { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></symbol>
+  <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.9L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
+  <symbol id="i-megaphone" viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 11z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></symbol>
+  <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></symbol>
+  <symbol id="i-brain" viewBox="0 0 24 24"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/></symbol>
+</svg>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark"><svg class="icon"><use href="#i-activity"/></svg></div>
+    <div>
+      <div class="brand-name">ZXSPRD<span style="color:#60A5FA"> AI</span></div>
+      <div class="brand-sub" id="clientHeaderText">Client Admin Console</div>
+    </div>
+  </div>
+  <nav class="role-switch">
+    <a href="super-admin.html" class="role-btn" aria-pressed="false"><svg class="icon"><use href="#i-shield"/></svg> Super Admin</a>
+    <a href="client-admin.html" class="role-btn" aria-pressed="true"><svg class="icon"><use href="#i-building"/></svg> Client Admin</a>
+    <a href="edge-kiosk.html" class="role-btn" aria-pressed="false"><svg class="icon"><use href="#i-tablet"/></svg> Edge Kiosk</a>
+  </nav>
+  <div class="tenant-picker">
+    <label for="tenantSelect">Tenant</label>
+    <select id="tenantSelect" class="control"></select>
+  </div>
+</header>
+
+<div id="impersonationBanner" class="impersonation" hidden>
+  <div class="left">
+    <svg class="icon"><use href="#i-alert"/></svg>
+    <span>Impersonating <strong id="impersonationName"></strong></span>
+  </div>
+  <a href="super-admin.html" class="link-btn">Return to Super Admin →</a>
+</div>
+
+<main>
+  <div class="admin-grid">
+
+    <!-- White-labeled client identity -->
+    <div class="client-hero">
+      <div class="client-ident">
+        <div class="client-logo"><img id="clientLogo" src="" alt="Client logo" /></div>
+        <div>
+          <div class="client-name" id="clientName">—</div>
+          <div class="client-sub" id="clientFooter">—</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <span class="badge badge-blue" id="clientTier">—</span>
+        <span class="badge badge-slate mono" id="clientPods">—</span>
+      </div>
+    </div>
+
+    <!-- Intelligence stats -->
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Meetings</div>
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-note">All recorded sessions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Awaiting Approval</div>
+        <div class="stat-value" style="color:var(--amber)" id="statPending">0</div>
+        <div class="stat-note">HITL guardrail queue</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Published</div>
+        <div class="stat-value" style="color:var(--green)" id="statApproved">0</div>
+        <div class="stat-note">Dispatched to attendees</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Guests Checked In</div>
+        <div class="stat-value" style="color:var(--tenant-accent)" id="statGuests">0</div>
+        <div class="stat-note">Across all meetings</div>
+      </div>
+    </div>
+
+    <!-- HITL QUEUE -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title"><svg class="icon"><use href="#i-brain"/></svg> Meeting Intelligence — Approval Queue</div>
+          <div class="panel-subtitle">Review raw transcripts and AI summaries before publishing to attendees.</div>
+        </div>
+        <span class="badge badge-amber" id="queueCount">0 pending</span>
+      </div>
+      <div id="hitlQueue" style="display:flex; flex-direction:column; gap:16px;"></div>
+    </section>
+
+    <div class="grid-2col">
+      <!-- Broadcast -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title"><svg class="icon"><use href="#i-megaphone"/></svg> Instant Tablet Broadcast</div>
+            <div class="panel-subtitle">Push a dismissable alert banner to all edge pods.</div>
+          </div>
+        </div>
+        <textarea id="broadcastMsg" class="form-textarea" placeholder="e.g. Welcome delegates — keynote starts in 5 minutes."></textarea>
+        <div style="display:flex; gap:10px; margin-top:12px;">
+          <button class="btn btn-blue" id="btnBroadcast" style="flex:1;">
+            <svg class="icon"><use href="#i-send"/></svg> Broadcast Now
+          </button>
+          <button class="btn btn-ghost" id="btnClearBroadcast">Clear Active</button>
+        </div>
+        <div id="broadcastStatus" style="margin-top:14px;"></div>
+      </section>
+
+      <!-- Guest roster + published -->
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title"><svg class="icon"><use href="#i-users"/></svg> Attendee Roster</div>
+            <div class="panel-subtitle">Guests scanned or typed in at the pod kiosk.</div>
+          </div>
+        </div>
+        <div id="guestRoster"></div>
+        <div style="margin-top:20px; border-top:1px solid var(--line-soft); padding-top:16px;">
+          <div class="pane-title"><svg class="icon"><use href="#i-check"/></svg> Published Briefings</div>
+          <div id="approvedList"></div>
+        </div>
+      </section>
+    </div>
+
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg class="icon"><use id="toastIcon" href="#i-check"/></svg>
+  <span id="toastText"></span>
+</div>
+
+<script src="mock-data.js"></script>
+<script src="store.js"></script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+  let toastTimer;
+  function toast(msg, kind = "success") {
+    $("#toastText").textContent = msg;
+    $("#toastIcon").setAttribute("href", kind === "error" ? "#i-alert" : "#i-check");
+    $("#toast").className = `toast show ${kind}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 3000);
+  }
+
+  /* ---------- White-label theming ---------- */
+  function renderBranding() {
+    const t = ZXStore.tenant();
+    if (!t) return;
+    const accent = t.primaryColor || "#3B82F6";
+    document.documentElement.style.setProperty("--tenant-accent", accent);
+    document.body.style.setProperty("--tenant-accent", accent);
+
+    $("#clientHeaderText").textContent = t.headerText || "Client Admin Console";
+    $("#clientName").textContent = t.name;
+    $("#clientFooter").textContent = t.footerText || "";
+    $("#clientLogo").src = t.logoUrl;
+    $("#clientTier").textContent = t.tier;
+    $("#clientPods").textContent = `${t.assignedPods}/${t.maxPods} pods`;
+    $("#impersonationName").textContent = t.name;
+    $("#impersonationBanner").hidden = false;
+
+    const sel = $("#tenantSelect");
+    sel.innerHTML = ZXStore.state.tenants.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join("");
+    sel.value = t.id;
+  }
+
+  /* ---------- Stats ---------- */
+  function renderStats() {
+    const ms = ZXStore.meetings();
+    $("#statTotal").textContent = ms.length;
+    $("#statPending").textContent = ms.filter(m => m.hitlStatus === "PendingApproval").length;
+    $("#statApproved").textContent = ms.filter(m => m.hitlStatus === "Approved").length;
+    $("#statGuests").textContent = ms.reduce((n, m) => n + (m.guests?.length || 0), 0);
+  }
+
+  /* ---------- HITL Queue ---------- */
+  function renderQueue() {
+    const pending = ZXStore.meetings().filter(m => m.hitlStatus === "PendingApproval");
+    const wrap = $("#hitlQueue");
+    $("#queueCount").textContent = `${pending.length} pending`;
+
+    if (!pending.length) {
+      wrap.innerHTML = `<div style="text-align:center; padding:40px; color:var(--dim); font-size:12px;">
+        <svg class="icon" style="width:28px;height:28px;color:var(--green);margin-bottom:8px;"><use href="#i-check"/></svg>
+        All briefings reviewed and published.</div>`;
+      return;
+    }
+
+    wrap.innerHTML = pending.map(m => `
+      <article class="hitl-card" data-meeting="${m.id}">
+        <div class="hitl-head">
+          <div>
+            <div class="hitl-title">${esc(m.title)}</div>
+            <div class="hitl-meta">${esc(m.podId)} · Host: ${esc(m.hostName)} · ${esc(m.startTime)}${m.endTime ? " – " + esc(m.endTime) : ""}</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <span class="badge badge-blue">${esc(m.status)}</span>
+            <span class="badge badge-amber">Awaiting Approval</span>
+          </div>
+        </div>
+
+        <div class="split-panel">
+          <div class="pane">
+            <div class="pane-title"><svg class="icon"><use href="#i-message"/></svg> Raw Transcript</div>
+            <div class="transcript-scroll">
+              ${(m.rawTranscript || []).map(l => `
+                <div class="t-line">
+                  <div class="t-meta"><span class="t-spk">${esc(l.speaker)}</span><span>${esc(l.time)}</span></div>
+                  <div class="t-txt">${esc(l.text)}</div>
+                </div>`).join("") || '<div style="font-size:11px;color:var(--dim);">No transcript captured.</div>'}
+            </div>
+          </div>
+
+          <div class="pane">
+            <div class="pane-title"><svg class="icon"><use href="#i-brain"/></svg> AI Summary <span style="color:var(--dim);font-weight:400;text-transform:none;">— editable</span></div>
+            <textarea class="summary-box" data-summary>${esc(m.aiSummary || "")}</textarea>
+            ${(m.actionItems || []).length ? `
+              <div class="pane-title" style="margin-top:14px;">Action Items</div>
+              <div class="action-chips">${m.actionItems.map(a => `<div class="action-chip">${esc(a)}</div>`).join("")}</div>
+            ` : ""}
+            <div class="sentiment-wrap">
+              <div class="sentiment-head"><span>Sentiment Score</span><span class="mono">${m.sentimentScore ?? 0}/100</span></div>
+              <div class="track"><div class="fill" style="width:${m.sentimentScore || 0}%; background:var(--tenant-accent);"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hitl-actions">
+          <button class="btn btn-ghost" data-action="reject"><svg class="icon"><use href="#i-x"/></svg> Reject</button>
+          <button class="btn btn-blue" data-action="approve"><svg class="icon"><use href="#i-send"/></svg> Approve &amp; Publish</button>
+        </div>
+      </article>
+    `).join("");
+  }
+
+  /* ---------- Guests + Approved ---------- */
+  function renderGuests() {
+    const all = ZXStore.meetings().flatMap(m => (m.guests || []).map(g => ({ ...g, meeting: m.title })));
+    $("#guestRoster").innerHTML = all.length ? all.map(g => `
+      <div class="guest-row">
+        <div style="min-width:0;">
+          <div class="guest-name">${esc(g.name)} <span class="badge badge-slate" style="margin-left:6px;">${esc(g.role || "Guest")}</span></div>
+          <div class="guest-contact">${esc(g.email || "—")} ${g.phone ? "· " + esc(g.phone) : ""}</div>
+        </div>
+        <span class="badge badge-green">${esc(g.checkedInAt || "")}</span>
+      </div>`).join("")
+      : `<div style="font-size:12px; color:var(--dim);">No guests checked in yet.</div>`;
+  }
+
+  function renderApproved() {
+    const done = ZXStore.meetings().filter(m => m.hitlStatus === "Approved");
+    $("#approvedList").innerHTML = done.length ? done.map(m => `
+      <div class="approved-item">
+        <div style="min-width:0;">
+          <div style="font-size:12.5px; font-weight:600;">${esc(m.title)}</div>
+          <div style="font-size:10.5px; color:var(--dim); font-family:var(--font-mono); margin-top:2px;">${esc(m.podId)} · WhatsApp &amp; Email dispatched</div>
+        </div>
+        <span class="badge badge-green"><svg class="icon"><use href="#i-check"/></svg> Live</span>
+      </div>`).join("")
+      : `<div style="font-size:12px; color:var(--dim);">Nothing published yet.</div>`;
+  }
+
+  /* ---------- Broadcast ---------- */
+  function renderBroadcast() {
+    const active = ZXStore.state.broadcasts.find(b => b.tenantId === ZXStore.state.activeTenantId && b.active);
+    $("#broadcastStatus").innerHTML = active
+      ? `<div style="background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.25); border-radius:10px; padding:12px 14px; font-size:12px; color:#FCD34D;">
+           <strong>Active on tablets:</strong> "${esc(active.message)}"</div>`
+      : `<div style="font-size:11.5px; color:var(--dim);">No active broadcast running.</div>`;
+  }
+
+  function renderAll() { renderBranding(); renderStats(); renderQueue(); renderGuests(); renderApproved(); renderBroadcast(); }
+
+  /* ---------- Events ---------- */
+  $("#tenantSelect").addEventListener("change", e => { ZXStore.setTenant(e.target.value); renderAll(); });
+
+  $("#hitlQueue").addEventListener("click", e => {
+    const btn = e.target.closest("[data-action]");
+    if (!btn) return;
+    const card = btn.closest("[data-meeting]");
+    const id = card.dataset.meeting;
+    const edited = card.querySelector("[data-summary]")?.value;
+
+    if (btn.dataset.action === "approve") {
+      ZXStore.approveSummary(id, edited);
+      toast("Briefing approved — dispatched via WhatsApp & Email API", "success");
+    } else {
+      ZXStore.rejectSummary(id);
+      toast("Briefing rejected and returned to draft", "info");
+    }
+  });
+
+  $("#btnBroadcast").addEventListener("click", () => {
+    const msg = $("#broadcastMsg").value.trim();
+    if (!msg) return toast("Enter a message first.", "error");
+    const tid = ZXStore.state.activeTenantId;
+    const bc = { id: `bc-${Date.now()}`, tenantId: tid, message: msg, timestamp: new Date().toLocaleTimeString(), active: true };
+    ZXStore.set({ broadcasts: [...ZXStore.state.broadcasts.map(b => b.tenantId === tid ? { ...b, active: false } : b), bc] });
+    $("#broadcastMsg").value = "";
+    toast("Broadcast pushed to all edge tablets", "success");
+  });
+
+  $("#btnClearBroadcast").addEventListener("click", () => {
+    const tid = ZXStore.state.activeTenantId;
+    ZXStore.set({ broadcasts: ZXStore.state.broadcasts.map(b => b.tenantId === tid ? { ...b, active: false } : b) });
+    toast("Broadcast cleared", "info");
+  });
+
+  ZXStore.subscribe(renderAll);
+  renderAll();
+})();
+</script>
+</body>
+</html>

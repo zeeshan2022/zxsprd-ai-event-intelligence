@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>ZXSPRD AI — Edge Kiosk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+
+<style>
+  body.kiosk-mode { background: #04070F; overflow: hidden; height: 100dvh; touch-action: manipulation; }
+  .kiosk-shell { display: flex; flex-direction: column; height: 100dvh; max-width: 1200px; margin: 0 auto; padding: 16px; gap: 12px; }
+
+  /* Topbar */
+  .kiosk-topbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
+  .kiosk-brand { display: flex; align-items: center; gap: 12px; }
+  .kiosk-logo { width: 36px; height: 36px; border-radius: 10px; background: var(--inset); border: 1px solid var(--line-soft); overflow: hidden; display: grid; place-items: center; }
+  .kiosk-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .kiosk-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .kiosk-sub { font-size: 10px; color: var(--dim); font-family: var(--font-mono); }
+  .kiosk-meta { display: flex; align-items: center; gap: 16px; }
+  .kiosk-clock { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--muted); }
+  .kiosk-density { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 8px; }
+  .kiosk-density.Low { background: rgba(16,185,129,.12); color: #6EE7B7; }
+  .kiosk-density.Medium { background: rgba(245,158,11,.12); color: #FCD34D; }
+  .kiosk-density.High { background: rgba(239,68,68,.12); color: #FCA5A5; }
+
+  /* Internal Broadcast Banner */
+  .broadcast-banner {
+    background: linear-gradient(90deg, rgba(99,102,241,0.15), rgba(59,130,246,0.1));
+    border: 1px solid rgba(99,102,241,0.4); border-radius: 12px; padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    animation: bannerPulse 2s infinite;
+  }
+  @keyframes bannerPulse { 0%, 100% { border-color: rgba(99,102,241,0.4); } 50% { border-color: rgba(99,102,241,0.8); } }
+  .broadcast-text { font-size: 12.5px; font-weight: 600; color: #A5B4FC; display: flex; align-items: center; gap: 10px; }
+  .broadcast-close { background: none; border: none; color: #A5B4FC; cursor: pointer; padding: 4px; }
+
+  /* Main Content Area */
+  .kiosk-main { flex: 1; display: grid; grid-template-columns: 300px 1fr; gap: 16px; min-height: 0; }
+
+  /* Left Column: Context & Controls */
+  .context-col { display: flex; flex-direction: column; gap: 12px; }
+  .context-card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; flex: 1; display: flex; flex-direction: column; }
+  
+  .speaker-card { background: var(--inset); border: 1px solid var(--line-soft); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+  .speaker-role { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--tenant-accent); margin-bottom: 4px; }
+  .speaker-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .audio-meter { height: 5px; background: var(--panel); border-radius: 3px; overflow: hidden; }
+  .audio-meter-fill { height: 100%; border-radius: 3px; transition: width 0.15s ease-out; background: linear-gradient(90deg, var(--tenant-accent), #60A5FA); }
+  .meter-label { display: flex; justify-content: space-between; font-size: 9px; color: var(--dim); font-family: var(--font-mono); margin-top: 4px; }
+
+  /* Meeting Controls */
+  .meeting-controls { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+  .ctrl-btn { padding: 12px; border-radius: 10px; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; border: none; transition: all 0.2s; }
+  .ctrl-btn svg { width: 16px; height: 16px; }
+  .ctrl-pause { background: var(--amber); color: #000; }
+  .ctrl-stop { background: var(--red); color: #fff; }
+  .ctrl-checkin { background: var(--panel-2); border: 1px solid var(--line); color: var(--text); }
+
+  /* Right Column: Transcript */
+  .transcript-col { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; display: flex; flex-direction: column; min-height: 0; }
+  .transcript-header { padding: 14px 18px; border-bottom: 1px solid var(--line-soft); display: flex; justify-content: space-between; align-items: center; }
+  .transcript-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .live-indicator { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--green); font-family: var(--font-mono); }
+  
+  .transcript-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .transcript-body::-webkit-scrollbar { width: 4px; }
+  .transcript-body::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+
+  .t-msg { background: var(--inset); border: 1px solid var(--line-soft); border-radius: 10px; padding: 10px 14px; animation: fadeIn 0.4s ease-out; }
+  .t-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+  .t-time { font-family: var(--font-mono); font-size: 9px; color: var(--dim); }
+  .t-spk { font-size: 10px; font-weight: 700; color: var(--tenant-accent); }
+  .t-txt { font-size: 12.5px; color: var(--text); line-height: 1.5; }
+
+  /* Idle / Standby State */
+  .idle-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 20px; grid-column: 1 / -1; }
+  .idle-title { font-size: 26px; font-weight: 800; color: var(--text); }
+  .idle-sub { font-size: 13px; color: var(--muted); max-width: 400px; }
+  .idle-actions { display: flex; gap: 16px; margin-top: 16px; }
+  .idle-btn { padding: 18px 28px; border-radius: 14px; font-size: 14px; font-weight: 700; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; border: none; transition: all 0.2s; min-width: 180px; }
+  .idle-btn svg { width: 28px; height: 28px; }
+  .idle-btn:hover { transform: translateY(-3px); }
+  .idle-btn-primary { background: linear-gradient(135deg, var(--tenant-accent), #4F46E5); color: #fff; box-shadow: 0 8px 24px rgba(37,99,235,0.3); }
+  .idle-btn-secondary { background: var(--panel); border: 1px solid var(--line); color: var(--text); }
+
+  /* Concierge FAB */
+  .concierge-fab { position: fixed; bottom: 24px; right: 24px; z-index: 40; }
+  .fab-btn { background: linear-gradient(135deg, var(--tenant-accent), #4F46E5); color: #fff; border: none; border-radius: 18px; padding: 14px 22px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(37,99,235,0.4); cursor: pointer; }
+  .fab-btn svg { width: 18px; height: 18px; }
+
+  /* Modals */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(4,7,15,0.85); backdrop-filter: blur(12px); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  .modal-overlay.active { opacity: 1; pointer-events: auto; }
+  .modal-card { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; width: 90%; max-width: 440px; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 18px; text-align: center; }
+
+  /* Concierge States */
+  .concierge-card { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
+  .state-icon { width: 70px; height: 70px; border-radius: 50%; display: grid; place-items: center; position: relative; }
+  .state-icon svg { width: 32px; height: 32px; }
+  .state-listening .state-icon { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .state-listening .state-icon::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--blue); animation: ripple 1.5s infinite; }
+  .state-transcribing .state-icon { background: rgba(99,102,241,0.15); color: var(--indigo); }
+  .state-processing .state-icon { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .state-responding .state-icon { background: rgba(16,185,129,0.15); color: var(--green); }
+  .state-title { font-size: 16px; font-weight: 700; color: var(--text); }
+  .transcript-bubble { background: var(--inset); border: 1px solid var(--line-soft); border-radius: 14px; padding: 16px; width: 100%; text-align: left; font-size: 13.5px; color: var(--text); line-height: 1.6; min-height: 50px; }
+  .loader { width: 36px; height: 36px; border: 3px solid var(--line); border-top-color: var(--amber); border-radius: 50%; animation: spin 1s linear infinite; }
+  .cursor { display: inline-block; width: 2px; height: 14px; background: var(--blue); margin-left: 2px; vertical-align: middle; animation: blink 1s infinite; }
+
+  @media(max-width: 900px) {
+    .kiosk-main { grid-template-columns: 1fr; }
+    .context-col { flex-direction: row; flex-wrap: wrap; }
+    .idle-actions { flex-direction: column; }
+  }
+</style>
+</head>
+<body class="kiosk-mode">
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.9L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></symbol>
+  <symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5zM15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></symbol>
+  <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14h1v1h-1zM14 20h3v1h-3zM20 20h1v1h-1z"/></symbol>
+</svg>
+
+<div class="kiosk-shell">
+  <!-- Topbar -->
+  <header class="kiosk-topbar">
+    <div class="kiosk-brand">
+      <div class="kiosk-logo"><img id="kioskLogo" src="" alt="Logo" onerror="this.style.display='none'" /></div>
+      <div>
+        <div class="kiosk-title" id="kioskTitle">Edge Intelligence Pod</div>
+        <div class="kiosk-sub" id="kioskSub">POD-01 · DWTC Hall A1</div>
+      </div>
+    </div>
+    <div class="kiosk-meta">
+      <div class="kiosk-density" id="kioskDensity">Low Density</div>
+      <div class="kiosk-clock" id="kioskClock">--:--:--</div>
+    </div>
+  </header>
+
+  <!-- Internal Broadcast Banner -->
+  <div id="broadcastBanner" class="broadcast-banner" hidden>
+    <div class="broadcast-text">
+      <svg class="icon" style="width:16px;height:16px;color:#A5B4FC"><use href="#i-alert"/></svg>
+      <span id="broadcastText">STAFF ALERT</span>
+    </div>
+    <button class="broadcast-close" id="btnCloseBroadcast"><svg class="icon" style="width:14px;height:14px"><use href="#i-x"/></svg></button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="kiosk-main" id="kioskMain"></div>
+</div>
+
+<!-- Concierge FAB -->
+<div class="concierge-fab" id="conciergeFab" hidden>
+  <button class="fab-btn" id="btnConcierge">
+    <svg><use href="#i-sparkles"/></svg> Ask AI Concierge
+  </button>
+</div>
+
+<!-- Guest Check-in Modal -->
+<div class="modal-overlay" id="checkinModal">
+  <div class="modal-card">
+    <div class="modal-title">Guest Check-In</div>
+    <form id="checkinForm" class="form-grid">
+      <div class="form-group full">
+        <button type="button" class="btn btn-ghost btn-block" style="padding: 14px;">
+          <svg class="icon"><use href="#i-qr"/></svg> Scan Badge / QR Code
+        </button>
+      </div>
+      <div class="divider-or">OR ENTER MANUALLY</div>
+      <div class="form-group full">
+        <label class="form-label">Full Name *</label>
+        <input type="text" id="guestName" class="form-input" required placeholder="e.g. Elena Rostova" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="guestEmail" class="form-input" placeholder="optional" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone</label>
+        <input type="tel" id="guestPhone" class="form-input" placeholder="optional" />
+      </div>
+      <div class="form-group full" style="display:flex; gap:10px;">
+        <button type="button" class="btn btn-ghost" id="cancelCheckin" style="flex:1;">Cancel</button>
+        <button type="submit" class="btn btn-blue" style="flex:2;">Confirm Check-In</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Concierge Modal -->
+<div class="modal-overlay" id="conciergeModal">
+  <div class="modal-card">
+    <div class="concierge-card" id="conciergeCard"></div>
+  </div>
+</div>
+
+<script src="mock-data.js"></script>
+<script src="store.js"></script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+  // Clock
+  setInterval(() => { $("#kioskClock").textContent = new Date().toLocaleTimeString('en-US', { hour12: true }); }, 1000);
+
+  // Mock Transcript Lines
+  const mockLines = [
+    { speaker: 'Host', text: "Welcome everyone. Let's explore the enterprise vector streaming pipelines today." },
+    { speaker: 'Guest', text: "Thanks. How do we resolve latency issues across multi-cloud regions?" },
+    { speaker: 'Host', text: "We utilize edge caching and deterministic routing via the OCI VCN tunnel." },
+    { speaker: 'Guest', text: "What about data sovereignty for the European delegates?" },
+    { speaker: 'Host', text: "All EU data is strictly sharded and processed within the Frankfurt sovereign zone." }
+  ];
+  let lineIdx = 0;
+
+  // Render Views
+  function render() {
+    const tenant = ZXStore.tenant();
+    const pod = ZXStore.state.pods.find(p => p.id === ZXStore.state.activePodId) || ZXStore.state.pods[0];
+    if (!tenant || !pod) return;
+
+    // Apply White-labeling & Pod Meta
+    document.documentElement.style.setProperty("--tenant-accent", tenant.primaryColor || "#3B82F6");
+    $("#kioskLogo").src = tenant.logoUrl;
+    $("#kioskTitle").textContent = tenant.headerText || tenant.name;
+    $("#kioskSub").textContent = `${pod.id} · ${pod.location}`;
+
+    // Pod Density
+    const densityEl = $("#kioskDensity");
+    densityEl.className = `kiosk-density ${pod.densityLevel}`;
+    densityEl.textContent = `${pod.densityLevel} · ${pod.currentHeadcount} Guests`;
+
+    // Internal Broadcast
+    const bc = ZXStore.state.broadcasts.internal.find(b => b.tenantId === tenant.id && b.active);
+    if (bc) {
+      $("#broadcastBanner").hidden = false;
+      $("#broadcastText").textContent = `STAFF ALERT: ${bc.message}`;
+    } else {
+      $("#broadcastBanner").hidden = true;
+    }
+
+    const meetingId = pod.currentMeetingId;
+    const meeting = meetingId ? ZXStore.state.meetings.find(m => m.id === meetingId) : null;
+
+    if (meeting && meeting.status !== "Ended") {
+      renderMeetingView(meeting, pod);
+      $("#conciergeFab").hidden = false;
+    } else {
+      renderIdleView();
+      $("#conciergeFab").hidden = true;
+    }
+  }
+
+  function renderIdleView() {
+    $("#kioskMain").innerHTML = `
+      <div class="idle-screen">
+        <svg class="icon" style="width:56px;height:56px;color:var(--tenant-accent);opacity:0.8;"><use href="#i-activity"/></svg>
+        <div class="idle-title">Pod Standby</div>
+        <div class="idle-sub">Touch screen to start an ad-hoc meeting or check in a walk-up guest.</div>
+        <div class="idle-actions">
+          <button class="idle-btn idle-btn-primary" id="btnStartMeeting">
+            <svg><use href="#i-play"/></svg> Start Ad-Hoc Meeting
+          </button>
+          <button class="idle-btn idle-btn-secondary" id="btnOpenCheckin">
+            <svg><use href="#i-users"/></svg> Guest Check-In
+          </button>
+        </div>
+      </div>
+    `;
+
+    $("#btnStartMeeting").addEventListener("click", () => {
+      const hostName = prompt("Enter Host / Pod Manager Name:", "John Doe");
+      if (hostName) {
+        ZXStore.startMeeting(ZXStore.state.activePodId, hostName);
+        render();
+      }
+    });
+
+    $("#btnOpenCheckin").addEventListener("click", () => {
+      $("#checkinModal").classList.add("active");
+    });
+  }
+
+  function renderMeetingView(meeting, pod) {
+    const isPaused = meeting.status === "Paused";
+    
+    $("#kioskMain").innerHTML = `
+      <div class="context-col">
+        <div class="context-card">
+          <div style="font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">Active Meeting</div>
+          <div style="font-size:15px; font-weight:700; color:var(--text); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(meeting.title)}</div>
+          <div style="font-size:10px; color:var(--muted); font-family:var(--font-mono);">Host: ${esc(meeting.hostName)} · Started ${esc(meeting.startTime)}</div>
+          
+          <div style="margin-top:16px;">
+            <div class="speaker-card">
+              <div class="speaker-role">Host (Mic 1)</div>
+              <div class="speaker-name">${esc(meeting.hostName)}</div>
+              <div class="audio-meter"><div class="audio-meter-fill" id="meterHost" style="width: 50%"></div></div>
+              <div class="meter-label"><span>CH 1</span><span id="meterHostVal">50 dB</span></div>
+            </div>
+            <div class="speaker-card" style="margin-bottom:0;">
+              <div class="speaker-role">Guest (Mic 2)</div>
+              <div class="speaker-name">${meeting.guests.length > 0 ? esc(meeting.guests[0].name) : "Waiting for guest..."}</div>
+              <div class="audio-meter"><div class="audio-meter-fill" id="meterGuest" style="width: 30%"></div></div>
+              <div class="meter-label"><span>CH 2</span><span id="meterGuestVal">30 dB</span></div>
+            </div>
+          </div>
+
+          <div class="meeting-controls">
+            <button class="ctrl-btn ctrl-checkin" id="btnCheckin">
+              <svg><use href="#i-users"/></svg> Check-In Guest
+            </button>
+            <button class="ctrl-btn ctrl-pause" id="btnPause">
+              <svg><use href="#${isPaused ? 'play' : 'pause'}"/></svg> ${isPaused ? 'Resume Recording' : 'Pause Recording'}
+            </button>
+            <button class="ctrl-btn ctrl-stop" id="btnEnd">
+              <svg><use href="#i-stop"/></svg> End Meeting & Generate Summary
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="transcript-col">
+        <div class="transcript-header">
+          <div class="transcript-title">
+            <svg class="icon" style="width:14px;height:14px;color:var(--tenant-accent)"><use href="#i-message"/></svg>
+            Real-Time Live Transcript
+          </div>
+          <div class="live-indicator">
+            ${isPaused ? '<span style="color:var(--amber)">PAUSED</span>' : '<span class="live-dot"></span> RECORDING'}
+          </div>
+        </div>
+        <div class="transcript-body" id="transcriptBody"></div>
+      </div>
+    `;
+
+    // Render existing transcript
+    const body = $("#transcriptBody");
+    meeting.rawTranscript.forEach(l => {
+      body.innerHTML += `<div class="t-msg"><div class="t-meta"><span class="t-time">${esc(l.time)}</span><span class="t-spk">${esc(l.speaker)}</span></div><div class="t-txt">${esc(l.text)}</div></div>`;
+    });
+    body.scrollTop = body.scrollHeight;
+
+    // Controls
+    $("#btnCheckin").addEventListener("click", () => $("#checkinModal").classList.add("active"));
+    
+    $("#btnPause").addEventListener("click", () => {
+      const newStatus = meeting.status === "Paused" ? "Recording" : "Paused";
+      ZXStore.set({ meetings: ZXStore.state.meetings.map(m => m.id === meeting.id ? { ...m, status: newStatus } : m) });
+    });
+
+    $("#btnEnd").addEventListener("click", () => {
+      if (confirm("End this meeting and send to Client Admin approval queue?")) {
+        ZXStore.endMeeting(meeting.id);
+        render();
+      }
+    });
+  }
+
+  // Simulate Live Transcript & Meters
+  setInterval(() => {
+    const pod = ZXStore.state.pods.find(p => p.id === ZXStore.state.activePodId);
+    if (!pod || !pod.currentMeetingId) return;
+    
+    const meeting = ZXStore.state.meetings.find(m => m.id === pod.currentMeetingId);
+    if (!meeting || meeting.status !== "Recording") return;
+
+    const line = mockLines[lineIdx % mockLines.length];
+    lineIdx++;
+    const timeStr = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    
+    ZXStore.set({
+      meetings: ZXStore.state.meetings.map(m => m.id === meeting.id ? {
+        ...m,
+        rawTranscript: [...m.rawTranscript, { time: timeStr, speaker: line.speaker === 'Host' ? meeting.hostName : (m.guests[0]?.name || 'Guest'), text: line.text }]
+      } : m)
+    });
+
+    const body = $("#transcriptBody");
+    if (body) {
+      const msgEl = document.createElement('div');
+      msgEl.className = 't-msg';
+      msgEl.innerHTML = `<div class="t-meta"><span class="t-time">[${timeStr}]</span><span class="t-spk">${line.speaker === 'Host' ? esc(meeting.hostName) : esc(meeting.guests[0]?.name || 'Guest')}</span></div><div class="t-txt">"${esc(line.text)}"</div>`;
+      body.appendChild(msgEl);
+      body.scrollTop = body.scrollHeight;
+      while (body.children.length > 30) body.removeChild(body.firstChild);
+    }
+  }, 4500);
+
+  // Audio Meters
+  setInterval(() => {
+    const mH = $("#meterHost");
+    const mG = $("#meterGuest");
+    if (mH) {
+      const g1 = Math.floor(Math.random() * 60) + 20;
+      mH.style.width = g1 + "%";
+      $("#meterHostVal").textContent = g1 + " dB";
+    }
+    if (mG) {
+      const g2 = Math.floor(Math.random() * 60) + 15;
+      mG.style.width = g2 + "%";
+      $("#meterGuestVal").textContent = g2 + " dB";
+    }
+  }, 200);
+
+  // Check-in Form
+  $("#checkinForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const pod = ZXStore.state.pods.find(p => p.id === ZXStore.state.activePodId);
+    if (!pod || !pod.currentMeetingId) {
+      alert("Please start a meeting first to check in a guest.");
+      return;
+    }
+    
+    ZXStore.checkInGuest(pod.currentMeetingId, {
+      name: $("#guestName").value,
+      email: $("#guestEmail").value,
+      phone: $("#guestPhone").value,
+      role: "Guest"
+    });
+    
+    $("#checkinModal").classList.remove("active");
+    e.target.reset();
+    render();
+  });
+
+  $("#cancelCheckin").addEventListener("click", () => $("#checkinModal").classList.remove("active"));
+
+  // Dismiss Internal Broadcast
+  $("#btnCloseBroadcast").addEventListener("click", () => {
+    ZXStore.clearBroadcasts('internal');
+  });
+
+  // --- Voice Concierge (5-State Machine) ---
+  const QUERY = "Where is the VIP networking lounge located?";
+  const RESPONSE = "The VIP Networking Lounge is located on Level 2, directly across from Escalator B.";
+  let cTimers = [];
+
+  function clearCTimers() {
+    cTimers.forEach(t => clearTimeout(t));
+    cTimers = [];
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+
+  $("#btnConcierge").addEventListener("click", () => {
+    clearCTimers();
+    const modal = $("#conciergeModal");
+    const card = $("#conciergeCard");
+    modal.classList.add('active');
+
+    // 1. Listening
+    card.className = 'concierge-card state-listening';
+    card.innerHTML = `<div class="state-icon"><svg><use href="#i-mic"/></svg></div><div class="state-title">Listening...</div>`;
+
+    // 2. Transcribing
+    cTimers.push(setTimeout(() => {
+      card.className = 'concierge-card state-transcribing';
+      card.innerHTML = `<div class="state-icon"><svg><use href="#i-message"/></svg></div><div class="state-title">Transcribing...</div><div class="transcript-bubble" id="typeTarget"><span class="cursor"></span></div>`;
+      let i = 0;
+      const target = $("#typeTarget");
+      const cursor = target.querySelector('.cursor');
+      const tInt = setInterval(() => {
+        if (i < QUERY.length) { target.insertBefore(document.createTextNode(QUERY.charAt(i)), cursor); i++; }
+        else { clearInterval(tInt); cursor.remove(); }
+      }, 40);
+      cTimers.push(tInt);
+    }, 3000));
+
+    // 3. Processing
+    cTimers.push(setTimeout(() => {
+      card.className = 'concierge-card state-processing';
+      card.innerHTML = `<div class="state-icon"><div class="loader"></div></div><div class="state-title">Searching Vector Index...</div>`;
+    }, 6500));
+
+    // 4. Responding
+    cTimers.push(setTimeout(() => {
+      card.className = 'concierge-card state-responding';
+      card.innerHTML = `<div class="state-icon"><svg><use href="#i-volume"/></svg></div><div class="state-title">AI Concierge Response</div><div class="transcript-bubble">"${RESPONSE}"</div><button class="ctrl-btn ctrl-checkin" id="closeConcierge" style="margin-top:10px;">Close</button>`;
+      
+      if ('speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance(RESPONSE);
+        u.rate = 1.0; u.pitch = 1.0;
+        window.speechSynthesis.speak(u);
+      }
+      $("#closeConcierge").addEventListener("click", () => { clearCTimers(); modal.classList.remove('active'); });
+    }, 9000));
+  });
+
+  $("#conciergeModal").addEventListener("click", e => { if (e.target === $("#conciergeModal")) { clearCTimers(); $("#conciergeModal").classList.remove('active'); } });
+
+  // Init
+  ZXStore.subscribe(render);
+  render();
+  window.addEventListener('beforeunload', clearCTimers);
+})();
+</script>
+</body>
+</html>

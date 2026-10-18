@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ZXSPRD AI — Client Admin Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+
+<style>
+  /* Page-specific overrides */
+  .admin-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+  
+  /* Pod Control Grid */
+  .pod-control-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .pod-ctrl-card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 16px; padding: 18px; position: relative;
+    transition: all 0.2s var(--ease);
+  }
+  .pod-ctrl-card:hover { border-color: #334155; transform: translateY(-2px); }
+  .pod-ctrl-card.is-recording { border-color: rgba(239,68,68,.4); box-shadow: 0 0 0 1px rgba(239,68,68,.2); }
+  .pod-ctrl-card.is-recording::before {
+    content: "REC"; position: absolute; top: 12px; right: 12px;
+    font-size: 9px; font-weight: 800; color: #fff; background: var(--red);
+    padding: 2px 6px; border-radius: 4px; animation: softPulse 1.5s infinite;
+  }
+  
+  .pod-ctrl-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .pod-ctrl-id { font-family: var(--font-mono); font-size: 14px; font-weight: 700; }
+  .pod-ctrl-loc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  
+  .pod-ctrl-stats { display: flex; gap: 12px; margin: 12px 0; font-size: 11px; color: var(--dim); }
+  .pod-ctrl-stats span { display: flex; align-items: center; gap: 4px; }
+  
+  .pod-ctrl-actions { display: flex; gap: 8px; margin-top: 14px; border-top: 1px solid var(--line-soft); padding-top: 14px; }
+  .pod-ctrl-actions .btn { flex: 1; justify-content: center; font-size: 11px; padding: 8px; }
+
+  /* Meeting Intelligence List */
+  .meeting-list { display: flex; flex-direction: column; gap: 12px; }
+  .meeting-row {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .meeting-row:hover { border-color: var(--tenant-accent); background: rgba(59,130,246,.03); }
+  .meeting-row.is-pending { border-left: 3px solid var(--amber); }
+  .meeting-row.is-approved { border-left: 3px solid var(--green); }
+  
+  .meeting-info { flex: 1; min-width: 0; }
+  .meeting-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .meeting-meta { font-size: 11px; color: var(--dim); font-family: var(--font-mono); display: flex; gap: 12px; flex-wrap: wrap; }
+  
+  .meeting-status { text-align: right; flex-shrink: 0; }
+  .meeting-status .badge { display: block; margin-bottom: 4px; }
+
+  /* Detail Modal Split View */
+  .detail-split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+  @media(max-width: 900px) { .detail-split { grid-template-columns: 1fr; } }
+  
+  .transcript-pane {
+    background: var(--inset); border: 1px solid var(--line-soft);
+    border-radius: 12px; padding: 16px; max-height: 400px; overflow-y: auto;
+    font-size: 12px; line-height: 1.6;
+  }
+  .transcript-line { margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line-soft); }
+  .transcript-line:last-child { border-bottom: none; }
+  .transcript-speaker { font-weight: 700; color: var(--tenant-accent); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .transcript-time { font-family: var(--font-mono); font-size: 10px; color: var(--dim); float: right; }
+  .transcript-text { color: var(--text); margin-top: 4px; }
+
+  .summary-pane { display: flex; flex-direction: column; gap: 16px; }
+  .summary-edit {
+    width: 100%; min-height: 150px; background: var(--inset);
+    border: 1px solid var(--line); border-radius: 10px; padding: 14px;
+    font-size: 13px; line-height: 1.6; color: var(--text); resize: vertical;
+  }
+  .summary-edit:focus { outline: none; border-color: var(--tenant-accent); }
+
+  .guest-list-mini { display: flex; flex-direction: column; gap: 6px; max-height: 120px; overflow-y: auto; }
+  .guest-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--panel); border: 1px solid var(--line-soft);
+    border-radius: 8px; padding: 6px 10px; font-size: 11px;
+  }
+  .guest-chip .avatar { width: 20px; height: 20px; font-size: 8px; }
+
+  /* Dual Broadcast */
+  .broadcast-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media(max-width: 768px) { .broadcast-grid { grid-template-columns: 1fr; } }
+  .broadcast-box {
+    background: var(--inset); border: 1px solid var(--line-soft);
+    border-radius: 14px; padding: 20px;
+  }
+  .broadcast-box h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .broadcast-box .hint { font-size: 10.5px; color: var(--dim); margin-bottom: 14px; }
+  .broadcast-box.internal { border-top: 2px solid var(--indigo); }
+  .broadcast-box.public { border-top: 2px solid var(--amber); }
+</style>
+</head>
+<body>
+
+<!-- SVG Sprite (Abbreviated for brevity, assumes standard set) -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></symbol>
+  <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-smartphone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m10.3 3.9-8.5 14.2A2 2 0 0 0 3.5 21h17a2 2 0 0 0 1.7-2.9L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+</svg>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark"><svg class="icon"><use href="#i-activity"/></svg></div>
+    <div>
+      <div class="brand-name">ZXSPRD<span style="color:#60A5FA"> AI</span></div>
+      <div class="brand-sub" id="clientHeaderText">Client Admin Console</div>
+    </div>
+  </div>
+  <nav class="role-switch">
+    <a href="super-admin.html" class="role-btn" aria-pressed="false"><svg class="icon"><use href="#i-shield"/></svg> Super Admin</a>
+    <a href="client-admin.html" class="role-btn" aria-pressed="true"><svg class="icon"><use href="#i-building"/></svg> Client Admin</a>
+    <a href="edge-kiosk.html" class="role-btn" aria-pressed="false"><svg class="icon"><use href="#i-tablet"/></svg> Edge Kiosk</a>
+    <a href="public-display.html" class="role-btn" aria-pressed="false"><svg class="icon"><use href="#i-tv"/></svg> Public Display</a>
+    <a href="guest-portal.html" class="role-btn" aria-pressed="false"><svg class="icon"><use href="#i-smartphone"/></svg> Guest Portal</a>
+  </nav>
+  <div class="tenant-picker">
+    <label for="tenantSelect">Tenant</label>
+    <select id="tenantSelect" class="control"></select>
+  </div>
+</header>
+
+<div id="impersonationBanner" class="impersonation" hidden>
+  <div class="left">
+    <svg class="icon"><use href="#i-alert"/></svg>
+    <span>Impersonating <strong id="impersonationName"></strong></span>
+  </div>
+  <a href="super-admin.html" class="link-btn">Return to Super Admin →</a>
+</div>
+
+<main>
+  <div class="admin-grid">
+
+    <!-- Stats & Export -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div class="stat-grid" style="flex: 1; min-width: 300px;">
+        <div class="stat-card">
+          <div class="stat-label">Total Meetings</div>
+          <div class="stat-value" id="statTotal">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending Approval</div>
+          <div class="stat-value" style="color:var(--amber)" id="statPending">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Published</div>
+          <div class="stat-value" style="color:var(--green)" id="statApproved">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Pods</div>
+          <div class="stat-value" style="color:var(--tenant-accent)" id="statPods">0</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost" id="btnExport">
+        <svg class="icon"><use href="#i-download"/></svg> Export Event Report (PDF)
+      </button>
+    </div>
+
+    <!-- 1. POD CONTROL CENTER -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title"><svg class="icon"><use href="#i-tablet"/></svg> Pod Control & Hardware Lifecycle</div>
+          <div class="panel-subtitle">Manage physical edge devices, enforce quotas, and monitor live recording status.</div>
+        </div>
+        <button class="btn btn-blue" id="btnAddPod">
+          <svg class="icon"><use href="#i-plus"/></svg> Provision New Pod
+        </button>
+      </div>
+      
+      <div id="quotaBanner" class="quota-banner" hidden>
+        <div><strong>Quota Limit Reached:</strong> Upgrade tier in Super Admin to provision more hardware.</div>
+      </div>
+
+      <div class="pod-control-grid" id="podGrid"></div>
+    </section>
+
+    <!-- 2. MEETING INTELLIGENCE (HITL) -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title"><svg class="icon"><use href="#i-eye"/></svg> Meeting Intelligence & Raw Data</div>
+          <div class="panel-subtitle">Review raw transcripts, edit AI summaries, and approve for distribution.</div>
+        </div>
+        <div class="tabs" style="width: auto;">
+          <button class="tab active" data-filter="pending">Pending Approval</button>
+          <button class="tab" data-filter="approved">Published</button>
+          <button class="tab" data-filter="all">Archive</button>
+        </div>
+      </div>
+      <div class="meeting-list" id="meetingList"></div>
+    </section>
+
+    <!-- 3. DUAL BROADCAST ENGINE -->
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title"><svg class="icon"><use href="#i-send"/></svg> Dual Announcement Engine</div>
+          <div class="panel-subtitle">Push distinct alerts to Staff/Pods (Internal) or Guests/Signage (Public).</div>
+        </div>
+      </div>
+      
+      <div class="broadcast-grid">
+        <!-- Internal -->
+        <div class="broadcast-box internal">
+          <h4><svg class="icon" style="color:var(--indigo)"><use href="#i-shield"/></svg> Internal Staff Alert</h4>
+          <div class="hint">Visible only on Edge Kiosk tablets and Admin consoles.</div>
+          <textarea id="msgInternal" class="form-textarea" placeholder="e.g. Tech check required for Pod 03 in 10 mins."></textarea>
+          <button class="btn btn-indigo btn-block" style="margin-top:12px;" data-broadcast="internal">
+            <svg class="icon"><use href="#i-send"/></svg> Push to Staff
+          </button>
+        </div>
+
+        <!-- Public -->
+        <div class="broadcast-box public">
+          <h4><svg class="icon" style="color:var(--amber)"><use href="#i-alert"/></svg> Public Guest Announcement</h4>
+          <div class="hint">Visible on Public Display screens and Guest Portal.</div>
+          <textarea id="msgPublic" class="form-textarea" placeholder="e.g. Keynote in Hall A1 starts in 15 minutes."></textarea>
+          <button class="btn btn-amber btn-block" style="margin-top:12px;" data-broadcast="public">
+            <svg class="icon"><use href="#i-send"/></svg> Push to Guests
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- Add Pod Modal -->
+<div class="modal-overlay" id="addPodModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">Provision New Edge Pod</div>
+      <button class="close-btn" onclick="document.getElementById('addPodModal').classList.remove('active')"><svg class="icon"><use href="#i-x"/></svg></button>
+    </div>
+    <form id="addPodForm" class="form-grid">
+      <div class="form-group full">
+        <label class="form-label">Location Name</label>
+        <input type="text" id="podLoc" class="form-input" placeholder="e.g. Hall A1 - VIP Zone" required />
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Hardware MAC Address</label>
+        <input type="text" id="podMac" class="form-input mono" placeholder="AC:DE:48:00:XX:XX" required />
+      </div>
+      <button type="submit" class="btn btn-blue btn-block">Register Hardware</button>
+    </form>
+  </div>
+</div>
+
+<!-- Meeting Detail Modal -->
+<div class="modal-overlay" id="meetingModal">
+  <div class="modal-card" style="max-width: 900px;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalMeetingTitle">Meeting Details</div>
+        <div class="mono dim" style="font-size:11px; margin-top:4px;" id="modalMeetingMeta"></div>
+      </div>
+      <button class="close-btn" onclick="document.getElementById('meetingModal').classList.remove('active')"><svg class="icon"><use href="#i-x"/></svg></button>
+    </div>
+
+    <div class="detail-split">
+      <!-- Left: Raw Transcript -->
+      <div>
+        <div class="pane-title" style="margin-bottom:10px;"><svg class="icon"><use href="#i-eye"/></svg> Raw Transcript Data</div>
+        <div class="transcript-pane" id="modalTranscript"></div>
+      </div>
+
+      <!-- Right: Summary & Actions -->
+      <div class="summary-pane">
+        <div>
+          <div class="pane-title" style="margin-bottom:10px;"><svg class="icon"><use href="#i-check"/></svg> AI Summary (Editable)</div>
+          <textarea class="summary-edit" id="modalSummary"></textarea>
+        </div>
+
+        <div>
+          <div class="pane-title" style="margin-bottom:10px;">Checked-In Guests</div>
+          <div class="guest-list-mini" id="modalGuests"></div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:auto; padding-top:20px; border-top: 1px solid var(--line-soft);">
+          <button class="btn btn-red" id="btnDeleteMeeting" style="flex:1;">
+            <svg class="icon"><use href="#i-trash"/></svg> Delete Record
+          </button>
+          <button class="btn btn-ghost" id="btnReject" style="flex:1;">Reject</button>
+          <button class="btn btn-green" id="btnApprove" style="flex:1.5;">
+            <svg class="icon"><use href="#i-check"/></svg> Approve & Publish
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg class="icon"><use id="toastIcon" href="#i-check"/></svg>
+  <span id="toastText"></span>
+</div>
+
+<script src="mock-data.js"></script>
+<script src="store.js"></script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+  let currentFilter = 'pending';
+  let currentMeetingId = null;
+
+  let toastTimer;
+  function toast(msg, kind = "success") {
+    $("#toastText").textContent = msg;
+    $("#toastIcon").setAttribute("href", kind === "error" ? "#i-alert" : "#i-check");
+    $("#toast").className = `toast show ${kind}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 3000);
+  }
+
+  // --- Renderers ---
+  function renderBranding() {
+    const t = ZXStore.tenant();
+    if(!t) return;
+    document.documentElement.style.setProperty("--tenant-accent", t.primaryColor || "#3B82F6");
+    $("#clientHeaderText").textContent = t.headerText || "Client Admin Console";
+    $("#impersonationName").textContent = t.name;
+    $("#impersonationBanner").hidden = false;
+    
+    const sel = $("#tenantSelect");
+    sel.innerHTML = ZXStore.state.tenants.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join("");
+    sel.value = t.id;
+  }
+
+  function renderStats() {
+    const ms = ZXStore.meetings();
+    const pods = ZXStore.pods();
+    $("#statTotal").textContent = ms.length;
+    $("#statPending").textContent = ms.filter(m => m.hitlStatus === "PendingApproval").length;
+    $("#statApproved").textContent = ms.filter(m => m.hitlStatus === "Approved").length;
+    $("#statPods").textContent = pods.filter(p => p.currentMeetingId).length;
+  }
+
+  function renderPods() {
+    const tenant = ZXStore.tenant();
+    const pods = ZXStore.pods();
+    const grid = $("#podGrid");
+    const quotaFull = tenant.assignedPods >= tenant.maxPods;
+    
+    $("#quotaBanner").hidden = !quotaFull;
+    $("#btnAddPod").disabled = quotaFull;
+
+    grid.innerHTML = pods.map(p => {
+      const isRec = !!p.currentMeetingId;
+      const meeting = isRec ? ZXStore.state.meetings.find(m => m.id === p.currentMeetingId) : null;
+      
+      return `
+        <div class="pod-ctrl-card ${isRec ? 'is-recording' : ''}">
+          <div class="pod-ctrl-head">
+            <div>
+              <div class="pod-ctrl-id">${esc(p.id)}</div>
+              <div class="pod-ctrl-loc">${esc(p.location)}</div>
+            </div>
+            <span class="badge badge-${p.status === 'Online' ? 'green' : 'amber'}">${esc(p.status)}</span>
+          </div>
+          
+          <div class="pod-ctrl-stats">
+            <span><span class="status-dot ${p.densityLevel === 'High' ? 'degraded' : 'online'}"></span> ${esc(p.densityLevel)} Density</span>
+            <span>·</span>
+            <span>${p.currentHeadcount} Guests</span>
+          </div>
+
+          ${isRec ? `<div style="font-size:11px; color:var(--red); font-weight:600; margin-top:8px;">Recording: ${esc(meeting.title)}</div>` : ''}
+
+          <div class="pod-ctrl-actions">
+            <a href="edge-kiosk.html?pod=${p.id}" class="btn btn-ghost">
+              <svg class="icon"><use href="#i-eye"/></svg> View Kiosk
+            </a>
+            ${isRec ? `<button class="btn btn-red" data-force-stop="${p.id}"><svg class="icon"><use href="#i-stop"/></svg> Force Stop</button>` : ''}
+            <button class="btn btn-ghost" data-del-pod="${p.id}" style="color:var(--dim);">
+              <svg class="icon"><use href="#i-trash"/></svg>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderMeetings() {
+    const list = $("#meetingList");
+    let ms = ZXStore.meetings();
+    
+    if (currentFilter === 'pending') ms = ms.filter(m => m.hitlStatus === 'PendingApproval');
+    else if (currentFilter === 'approved') ms = ms.filter(m => m.hitlStatus === 'Approved');
+
+    if (ms.length === 0) {
+      list.innerHTML = `<div class="empty-state">No meetings found in this category.</div>`;
+      return;
+    }
+
+    list.innerHTML = ms.map(m => `
+      <div class="meeting-row ${m.hitlStatus === 'PendingApproval' ? 'is-pending' : ''} ${m.hitlStatus === 'Approved' ? 'is-approved' : ''}" data-meeting-id="${m.id}">
+        <div class="meeting-info">
+          <div class="meeting-title">${esc(m.title)}</div>
+          <div class="meeting-meta">
+            <span>${esc(m.podId)}</span>
+            <span>Host: ${esc(m.hostName)}</span>
+            <span>${esc(m.startTime)} - ${esc(m.endTime || 'Live')}</span>
+          </div>
+        </div>
+        <div class="meeting-status">
+          <span class="badge badge-${m.hitlStatus === 'Approved' ? 'green' : m.hitlStatus === 'PendingApproval' ? 'amber' : 'slate'}">
+            ${esc(m.hitlStatus)}
+          </span>
+          <span class="badge badge-slate">${m.rawTranscript.length} Lines</span>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  // --- Events ---
+  $("#tenantSelect").addEventListener("change", e => { ZXStore.setTenant(e.target.value); renderAll(); });
+
+  // Tabs
+  $$(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      $$(".tab").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      currentFilter = tab.dataset.filter;
+      renderMeetings();
+    });
+  });
+
+  // Pod Actions
+  $("#podGrid").addEventListener("click", e => {
+    const stopBtn = e.target.closest("[data-force-stop]");
+    if (stopBtn) {
+      const podId = stopBtn.dataset.forceStop;
+      const pod = ZXStore.state.pods.find(p => p.id === podId);
+      if (pod.currentMeetingId) {
+        ZXStore.endMeeting(pod.currentMeetingId);
+        toast("Recording force-stopped. Sent to approval queue.", "info");
+      }
+      return;
+    }
+
+    const delBtn = e.target.closest("[data-del-pod]");
+    if (delBtn) {
+      if (confirm("Delete this pod hardware?")) {
+        ZXStore.deletePod(delBtn.dataset.delPod);
+        toast("Pod de-provisioned.", "info");
+      }
+    }
+  });
+
+  // Add Pod
+  $("#btnAddPod").addEventListener("click", () => $("#addPodModal").classList.add("active"));
+  $("#addPodForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const success = ZXStore.addPod({
+      tenantId: ZXStore.state.activeTenantId,
+      location: $("#podLoc").value,
+      macAddress: $("#podMac").value
+    });
+    if (success) {
+      $("#addPodModal").classList.remove("active");
+      e.target.reset();
+      toast("Pod provisioned successfully", "success");
+    } else {
+      toast("Quota exceeded.", "error");
+    }
+  });
+
+  // Meeting Detail
+  $("#meetingList").addEventListener("click", e => {
+    const row = e.target.closest("[data-meeting-id]");
+    if (!row) return;
+    const id = row.dataset.meetingId;
+    const m = ZXStore.state.meetings.find(x => x.id === id);
+    if (!m) return;
+
+    currentMeetingId = id;
+    $("#modalMeetingTitle").textContent = m.title;
+    $("#modalMeetingMeta").textContent = `${m.podId} · ${m.startTime} · Host: ${m.hostName}`;
+    
+    // Transcript
+    $("#modalTranscript").innerHTML = m.rawTranscript.map(l => `
+      <div class="transcript-line">
+        <span class="transcript-time">${esc(l.time)}</span>
+        <div class="transcript-speaker">${esc(l.speaker)}</div>
+        <div class="transcript-text">${esc(l.text)}</div>
+      </div>
+    `).join("");
+
+    // Summary
+    $("#modalSummary").value = m.aiSummary;
+
+    // Guests
+    $("#modalGuests").innerHTML = m.guests.length ? m.guests.map(g => `
+      <div class="guest-chip">
+        <div class="avatar">${esc(g.name.charAt(0))}</div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-weight:600;">${esc(g.name)}</div>
+          <div style="font-size:9px; color:var(--dim);">${esc(g.email || 'No email')}</div>
+        </div>
+      </div>
+    `).join("") : `<div class="dim" style="font-size:11px;">No guests checked in.</div>`;
+
+    // Buttons state
+    $("#btnApprove").disabled = m.hitlStatus === 'Approved';
+    $("#btnReject").disabled = m.hitlStatus === 'Rejected';
+
+    $("#meetingModal").classList.add("active");
+  });
+
+  // Approval Actions
+  $("#btnApprove").addEventListener("click", () => {
+    const edited = $("#modalSummary").value;
+    ZXStore.approveSummary(currentMeetingId, edited);
+    $("#meetingModal").classList.remove("active");
+    toast("Summary approved & dispatched to Guest Portal/Signage.", "success");
+  });
+
+  $("#btnReject").addEventListener("click", () => {
+    ZXStore.rejectSummary(currentMeetingId);
+    $("#meetingModal").classList.remove("active");
+    toast("Summary rejected.", "info");
+  });
+
+  $("#btnDeleteMeeting").addEventListener("click", () => {
+    if (confirm("Permanently delete this meeting record and raw data?")) {
+      ZXStore.deleteMeeting(currentMeetingId);
+      $("#meetingModal").classList.remove("active");
+      toast("Record deleted.", "error");
+    }
+  });
+
+  // Broadcasts
+  $$("[data-broadcast]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const type = btn.dataset.broadcast;
+      const msg = $(`#msg${type.charAt(0).toUpperCase() + type.slice(1)}`).value;
+      if (!msg.trim()) return toast("Enter a message first.", "error");
+      
+      if (type === 'internal') ZXStore.sendInternalBroadcast(msg);
+      else ZXStore.sendPublicBroadcast(msg);
+      
+      $(`#msg${type.charAt(0).toUpperCase() + type.slice(1)}`).value = "";
+      toast(`Broadcast sent to ${type} channels.`, "success");
+    });
+  });
+
+  // Export Mock
+  $("#btnExport").addEventListener("click", () => {
+    toast("Generating PDF Report... (Mocked)", "info");
+  });
+
+  function renderAll() {
+    renderBranding();
+    renderStats();
+    renderPods();
+    renderMeetings();
+  }
+
+  ZXStore.subscribe(renderAll);
+  renderAll();
+})();
+</script>
+</body>
+</html>
