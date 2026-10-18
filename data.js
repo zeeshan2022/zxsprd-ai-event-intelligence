@@ -32,8 +32,34 @@ const ZX_I18N = {
 };
 
 /* ---------------- SEED STATE ---------------- */
+/* ---------------- DEMO PASSWORD (date-derived, e.g. Oct18 -> PDt19) ----------------
+ * Rule from the demo spec: token MMMDD (e.g. "Oct18"):
+ *   O + 1 = P  (Caps)      c + 1 = D  (Caps)      t + t = t  (small — last month letter keeps its case)
+ *   day number + 1         (1 -> 2, 10 -> 11, 30 -> 31, 31 -> 32)
+ * Generalized: first two letters shift +1 and render UPPERCASE; third letter shifts +1
+ * keeping its original case; day increments by one.
+ */
+function zxDemoPassword(d = new Date()) {
+  const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const mmdd = MON[d.getMonth()] + String(d.getDate()).padStart(2, "0"); // e.g. "Oct18"
+  const letters = mmdd.match(/[A-Za-z]/g) || [];
+  const digits = mmdd.replace(/\D/g, "");
+  const shift = (ch) => {
+    const code = ch.toLowerCase().charCodeAt(0);
+    return String.fromCharCode(((code - 97 + 1) % 26) + 97); // a->b ... z->a
+  };
+  const out = letters.map((ch, i) => {
+    const s = shift(ch);
+    if (i < 2) return s.toUpperCase();                       // O->P Caps, c->D Caps
+    return ch === ch.toUpperCase() ? s.toUpperCase() : s.toLowerCase(); // t->t small
+  }).join("");
+  const dayNext = parseInt(digits, 10) + 1;                  // 18 -> 19, 31 -> 32
+  return out + String(dayNext);                              // Oct18 -> PDt19
+}
+window.zxDemoPassword = zxDemoPassword;
+
 const ZXSeed = {
-  version: 7, // Final Demo schema — forces localStorage reset
+  version: 8, // Final Demo schema v8 — Arabic demo data, venue map, crowd history, temp sessions
   activeRole: "SUPER_ADMIN",
   activeTenantId: "tenant-wps-2026",
   activePodId: "POD-01",
@@ -49,7 +75,10 @@ const ZXSeed = {
     registrationsOpen: true,
     hitlRequired: true,           // force human approval before publishing summaries
     autoPurgeDays: 30,
-    maxTenants: 50
+    maxTenants: 50,
+    crowdAutoSimulate: true,      // client admin toggle — auto movement simulation on crowd map
+    publicDisplayCrowdCard: true, // super admin controls whether Crowd card shows on Public Display
+    demoPasswordHint: true        // show the date-derived password hint on the launcher gate
   },
 
   featureFlags: {
@@ -96,6 +125,11 @@ const ZXSeed = {
   ttsCatalog: ["ElevenLabs Neural v2", "Azure Neural TTS", "Amazon Polly Standard", "Google Cloud TTS Chirp3"],
 
   /* ===== CLIENT ADMIN SCOPE (Event Organizer) ===== */
+  tenantSettings: {
+    "tenant-wps-2026": { crowdAutoSimulate: true, publicDisplayCrowdCard: true },
+    "tenant-tech-expo": { crowdAutoSimulate: false, publicDisplayCrowdCard: true }
+  },
+
   pods: [
     { id: "POD-01", tenantId: "tenant-wps-2026", macAddress: "AC:DE:48:00:11:22", location: "DWTC Hall A1 — Zone 1", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 15, status: "Online", currentMeetingId: null, densityLevel: "High", currentHeadcount: 145, mic1Role: "Host (Speaker 1)", mic2Role: "Guest (Speaker 2)", mic1Gain: 65, mic2Gain: 42 },
     { id: "POD-02", tenantId: "tenant-wps-2026", macAddress: "AC:DE:48:00:11:23", location: "DWTC Hall A1 — Zone 2", llmOverride: "OpenAI GPT-4o", ttsOverride: null, standbyTimeoutMins: 5, status: "Online", currentMeetingId: null, densityLevel: "Medium", currentHeadcount: 82, mic1Role: "Host (Speaker 1)", mic2Role: "Audience Q&A", mic1Gain: 70, mic2Gain: 12 },
@@ -104,37 +138,37 @@ const ZXSeed = {
   ],
 
   schedule: [
-    { id: "sch-1", tenantId: "tenant-wps-2026", podId: "POD-01", title: "AI Governance in Sovereign Law Enforcement", startTime: "10:00 AM", endTime: "10:45 AM", speakerHost: "Dr. Aris Thorne", speakerGuest: "Elena Rostova", status: "Scheduled" },
-    { id: "sch-2", tenantId: "tenant-wps-2026", podId: "POD-02", title: "Edge Inference for Real-Time Border Analytics", startTime: "11:00 AM", endTime: "11:45 AM", speakerHost: "Col. Majid Al Suwaidi", speakerGuest: "Dr. Lena Fischer", status: "Scheduled" },
-    { id: "sch-3", tenantId: "tenant-wps-2026", podId: "POD-03", title: "Closed-Door Keynote: National AI Safety", startTime: "09:00 AM", endTime: "09:40 AM", speakerHost: "H.E. Saif Al Mansouri", speakerGuest: "Dr. Aris Thorne", status: "Completed" },
-    { id: "sch-4", tenantId: "tenant-tech-expo", podId: "POD-04", title: "Keynote: The Agentic Enterprise", startTime: "02:00 PM", endTime: "02:45 PM", speakerHost: "Priya Nair", speakerGuest: "Tom Becker", status: "Scheduled" }
+    { id: "sch-1", tenantId: "tenant-wps-2026", podId: "POD-01", title: "حوكمة الذكاء الاصطناعي في إنفاذ القانون السيادي", startTime: "10:00 AM", endTime: "10:45 AM", speakerHost: "عبدالله المطيري", speakerGuest: "فاطمة الظاهري", status: "Scheduled" },
+    { id: "sch-2", tenantId: "tenant-wps-2026", podId: "POD-02", title: "الاستدلال على الحافة لتحليلات الحدود الفورية", startTime: "11:00 AM", endTime: "11:45 AM", speakerHost: "العقيد ماجد السويدي", speakerGuest: "نورة القحطاني", status: "Scheduled" },
+    { id: "sch-3", tenantId: "tenant-wps-2026", podId: "POD-03", title: "كلمة افتتاحية مغلقة: سلامة الذكاء الاصطناعي الوطنية", startTime: "09:00 AM", endTime: "09:40 AM", speakerHost: "معالي سيف المنصوري", speakerGuest: "خالد الشامسي", status: "Completed" },
+    { id: "sch-4", tenantId: "tenant-tech-expo", podId: "POD-04", title: "الكلمة الرئيسية: المؤسسة الوكيلة", startTime: "02:00 PM", endTime: "02:45 PM", speakerHost: "مريم الكتبي", speakerGuest: "سلطان الدوسري", status: "Scheduled" }
   ],
 
   meetings: [
     {
       id: "mtg-101", tenantId: "tenant-wps-2026", podId: "POD-03",
-      title: "Closed-Door Keynote: National AI Safety", startTime: "09:00 AM", endTime: "09:40 AM",
-      hostName: "H.E. Saif Al Mansouri", status: "Ended", hitlStatus: "PendingApproval",
-      guests: [{ id: "g1", badgeId: "BDG-9941", name: "Elena Rostova", email: "elena@cybersec.gov", phone: "+971500000000", role: "VIP", checkedInAt: "08:55 AM" }],
+      title: "كلمة افتتاحية مغلقة: سلامة الذكاء الاصطناعي الوطنية", startTime: "09:00 AM", endTime: "09:40 AM",
+      hostName: "معالي سيف المنصوري", status: "Ended", hitlStatus: "PendingApproval",
+      guests: [{ id: "g1", badgeId: "BDG-9941", name: "فاطمة الظاهري", email: "fatima@zxsprd.ae", phone: "+971500000000", role: "VIP", checkedInAt: "08:55 AM" }],
       rawTranscript: [
-        { time: "09:00:12", speaker: "H.E. Saif Al Mansouri", text: "Welcome everyone. Today we are presenting the sovereign data cloud compliance matrix." },
-        { time: "09:02:45", speaker: "Dr. Aris Thorne", text: "How does the 30-day automated data purge verify compliance with national regulations?" },
-        { time: "09:05:10", speaker: "H.E. Saif Al Mansouri", text: "The system utilizes cryptographic shredding. Once the window closes, keys are destroyed." }
+        { time: "09:00:12", speaker: "معالي سيف المنصوري", text: "أهلاً بالجميع. نستعرض اليوم مصفوفة الامتثال للسحابة السيادية للبيانات." },
+        { time: "09:02:45", speaker: "خالد الشامسي", text: "كيف يتحقق التدمير الآلي للبيانات خلال ثلاثين يوماً من الامتثال للأنظمة الوطنية؟" },
+        { time: "09:05:10", speaker: "معالي سيف المنصوري", text: "يعتمد النظام على التقطيع التشفيري؛ بمجرد إغلاق النافذة تُتلف المفاتيح نهائياً." }
       ],
-      aiSummary: "The session covered sovereign data cloud compliance, focusing on the 30-day automated data purge mechanism using cryptographic shredding to ensure national regulatory compliance.",
-      sentimentScore: 85, actionItems: ["Review cryptographic shredding docs.", "Verify purge logs."]
+      aiSummary: "تناولت الجلسة امتثال السحابة السيادية للبيانات مع التركيز على آلية التدمير الآلي للبيانات خلال ثلاثين يوماً باستخدام التقطيع التشفيري لضمان الامتثال للأنظمة الوطنية.",
+      sentimentScore: 85, actionItems: ["مراجعة وثائق التقطيع التشفيري.", "التحقق من سجلات الإتلاف."]
     },
     {
       id: "mtg-102", tenantId: "tenant-wps-2026", podId: "POD-01",
-      title: "Ad-Hoc: Cross-Border Cyber Taskforce", startTime: "08:15 AM", endTime: "08:50 AM",
-      hostName: "Col. Majid Al Suwaidi", status: "Ended", hitlStatus: "Approved",
+      title: "جلسة طارئة: فريق مكافحة الجرائم السيبرانية العابرة للحدود", startTime: "08:15 AM", endTime: "08:50 AM",
+      hostName: "العقيد ماجد السويدي", status: "Ended", hitlStatus: "Approved",
       guests: [],
       rawTranscript: [
-        { time: "08:15:40", speaker: "Col. Majid Al Suwaidi", text: "We need a joint incident-response playbook for port infrastructure attacks." },
-        { time: "08:22:03", speaker: "Guest (Speaker 2)", text: "Agreed. Let us pilot real-time signal sharing between the Dubai and Abu Dhabi NOCs." }
+        { time: "08:15:40", speaker: "العقيد ماجد السويدي", text: "نحتاج دليل استجابة مشترك للحوادث يستهدف البنية التحتية للموانئ." },
+        { time: "08:22:03", speaker: "نورة القحطاني", text: "متفقون. لنبدأ تجريب مشاركة الإشارات الفورية بين مراكز العمليات في دبي وأبوظبي." }
       ],
-      aiSummary: "Participants agreed to draft a joint incident-response playbook for port infrastructure and pilot real-time signal sharing between Dubai and Abu Dhabi NOCs.",
-      sentimentScore: 72, actionItems: ["Draft joint playbook.", "Schedule NOC integration pilot."]
+      aiSummary: "اتفق المشاركون على صياغة دليل مشترك للاستجابة لحوادث البنية التحتية للموانئ، وعلى بدء تجربة مشاركة الإشارات الفورية بين مركزي عمليات دبي وأبوظبي.",
+      sentimentScore: 72, actionItems: ["إعداد الدليل المشترك.", "جدولة تكامل مراكز العمليات."]
     }
   ],
 
@@ -144,26 +178,47 @@ const ZXSeed = {
       { zone: "Hall A1 - Main Stage", density: 92, status: "Critical" },
       { zone: "Hall B2 - VIP Lounge", density: 65, status: "Moderate" },
       { zone: "Expo Hall 3 - Startup", density: 40, status: "Comfortable" }
-    ]
+    ],
+    occupancyHistory: (function () { const a = []; let v = 2100; for (let i = 0; i < 24; i++) { v = Math.max(800, Math.min(4800, v + Math.round(Math.sin(i / 3.2) * 220 + (i % 5) * 30))); a.push(v); } return a; })(),
+    ingressHistory: (function () { const a = []; for (let i = 0; i < 24; i++) a.push(180 + Math.round(Math.abs(Math.sin(i / 2.4)) * 320)); return a; })(),
+    // 2D venue map — normalized coordinates (0..1). Zones host the hot-zones & pods.
+    venueMap: {
+      name: "DWTC — Dubai World Trade Centre",
+      zones: [
+        { id: "z-hall-a1", label: "قاعة A1 — المسرح الرئيسي", x: 0.05, y: 0.07, w: 0.4, h: 0.4, capacity: 1800 },
+        { id: "z-hall-a2", label: "قاعة A2 — الورش", x: 0.05, y: 0.55, w: 0.28, h: 0.36, capacity: 900 },
+        { id: "z-hall-b2", label: "قاعة B2 — كبار الشخصيات", x: 0.55, y: 0.55, w: 0.2, h: 0.36, capacity: 500 },
+        { id: "z-expo-3", label: "قاعة Expo 3 — الشركات الناشئة", x: 0.55, y: 0.07, w: 0.4, h: 0.4, capacity: 1200 },
+        { id: "z-concourse", label: "البهو والمقصف", x: 0.36, y: 0.5, w: 0.16, h: 0.12, capacity: 600 },
+        { id: "z-entrance", label: "البوابة الرئيسية والتسجيل", x: 0.81, y: 0.55, w: 0.14, h: 0.36, capacity: 400 }
+      ]
+    },
+    agents: [] // simulated people-flow dots (auto-generated at runtime)
   },
 
   sponsors: [
-    { id: "sp-1", name: "Oracle Cloud Infrastructure", logoUrl: "", message: "Visit Booth 42 for a live demo of sovereign edge nodes." },
-    { id: "sp-2", name: "Deepgram AI", logoUrl: "", message: "Powering real-time neural transcription across all pods." }
+    { id: "sp-1", name: "البنك الأهلي", logoUrl: "", message: "زوروا الجناح ٤٢ لتجربة الحلول المصرفية المدعومة بالذكاء الاصطناعي." },
+    { id: "sp-2", name: "اتصالات", logoUrl: "", message: "شبكة الجيل الخامس الحصرية للفعالية تغطي جميع القاعات." },
+    { id: "sp-3", name: "مجموعة الإمارات الجوية", logoUrl: "", message: "سافر معنا — خصومات خاصة لجميع المشاركين في القمة." }
   ],
 
   broadcasts: { internalPod: [], allScreens: [], guestPortal: [], loggedInUsers: [] },
 
   trendingTopics: [
-    { keyword: "Sovereign Cloud", mentions: 142, sentiment: "Positive" },
-    { keyword: "Cryptographic Shredding", mentions: 98, sentiment: "Neutral" },
-    { keyword: "Edge Inference", mentions: 76, sentiment: "Positive" },
-    { keyword: "Data Purge", mentions: 54, sentiment: "Negative" }
+    { keyword: "السحابة السيادية", mentions: 142, sentiment: "Positive" },
+    { keyword: "التقطيع التشفيري", mentions: 98, sentiment: "Neutral" },
+    { keyword: "الاستدلال على الحافة", mentions: 76, sentiment: "Positive" },
+    { keyword: "إتلاف البيانات", mentions: 54, sentiment: "Negative" },
+    { keyword: "الأمن السيبراني", mentions: 61, sentiment: "Positive" }
   ],
 
   guestProfiles: [
-    { id: "usr-1", badgeId: "BDG-9941", name: "Elena Rostova", email: "elena@cybersec.gov", phone: "+971500000000", interests: ["AI Governance", "Cloud Security"], joinedSessions: ["mtg-101"] }
+    { id: "usr-1", badgeId: "BDG-9941", name: "فاطمة الظاهري", email: "fatima@zxsprd.ae", phone: "+971500000000", interests: ["حوكمة الذكاء الاصطناعي", "أمن السحابة"], joinedSessions: ["mtg-101"] },
+    { id: "usr-2", badgeId: "BDG-4823", name: "خالد الشامسي", email: "khaled@zxsprd.ae", phone: "+971501112233", interests: ["الاستدلال على الحافة", "الأمن السيبراني"], joinedSessions: ["mtg-102"] },
+    { id: "usr-3", badgeId: "BDG-7702", name: "نورة القحطاني", email: "noura@zxsprd.ae", phone: "+971504445566", interests: ["تحليلات الحدود", "المدن الذكية"], joinedSessions: [] }
   ],
+
+  tempGuestSessions: [],
 
   documents: [],
   voiceQueries: [],
@@ -336,21 +391,60 @@ const ZXStore = (() => {
       this.set({ broadcasts: { ...state.broadcasts, [channelName]: state.broadcasts[channelName].map(b => b.tenantId === state.activeTenantId ? { ...b, active: false } : b) } });
     },
 
-    simulateCrowdShift() {
+    /* ===== CROWD ENGINE (v8 — 2D venue map, auto-simulation, graphs) ===== */
+    crowdStep() {
       const tenant = this.tenant(); if (!tenant) return;
-      const delta = Math.floor(Math.random() * 40) - 15;
-      const occ = Math.max(0, Math.min(tenant.venueCapacity, (tenant.currentOccupancy || 0) + delta));
+      const cm = state.crowdMetrics || {};
+      const zones = (cm.venueMap && cm.venueMap.zones) || [];
+      // per-zone density walk
+      const hotZones = (cm.hotZones || []).map(z => {
+        const d = Math.max(5, Math.min(99, z.density + Math.floor(Math.random() * 13) - 6));
+        return { ...z, density: d, status: d > 85 ? "Critical" : d > 55 ? "Moderate" : "Comfortable" };
+      });
+      // pod headcounts drift
       const pods = state.pods.map(p => {
         if (p.tenantId !== tenant.id) return p;
-        const hc = Math.max(0, p.currentHeadcount + Math.floor(Math.random() * 10) - 3);
+        const hc = Math.max(0, p.currentHeadcount + Math.floor(Math.random() * 14) - 7);
         return { ...p, currentHeadcount: hc, densityLevel: hc > 100 ? "High" : hc > 50 ? "Medium" : "Low" };
       });
+      const delta = Math.floor(Math.random() * 60) - 22;
+      const occ = Math.max(0, Math.min(tenant.venueCapacity, (tenant.currentOccupancy || 0) + delta));
+      const ing = Math.max(0, (cm.ingressLastHour || 0) + Math.floor(Math.random() * 24) - 10);
+      const eg = Math.max(0, (cm.egressLastHour || 0) + Math.floor(Math.random() * 24) - 12);
+      const hist = [...(cm.occupancyHistory || []), occ].slice(-48);
+      const ingHist = [...(cm.ingressHistory || []), ing].slice(-48);
       this.set({
         tenants: state.tenants.map(t => t.id === tenant.id ? { ...t, currentOccupancy: occ } : t),
         pods,
-        crowdMetrics: { ...state.crowdMetrics, currentOccupancy: occ, ingressLastHour: Math.max(0, state.crowdMetrics.ingressLastHour + Math.floor(Math.random() * 10) - 5), egressLastHour: Math.max(0, state.crowdMetrics.egressLastHour + Math.floor(Math.random() * 10) - 5) }
+        crowdMetrics: { ...cm, currentOccupancy: occ, ingressLastHour: ing, egressLastHour: eg, hotZones, occupancyHistory: hist, ingressHistory: ingHist }
       });
     },
+    simulateCrowdShift() { this.crowdStep(); },
+    setTenantSetting(key, val, tid = state.activeTenantId) {
+      this.set({ tenantSettings: { ...(state.tenantSettings || {}), [tid]: { ...(state.tenantSettings || {})[tid], [key]: val } } });
+      log("client-admin", `Event setting ${key} = ${val}`);
+    },
+    tenantSetting(key, tid = state.activeTenantId, fallback = false) {
+      const s = (state.tenantSettings || {})[tid] || {};
+      return key in s ? s[key] : fallback;
+    },
+
+    /* ===== TEMPORARY GUEST SESSIONS (interest-based, no badge) ===== */
+    createTempGuestSession(data) {
+      const sg = { id: `tmp-${Date.now()}`, name: data.name || "ضيف", interests: data.interests || [], createdAt: new Date().toISOString(), joinedSessions: [] };
+      this.set({ tempGuestSessions: [...(state.tempGuestSessions || []), sg] });
+      return sg;
+    },
+    setActiveTempGuest(id) { try { sessionStorage.setItem("zx-temp-guest", id); } catch (_) {} },
+    getActiveTempGuest() {
+      let id = null; try { id = sessionStorage.getItem("zx-temp-guest"); } catch (_) {}
+      return (state.tempGuestSessions || []).find(s => s.id === id) || null;
+    },
+    tempGuestJoin(sgId, refId) {
+      this.set({ tempGuestSessions: (state.tempGuestSessions || []).map(s => s.id === sgId ? { ...s, joinedSessions: [...new Set([...s.joinedSessions, refId])] } : s) });
+    },
+
+    reset() { try { sessionStorage.removeItem("zx-temp-guest"); } catch (_) {} state = clone(ZXSeed); persist(); try { channel?.postMessage({ type: "state", state }); } catch (_) {} notify("reset"); },
 
     addSponsor(data) { this.set({ sponsors: [...state.sponsors, { ...data, id: `sp-${Date.now()}` }] }); },
     removeSponsor(id) { this.set({ sponsors: state.sponsors.filter(s => s.id !== id) }); },
@@ -420,24 +514,57 @@ window.ZX_I18N = ZX_I18N;
   };
 
   // Theme + Language toolbar injection
-  window.zxInitChrome = function () {
+  // opts.chromeLangs: restrict language dropdowns to a tenant pool (array of codes)
+  // opts.hideLang: hide both language selects (e.g. Public Display → theme switch only)
+  window.zxInitChrome = function (opts = {}) {
     const tb = $("#chromeControls");
     if (!tb) return;
+    const langs = (opts.chromeLangs && opts.chromeLangs.length ? ZX_LANGS.filter(l => opts.chromeLangs.includes(l.code)) : ZX_LANGS);
     tb.innerHTML = `
       <button id="btnTheme" class="icon-btn" title="Toggle Dark / Light theme"><svg class="icon"><use href="#i-moon"/></svg></button>
-      <select id="selUiLang" class="mini-select" title="Interface language">${ZX_LANGS.map(l => `<option value="${l.code}">${l.label}</option>`).join("")}</select>
-      <select id="selVoiceLang" class="mini-select" title="Voice language (STT/TTS)">${ZX_LANGS.map(l => `<option value="${l.code}">🎤 ${l.label}</option>`).join("")}</select>
+      ${opts.hideLang ? "" : `
+      <select id="selUiLang" class="mini-select" title="Interface language">${langs.map(l => `<option value="${l.code}">${l.label}</option>`).join("")}</select>
+      <select id="selVoiceLang" class="mini-select" title="Voice language (STT/TTS)">${langs.map(l => `<option value="${l.code}">🎤 ${l.label}</option>`).join("")}</select>`}
       <button id="btnOffline" class="icon-btn" title="Offline / connection status"><svg class="icon"><use href="#i-wifi"/></svg></button>`;
-    $("#selUiLang").value = ZXStore.state.uiLang;
-    $("#selVoiceLang").value = ZXStore.state.voiceLang;
+    if (!opts.hideLang) {
+      $("#selUiLang").value = ZXStore.state.uiLang;
+      $("#selVoiceLang").value = ZXStore.state.voiceLang;
+      $("#selUiLang").onchange = (e) => ZXStore.setUiLang(e.target.value);
+      $("#selVoiceLang").onchange = (e) => { ZXStore.setVoiceLang(e.target.value); zxToast("Voice language set to " + e.target.selectedOptions[0].text); };
+    }
     $("#btnTheme").onclick = () => { zxStoreSetTheme(ZXStore.state.theme === "dark" ? "light" : "dark"); };
-    $("#selUiLang").onchange = (e) => ZXStore.setUiLang(e.target.value);
-    $("#selVoiceLang").onchange = (e) => { ZXStore.setVoiceLang(e.target.value); zxToast("Voice language set to " + e.target.selectedOptions[0].text); };
     const offBtn = $("#btnOffline");
     const paintNet = () => { offBtn.innerHTML = `<svg class="icon"><use href="#${navigator.onLine ? "i-wifi" : "i-wifi-off"}"/></svg>`; offBtn.title = navigator.onLine ? "Online (cached assets served offline-ready)" : "OFFLINE — app still works from cache"; };
     paintNet(); window.addEventListener("online", paintNet); window.addEventListener("offline", paintNet);
   };
   window.zxStoreSetTheme = (th) => ZXStore.setTheme(th);
+
+  /* ---------------- CHART HELPERS (dependency-free SVG, theme-aware) ---------------- */
+  window.zxSparkline = function (data, opts = {}) {
+    const w = opts.w || 320, h = opts.h || 70, pad = 4;
+    if (!data || !data.length) return "";
+    const min = Math.min(...data), max = Math.max(...data), span = (max - min) || 1;
+    const pts = data.map((v, i) => `${pad + (i / (data.length - 1)) * (w - pad * 2)},${h - pad - ((v - min) / span) * (h - pad * 2)}`).join(" ");
+    const color = opts.color || "var(--tenant-accent, #3B82F6)";
+    const last = pts.split(" ").pop().split(",");
+    return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px;display:block">
+      <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+      <polygon points="${pad},${h - pad} ${pts} ${w - pad},${h - pad}" fill="${color}" opacity="0.12"/>
+      <circle cx="${last[0]}" cy="${last[1]}" r="3" fill="${color}"/></svg>`;
+  };
+  window.zxBarChart = function (data, opts = {}) {
+    const w = opts.w || 320, h = opts.h || 90, pad = 2;
+    if (!data || !data.length) return "";
+    const max = Math.max(...data) || 1;
+    const bw = (w - pad * 2) / data.length;
+    const color = opts.color || "var(--tenant-accent, #3B82F6)";
+    let bars = "";
+    data.forEach((v, i) => {
+      const bh = Math.max(2, (v / max) * (h - pad * 2));
+      bars += `<rect x="${(pad + i * bw + bw * 0.15).toFixed(1)}" y="${(h - pad - bh).toFixed(1)}" width="${(bw * 0.7).toFixed(1)}" height="${bh.toFixed(1)}" rx="1.5" fill="${color}" opacity="${0.45 + 0.55 * (v / max)}"/>`;
+    });
+    return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px;display:block">${bars}</svg>`;
+  };
 
   // Service worker registration (graceful when opened via file://)
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
