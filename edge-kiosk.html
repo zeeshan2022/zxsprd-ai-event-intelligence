@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ZXSPRD AI — Edge Kiosk (POD)</title>
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="styles.css" />
+<script src="data.js"></script>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/></symbol>
+  <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-smartphone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="m6 3 14 9-14 9z"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></symbol>
+  <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="m1 1 22 22M8.5 16.5a5 5 0 0 1 7 0M2 8.82a15 15 0 0 1 4.17-2.65M10.66 5c4.01-.36 8.14.9 11.34 3.76M16.85 11.25a10 10 0 0 1 2.22 1.68M5 13a10 10 0 0 1 5.24-2.76"/></symbol>
+</svg>
+
+<div class="kiosk-shell">
+  <div id="bcBanner"></div>
+  <header class="kiosk-header">
+    <div style="display:flex;align-items:center;gap:14px">
+      <span class="brand-mark" style="background:var(--tenant-accent)"><svg class="icon"><use href="#i-tablet"/></svg></span>
+      <div>
+        <div class="kiosk-title" id="kTenantName">—</div>
+        <div class="dim mono" style="font-size:11px" id="kPodInfo">—</div>
+      </div>
+    </div>
+    <select id="podSelect" class="mini-select" style="max-width:220px;padding:8px"></select>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="chrome-controls" id="chromeControls"></div>
+      <div class="kiosk-clock" id="clock">--:--</div>
+    </div>
+  </header>
+
+  <main class="kiosk-main">
+    <!-- IDLE -->
+    <div class="kiosk-card" id="stIdle">
+      <div class="state-icon"><svg><use href="#i-zap"/></svg></div>
+      <h2 style="text-align:center;font-size:26px" data-i18n="welcome">Welcome</h2>
+      <p class="muted" style="text-align:center;margin-top:6px" id="idleSub">This intelligence pod is on standby.</p>
+      <button class="idle-btn idle-btn-primary" id="btnStartHost"><svg class="icon"><use href="#i-mic"/></svg> I'm the Host — Start Meeting</button>
+      <button class="idle-btn idle-btn-secondary" id="btnJoinGuest"><svg class="icon"><use href="#i-users"/></svg> I'm a Guest — Join Scheduled Session</button>
+    </div>
+
+    <!-- ACTIVE -->
+    <div class="kiosk-card" id="stActive" hidden>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <h2 style="font-size:22px" id="aTitle">Session</h2>
+        <span class="badge badge-red"><span class="rec-dot"></span> RECORDING · <span id="aTimer" class="mono">00:00</span></span>
+      </div>
+      <div class="dim" id="aMeta" style="font-size:12px;margin:4px 0 14px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+        <div><b style="font-size:12px">CH1 · <span id="aMic1"></span></b><div class="audio-meter"><div class="audio-meter-fill" id="m1" style="width:0%"></div></div></div>
+        <div><b style="font-size:12px">CH2 · <span id="aMic2"></span></b><div class="audio-meter"><div class="audio-meter-fill" id="m2" style="width:0%"></div></div></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--inset);border:1px solid var(--line-soft);border-radius:12px;padding:10px 14px;margin-bottom:16px;flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--muted)">Voice pipeline language:</span>
+        <select id="voiceLangSel" class="mini-select" style="padding:7px 10px;max-width:200px"></select>
+      </div>
+      <h3 style="font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);margin-bottom:8px">Live Neural Transcription</h3>
+      <div class="transcript-body" id="trList"></div>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button class="ctrl-btn btn-blue" id="btnCheckIn"><svg class="icon"><use href="#i-users"/></svg> Check-In Guest</button>
+        <button class="ctrl-btn btn-red" id="btnEndMeeting"><svg class="icon"><use href="#i-stop"/></svg> End &amp; Send to Approval</button>
+      </div>
+    </div>
+  </main>
+
+  <footer style="padding:12px 24px;border-top:1px solid var(--line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <span class="dim mono" style="font-size:10.5px">ZXSPRD EDGE POD · OFFLINE-CAPABLE PWA · <span id="fSw"></span></span>
+    <nav class="role-switch">
+      <a href="index.html" class="role-btn"><svg class="icon"><use href="#i-grid"/></svg> Launcher</a>
+      <a href="client-admin.html" class="role-btn"><svg class="icon"><use href="#i-building"/></svg> Admin</a>
+      <a href="public-display.html" class="role-btn"><svg class="icon"><use href="#i-tv"/></svg> Display</a>
+    </nav>
+  </footer>
+</div>
+
+<!-- Check-in Modal -->
+<div class="modal-overlay" id="ciModal">
+  <div class="modal-card">
+    <div class="modal-header"><div class="modal-title">Guest QR / Badge Check-In</div><button class="close-btn" onclick="ciModal.classList.remove('active')"><svg class="icon"><use href="#i-x"/></svg></button></div>
+    <form id="ciForm" class="form-grid">
+      <div class="form-group"><label class="form-label">Badge ID</label><input class="form-input mono" id="cifBadge" required placeholder="BDG-0000"></div>
+      <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="cifName" required></div>
+      <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="cifEmail"></div>
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="cifPhone"></div>
+      <div class="form-group full"><label class="form-label">Role</label><select class="form-select" id="cifRole"><option>VIP</option><option>Press</option><option>Delegate</option><option>Staff</option></select></div>
+      <div class="form-group full" style="display:flex;gap:10px;justify-content:flex-end"><button type="button" class="btn btn-ghost" onclick="ciModal.classList.remove('active')">Cancel</button><button type="submit" class="btn btn-blue">Confirm Check-In</button></div>
+    </form>
+  </div>
+</div>
+
+<script>
+zxInitChrome();
+const podSel = document.getElementById("podSelect");
+let recTimer = null, tick = 0;
+
+function voiceLangs() {
+  const t = ZXStore.tenant();
+  return (t?.tenantLangs && t.tenantLangs.length ? t.tenantLangs : ["en-US"]);
+}
+function paintVoiceSel() {
+  const list = voiceLangs();
+  const sel = document.getElementById("voiceLangSel");
+  sel.innerHTML = list.map(c => `<option value="${c}" ${c===ZXStore.state.voiceLang?"selected":""}>🎤 ${ZX_LANGS.find(l=>l.code===c)?.label||c}</option>`).join("");
+  sel.onchange = e => ZXStore.setVoiceLang(e.target.value);
+}
+
+function applyI18n() {
+  document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = ZXStore.t(el.dataset.i18n));
+  document.documentElement.lang = ZXStore.state.uiLang;
+  document.documentElement.dir = ZXStore.state.uiLang === "ar-AE" || ZXStore.state.uiLang === "ur-PK" ? "rtl" : "ltr";
+}
+
+function render() {
+  const s = ZXStore.state, t = ZXStore.tenant();
+  if (!t) return;
+  document.getElementById("kTenantName").textContent = t.headerText || t.name;
+  applyI18n(); paintVoiceSel();
+  const pods = ZXStore.pods(t.id);
+  const cur = pods.find(p => p.id === s.activePodId) || pods[0];
+  if (cur && s.activePodId !== cur.id) setTimeout(()=>ZXStore.set({ activePodId: cur.id }),0);
+  podSel.innerHTML = pods.map(p => `<option value="${p.id}" ${cur && p.id===cur.id?"selected":""}>${p.id} — ${zxesc(p.location)}</option>`).join("");
+  if (!cur) { document.getElementById("stIdle").hidden = false; document.getElementById("stActive").hidden = true; return; }
+  document.getElementById("kPodInfo").textContent = `${cur.id} · ${cur.macAddress} · LLM: ${cur.llmOverride || t.defaultLlm}`;
+
+  const m = s.meetings.find(x => x.id === cur.currentMeetingId);
+  if (!m) {
+    document.getElementById("stIdle").hidden = false; document.getElementById("stActive").hidden = true;
+    clearInterval(recTimer);
+    const next = ZXStore.schedule(t.id).find(x => x.podId === cur.id && x.status === "Scheduled");
+    document.getElementById("idleSub").textContent = next ? `Next scheduled: “${next.title}” at ${next.startTime} with ${next.speakerHost}.` : "This intelligence pod is on standby.";
+  } else {
+    document.getElementById("stIdle").hidden = true; document.getElementById("stActive").hidden = false;
+    document.getElementById("aTitle").textContent = m.title;
+    document.getElementById("aMeta").textContent = `Host: ${m.hostName} · Started ${m.startTime} · Guests checked in: ${m.guests.length}`;
+    document.getElementById("aMic1").textContent = cur.mic1Role; document.getElementById("aMic2").textContent = cur.mic2Role;
+    document.getElementById("trList").innerHTML = m.rawTranscript.slice(-14).map(l => `
+      <div class="t-line"><div class="t-meta"><span>${l.time}</span><span class="t-speaker">${zxesc(l.speaker)}</span></div>${zxesc(l.text)}</div>`).join("");
+    document.getElementById("trList").scrollTop = 1e6;
+    if (!recTimer) {
+      recTimer = setInterval(() => {
+        tick++;
+        const mm = String(Math.floor(tick/60)).padStart(2,"0"), ss = String(tick%60).padStart(2,"0");
+        document.getElementById("aTimer").textContent = `${mm}:${ss}`;
+        document.getElementById("m1").style.width = (20 + Math.random()*70) + "%";
+        document.getElementById("m2").style.width = (10 + Math.random()*55) + "%";
+        const live = ZXStore.state.meetings.find(x => x.id === m.id); if (!live) { clearInterval(recTimer); recTimer = null; return; }
+        if (tick % 4 === 0) simLine(live, [cur.mic1Role, cur.mic2Role][Math.random() > .5 ? 1 : 0]);
+      }, 1000);
+    }
+  }
+  // Broadcast banner (internal pod channel)
+  const bc = s.broadcasts.internalPod.filter(b => b.tenantId === t.id && b.active).slice(-1)[0];
+  document.getElementById("bcBanner").innerHTML = bc ? `<div class="broadcast-banner">📢 ${zxesc(bc.message)}<span class="dim mono" style="font-size:10px">${bc.timestamp}</span></div>` : "";
+  document.getElementById("fSw").textContent = ZXStore.storageOK ? "STATE SYNC OK (localStorage + BroadcastChannel)" : "IN-MEMORY MODE (storage blocked)";
+}
+
+const SIM_LINES = [
+  "The edge node maintains sub-second inference even during complete uplink loss.",
+  "Sovereign compliance requires all audio buffers to be shredded after summarization.",
+  "Can we pilot the multilingual voice concierge for Arabic and French delegates first?",
+  "Crowd density in Hall A1 crossed the safe threshold — suggest opening overflow routing.",
+  "The HITL approval step keeps legal fully in control before anything goes public.",
+  "Latency budget: 40ms STT, 120ms LLM, 60ms TTS — we are inside envelope."
+];
+function simLine(m, speaker) {
+  ZXStore.appendTranscriptLine(m.id, {
+    time: new Date().toLocaleTimeString(),
+    speaker,
+    text: `[voice=${ZXStore.state.voiceLang}] ` + SIM_LINES[Math.floor(Math.random()*SIM_LINES.length)]
+  });
+}
+
+podSel.onchange = e => ZXStore.set({ activePodId: e.target.value });
+document.getElementById("btnStartHost").onclick = () => {
+  const name = prompt("Host name:", "Dr. Aris Thorne") || "Host";
+  ZXStore.startMeeting(ZXStore.state.activePodId, name);
+  zxToast("Recording started — sending to approval queue on end", "success");
+};
+document.getElementById("btnJoinGuest").onclick = () => {
+  const t = ZXStore.tenant();
+  const next = ZXStore.schedule(t.id).find(x => x.podId === ZXStore.state.activePodId && x.status === "Scheduled");
+  if (!next) return zxToast("No scheduled session on this pod.", "error");
+  ZXStore.startMeeting(next.podId, next.speakerHost, next.title);
+  ZXStore.updateSessionStatus(next.id, "Live");
+};
+document.getElementById("btnEndMeeting").onclick = () => {
+  const pod = ZXStore.pods().find(p => p.id === ZXStore.state.activePodId);
+  if (pod?.currentMeetingId) {
+    ZXStore.endMeeting(pod.currentMeetingId);
+    const sch = ZXStore.schedule().find(s => s.podId === pod.id && s.status === "Live");
+    if (sch) ZXStore.updateSessionStatus(sch.id, "Completed");
+    clearInterval(recTimer); recTimer = null; tick = 0;
+    zxToast("Meeting ended → queued for HITL approval", "success");
+  }
+};
+document.getElementById("btnCheckIn").onclick = () => ciModal.classList.add("active");
+document.getElementById("ciForm").onsubmit = (e) => {
+  e.preventDefault();
+  const pod = ZXStore.pods().find(p => p.id === ZXStore.state.activePodId);
+  if (!pod?.currentMeetingId) return zxToast("No active meeting.", "error");
+  const g = { badgeId: cifBadge.value.trim(), name: cifName.value.trim(), email: cifEmail.value.trim(), phone: cifPhone.value.trim(), role: cifRole.value };
+  ZXStore.checkInGuest(pod.currentMeetingId, g);
+  ZXStore.addGuestProfile({ ...g, interests: [] });
+  ZXStore.logGuestInteraction(g.badgeId, pod.currentMeetingId);
+  ciModal.classList.remove("active"); ciForm.reset();
+  zxToast(`${g.name} checked in via ${g.badgeId}`, "success");
+};
+
+setInterval(() => document.getElementById("clock").textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), 1000);
+let _raf=false; function scheduleRender(){ if(_raf)return; _raf=true; requestAnimationFrame(()=>{_raf=false; render();}); }
+render();
+ZXStore.subscribe(scheduleRender);
+</script>
+</body>
+</html>

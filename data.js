@@ -1,0 +1,448 @@
+/**
+ * ============================================================
+ * ZXSPRD AI — UNIFIED DATA & STATE ENGINE (Final Demo)
+ * Single source of truth for ALL data, variables & actions.
+ * Merges every function from v3.5 / v4.2 / v5.6 / v6.9 and adds
+ * Final-Demo enhancements: Themes, Multilingual Voice, Feature
+ * Flags, API Keys, Impersonation, Approvals, Raw Transcripts.
+ * ============================================================
+ */
+
+/* ---------------- I18N DICTIONARY (Multilingual UI + Voice) ---------------- */
+const ZX_LANGS = [
+  { code: "en-US", label: "English" },
+  { code: "ar-AE", label: "العربية (Arabic)" },
+  { code: "fr-FR", label: "Français (French)" },
+  { code: "es-ES", label: "Español (Spanish)" },
+  { code: "de-DE", label: "Deutsch (German)" },
+  { code: "hi-IN", label: "हिन्दी (Hindi)" },
+  { code: "ur-PK", label: "اردو (Urdu)" },
+  { code: "zh-CN", label: "中文 (Chinese)" }
+];
+
+const ZX_I18N = {
+  "en-US": { welcome: "Welcome", next_session: "Next Session", live_now: "Live Now", trending: "Trending Topics", agenda: "Agenda", journey: "My Journey", concierge: "AI Concierge", profile: "Profile", announcements: "Announcements", scan_badge: "Scan your badge QR to check-in", ask_anything: "Ask anything about the event", floor: "Floor Guide", checked_in: "Checked In", join: "Join", leave: "Leave", home: "Home" },
+  "ar-AE": { welcome: "مرحباً", next_session: "الجلسة القادمة", live_now: "الآن مباشر", trending: "المواضيع الرائجة", agenda: "جدول الأعمال", journey: "رحلتي", concierge: "المرشد الذكي", profile: "الملف الشخصي", announcements: "الإعلانات", scan_badge: "امسح رمز QR للتحقق من دخولك", ask_anything: "اسأل أي شيء عن الفعالية", floor: "دليل الطوابق", checked_in: "تم تسجيل الدخول", join: "انضمام", leave: "مغادرة", home: "الرئيسية" },
+  "fr-FR": { welcome: "Bienvenue", next_session: "Session suivante", live_now: "En direct", trending: "Sujets tendance", agenda: "Programme", journey: "Mon parcours", concierge: "Concierge IA", profile: "Profil", announcements: "Annonces", scan_badge: "Scannez votre QR pour l'enregistrement", ask_anything: "Posez vos questions sur l'événement", floor: "Guide des étages", checked_in: "Enregistré", join: "Rejoindre", leave: "Quitter", home: "Accueil" },
+  "es-ES": { welcome: "Bienvenido", next_session: "Próxima sesión", live_now: "En vivo", trending: "Temas destacados", agenda: "Agenda", journey: "Mi recorrido", concierge: "Conserje IA", profile: "Perfil", announcements: "Anuncios", scan_badge: "Escanea tu QR para registrarte", ask_anything: "Pregunta lo que quieras sobre el evento", floor: "Guía de pisos", checked_in: "Registrado", join: "Unirse", leave: "Salir", home: "Inicio" },
+  "de-DE": { welcome: "Willkommen", next_session: "Nächste Sitzung", live_now: "Live jetzt", trending: "Beliebte Themen", agenda: "Agenda", journey: "Mein Rundgang", concierge: "KI-Concierge", profile: "Profil", announcements: "Ankündigungen", scan_badge: "QR-Code zum Check-in scannen", ask_anything: "Fragen Sie alles zur Veranstaltung", floor: "Etagenführer", checked_in: "Eingecheckt", join: "Beitreten", leave: "Verlassen", home: "Start" },
+  "hi-IN": { welcome: "स्वागत है", next_session: "अगला सत्र", live_now: "अभी लाइव", trending: "ट्रेंडिंग विषय", agenda: "एजेंडा", journey: "मेरी यात्रा", concierge: "एआई कंसीयज", profile: "प्रोफ़ाइल", announcements: "घोषणाएँ", scan_badge: "चेक-इन के लिए अपना QR स्कैन करें", ask_anything: "इवेंट के बारे में कुछ भी पूछें", floor: "फ्लोर गाइड", checked_in: "चेक-इन हो गया", join: "शामिल हों", leave: "छोड़ें", home: "होम" },
+  "ur-PK": { welcome: "خوش آمدید", next_session: "اگلا سیشن", live_now: "ابھی براہ راست", trending: "رجھن موضوعات", agenda: "ایجنڈا", journey: "میری راہنمائی", concierge: "اے آئی کونسلیج", profile: "پروفائل", announcements: "اعلانات", scan_badge: "چیک اِن کے لیے QR اسکین کریں", ask_anything: "تقریب کے بارے میں کچھ بھی پوچھیں", floor: "فلور گائیڈ", checked_in: "چیک اِن ہو گیا", join: "شامل ہوں", leave: "چھوڑیں", home: "ہوم" },
+  "zh-CN": { welcome: "欢迎", next_session: "下一场会议", live_now: "正在直播", trending: "热门话题", agenda: "议程", journey: "我的行程", concierge: "AI礼宾", profile: "个人资料", announcements: "公告", scan_badge: "扫描您的二维码签到", ask_anything: "询问有关活动的任何问题", floor: "楼层指南", checked_in: "已签到", join: "加入", leave: "离开", home: "首页" }
+};
+
+/* ---------------- SEED STATE ---------------- */
+const ZXSeed = {
+  version: 7, // Final Demo schema — forces localStorage reset
+  activeRole: "SUPER_ADMIN",
+  activeTenantId: "tenant-wps-2026",
+  activePodId: "POD-01",
+  impersonating: false,          // Super Admin → Client Admin impersonation flag
+  theme: "dark",                 // "dark" | "light"
+  uiLang: "en-US",               // interface language
+  voiceLang: "en-US",            // STT/TTS language (multilingual voice)
+
+  /* ===== SUPER ADMIN SCOPE (Platform Owner) ===== */
+  platformSettings: {
+    globalThemeLock: false,       // if true, tenants cannot change theme
+    maintenanceMode: false,
+    registrationsOpen: true,
+    hitlRequired: true,           // force human approval before publishing summaries
+    autoPurgeDays: 30,
+    maxTenants: 50
+  },
+
+  featureFlags: {
+    voiceConcierge: true,
+    crowdAnalytics: true,
+    sponsorInjection: true,
+    publicDisplay: true,
+    guestPortal: true,
+    edgeKiosk: true,
+    qrCheckIn: true,
+    multiLanguageVoice: true,
+    sentimentAnalysis: true,
+    actionItemExtraction: true,
+    offlineMode: true
+  },
+
+  apiKeys: [
+    { id: "ak-1", tenantId: "tenant-wps-2026", provider: "OCI Generative AI (Llama 3 70B)", keyMasked: "sk-oci-****-****-7f3a", region: "uk-london-1 (Sovereign)", status: "Active", lastRotated: "2026-09-12" },
+    { id: "ak-2", tenantId: "tenant-wps-2026", provider: "ElevenLabs Neural TTS v2", keyMasked: "sk-el-****-****-b21c", region: "EU Edge", status: "Active", lastRotated: "2026-08-01" },
+    { id: "ak-3", tenantId: "tenant-tech-expo", provider: "OpenAI GPT-4o", keyMasked: "sk-oai-****-****-9d44", region: "US-Central", status: "Active", lastRotated: "2026-07-22" },
+    { id: "ak-4", tenantId: "tenant-tech-expo", provider: "Deepgram STT", keyMasked: "sk-dg-****-****-11e0", region: "US-East", status: "Revoked", lastRotated: "2026-05-10" }
+  ],
+
+  tenants: [
+    {
+      id: "tenant-wps-2026", name: "World Police Summit 2026", subdomain: "wps2026", tier: "Enterprise",
+      maxPods: 20, assignedPods: 3, status: "Active", createdDate: "2026-01-14",
+      logoUrl: "", primaryColor: "#2563EB", headerText: "WPS 2026 Secure Intelligence Hub", footerText: "© 2026 World Police Summit.",
+      defaultLlm: "OCI Llama 3 70B (Private)", defaultTts: "ElevenLabs Neural v2", temperature: 0.4, cloudFallback: false,
+      venueCapacity: 5000, currentOccupancy: 3420,
+      tenantTheme: "dark", tenantLangs: ["en-US", "ar-AE", "fr-FR"], allowTenantTheme: true, allowTenantLangs: true
+    },
+    {
+      id: "tenant-tech-expo", name: "Global Tech Innovation Expo", subdomain: "techexpo", tier: "Pro",
+      maxPods: 5, assignedPods: 1, status: "Active", createdDate: "2026-02-02",
+      logoUrl: "", primaryColor: "#10B981", headerText: "Tech Expo Live Intelligence", footerText: "Powered by ZXSPRD AI",
+      defaultLlm: "OpenAI GPT-4o", defaultTts: "Azure Neural TTS", temperature: 0.7, cloudFallback: true,
+      venueCapacity: 2000, currentOccupancy: 1150,
+      tenantTheme: "light", tenantLangs: ["en-US", "es-ES", "zh-CN"], allowTenantTheme: true, allowTenantLangs: false
+    }
+  ],
+
+  llmCatalog: ["OCI Llama 3 70B (Private)", "OpenAI GPT-4o", "Anthropic Claude 3.5 Sonnet", "Mistral Large (EU Sovereign)", "Azure OpenAI GPT-4o-mini"],
+  ttsCatalog: ["ElevenLabs Neural v2", "Azure Neural TTS", "Amazon Polly Standard", "Google Cloud TTS Chirp3"],
+
+  /* ===== CLIENT ADMIN SCOPE (Event Organizer) ===== */
+  pods: [
+    { id: "POD-01", tenantId: "tenant-wps-2026", macAddress: "AC:DE:48:00:11:22", location: "DWTC Hall A1 — Zone 1", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 15, status: "Online", currentMeetingId: null, densityLevel: "High", currentHeadcount: 145, mic1Role: "Host (Speaker 1)", mic2Role: "Guest (Speaker 2)", mic1Gain: 65, mic2Gain: 42 },
+    { id: "POD-02", tenantId: "tenant-wps-2026", macAddress: "AC:DE:48:00:11:23", location: "DWTC Hall A1 — Zone 2", llmOverride: "OpenAI GPT-4o", ttsOverride: null, standbyTimeoutMins: 5, status: "Online", currentMeetingId: null, densityLevel: "Medium", currentHeadcount: 82, mic1Role: "Host (Speaker 1)", mic2Role: "Audience Q&A", mic1Gain: 70, mic2Gain: 12 },
+    { id: "POD-03", tenantId: "tenant-wps-2026", macAddress: "AC:DE:48:00:11:24", location: "DWTC Hall B2 — VIP", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 10, status: "Online", currentMeetingId: "mtg-101", densityLevel: "Low", currentHeadcount: 12, mic1Role: "Host (Speaker 1)", mic2Role: "Guest (Speaker 2)", mic1Gain: 50, mic2Gain: 50 },
+    { id: "POD-04", tenantId: "tenant-tech-expo", macAddress: "AC:DE:48:00:22:01", location: "Expo Hall 3 — Startup Stage", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 10, status: "Online", currentMeetingId: null, densityLevel: "Medium", currentHeadcount: 60, mic1Role: "Host (Speaker 1)", mic2Role: "Guest (Speaker 2)", mic1Gain: 55, mic2Gain: 55 }
+  ],
+
+  schedule: [
+    { id: "sch-1", tenantId: "tenant-wps-2026", podId: "POD-01", title: "AI Governance in Sovereign Law Enforcement", startTime: "10:00 AM", endTime: "10:45 AM", speakerHost: "Dr. Aris Thorne", speakerGuest: "Elena Rostova", status: "Scheduled" },
+    { id: "sch-2", tenantId: "tenant-wps-2026", podId: "POD-02", title: "Edge Inference for Real-Time Border Analytics", startTime: "11:00 AM", endTime: "11:45 AM", speakerHost: "Col. Majid Al Suwaidi", speakerGuest: "Dr. Lena Fischer", status: "Scheduled" },
+    { id: "sch-3", tenantId: "tenant-wps-2026", podId: "POD-03", title: "Closed-Door Keynote: National AI Safety", startTime: "09:00 AM", endTime: "09:40 AM", speakerHost: "H.E. Saif Al Mansouri", speakerGuest: "Dr. Aris Thorne", status: "Completed" },
+    { id: "sch-4", tenantId: "tenant-tech-expo", podId: "POD-04", title: "Keynote: The Agentic Enterprise", startTime: "02:00 PM", endTime: "02:45 PM", speakerHost: "Priya Nair", speakerGuest: "Tom Becker", status: "Scheduled" }
+  ],
+
+  meetings: [
+    {
+      id: "mtg-101", tenantId: "tenant-wps-2026", podId: "POD-03",
+      title: "Closed-Door Keynote: National AI Safety", startTime: "09:00 AM", endTime: "09:40 AM",
+      hostName: "H.E. Saif Al Mansouri", status: "Ended", hitlStatus: "PendingApproval",
+      guests: [{ id: "g1", badgeId: "BDG-9941", name: "Elena Rostova", email: "elena@cybersec.gov", phone: "+971500000000", role: "VIP", checkedInAt: "08:55 AM" }],
+      rawTranscript: [
+        { time: "09:00:12", speaker: "H.E. Saif Al Mansouri", text: "Welcome everyone. Today we are presenting the sovereign data cloud compliance matrix." },
+        { time: "09:02:45", speaker: "Dr. Aris Thorne", text: "How does the 30-day automated data purge verify compliance with national regulations?" },
+        { time: "09:05:10", speaker: "H.E. Saif Al Mansouri", text: "The system utilizes cryptographic shredding. Once the window closes, keys are destroyed." }
+      ],
+      aiSummary: "The session covered sovereign data cloud compliance, focusing on the 30-day automated data purge mechanism using cryptographic shredding to ensure national regulatory compliance.",
+      sentimentScore: 85, actionItems: ["Review cryptographic shredding docs.", "Verify purge logs."]
+    },
+    {
+      id: "mtg-102", tenantId: "tenant-wps-2026", podId: "POD-01",
+      title: "Ad-Hoc: Cross-Border Cyber Taskforce", startTime: "08:15 AM", endTime: "08:50 AM",
+      hostName: "Col. Majid Al Suwaidi", status: "Ended", hitlStatus: "Approved",
+      guests: [],
+      rawTranscript: [
+        { time: "08:15:40", speaker: "Col. Majid Al Suwaidi", text: "We need a joint incident-response playbook for port infrastructure attacks." },
+        { time: "08:22:03", speaker: "Guest (Speaker 2)", text: "Agreed. Let us pilot real-time signal sharing between the Dubai and Abu Dhabi NOCs." }
+      ],
+      aiSummary: "Participants agreed to draft a joint incident-response playbook for port infrastructure and pilot real-time signal sharing between Dubai and Abu Dhabi NOCs.",
+      sentimentScore: 72, actionItems: ["Draft joint playbook.", "Schedule NOC integration pilot."]
+    }
+  ],
+
+  crowdMetrics: {
+    totalVenueCapacity: 5000, currentOccupancy: 3420, ingressLastHour: 450, egressLastHour: 120, peakHour: "11:00 AM - 12:00 PM",
+    hotZones: [
+      { zone: "Hall A1 - Main Stage", density: 92, status: "Critical" },
+      { zone: "Hall B2 - VIP Lounge", density: 65, status: "Moderate" },
+      { zone: "Expo Hall 3 - Startup", density: 40, status: "Comfortable" }
+    ]
+  },
+
+  sponsors: [
+    { id: "sp-1", name: "Oracle Cloud Infrastructure", logoUrl: "", message: "Visit Booth 42 for a live demo of sovereign edge nodes." },
+    { id: "sp-2", name: "Deepgram AI", logoUrl: "", message: "Powering real-time neural transcription across all pods." }
+  ],
+
+  broadcasts: { internalPod: [], allScreens: [], guestPortal: [], loggedInUsers: [] },
+
+  trendingTopics: [
+    { keyword: "Sovereign Cloud", mentions: 142, sentiment: "Positive" },
+    { keyword: "Cryptographic Shredding", mentions: 98, sentiment: "Neutral" },
+    { keyword: "Edge Inference", mentions: 76, sentiment: "Positive" },
+    { keyword: "Data Purge", mentions: 54, sentiment: "Negative" }
+  ],
+
+  guestProfiles: [
+    { id: "usr-1", badgeId: "BDG-9941", name: "Elena Rostova", email: "elena@cybersec.gov", phone: "+971500000000", interests: ["AI Governance", "Cloud Security"], joinedSessions: ["mtg-101"] }
+  ],
+
+  documents: [],
+  voiceQueries: [],
+  auditLog: [
+    { ts: "2026-10-15 09:12", actor: "super-admin@zxsprd", action: "Rotated OCI API key for WPS 2026" },
+    { ts: "2026-10-16 14:03", actor: "ops@wps2026", action: "Broadcast sent to All Screens channel" }
+  ]
+};
+
+/* ---------------- STORE ENGINE ---------------- */
+const ZXStore = (() => {
+  const KEY = "zxsprd-global-state-v7";
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const listeners = new Set();
+  let channel = null, storageOK = true;
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.version === ZXSeed.version) return { ...clone(ZXSeed), ...parsed };
+      }
+    } catch (e) { storageOK = false; }
+    return clone(ZXSeed);
+  }
+
+  let state = load();
+
+  function persist() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); storageOK = true; }
+    catch (e) { storageOK = false; }
+  }
+  function notify(source) { listeners.forEach(fn => fn(state, source)); }
+
+  try {
+    if ("BroadcastChannel" in window) {
+      channel = new BroadcastChannel("zxsprd-state-v7");
+      channel.onmessage = (e) => { if (e.data?.type === "state") { state = e.data.state; notify("cross-tab"); } };
+    }
+  } catch (e) {}
+  window.addEventListener("storage", (e) => {
+    if (e.key === KEY && e.newValue) { try { state = JSON.parse(e.newValue); notify("cross-tab"); } catch (_) {} }
+  });
+  persist();
+
+  function log(actor, action) {
+    state.auditLog = [...(state.auditLog || []), { ts: new Date().toISOString().slice(0, 16).replace("T", " "), actor, action }].slice(-100);
+  }
+
+  return {
+    get state() { return state; },
+    get storageOK() { return storageOK; },
+
+    set(patch, source = "local") {
+      state = { ...state, ...(typeof patch === "function" ? patch(state) : patch) };
+      persist();
+      if (source !== "cross-tab") { try { channel?.postMessage({ type: "state", state }); } catch (_) {} }
+      notify(source);
+    },
+    subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
+
+    /* GETTERS */
+    tenant(id = state.activeTenantId) { return state.tenants.find(t => t.id === id); },
+    pods(tid = state.activeTenantId) { return state.pods.filter(p => p.tenantId === tid); },
+    schedule(tid = state.activeTenantId) { return state.schedule.filter(s => s.tenantId === tid); },
+    meetings(tid = state.activeTenantId) { return state.meetings.filter(m => m.tenantId === tid); },
+    apiKeys(tid = state.activeTenantId) { return state.apiKeys.filter(k => k.tenantId === tid); },
+    t(key) { return (ZX_I18N[state.uiLang] || ZX_I18N["en-US"])[key] || ZX_I18N["en-US"][key] || key; },
+    feature(name) { return !!state.featureFlags[name]; },
+
+    /* CONTEXT / THEME / LANGUAGE */
+    setRole(role) { this.set({ activeRole: role }); },
+    setTenant(id) {
+      if (!state.tenants.some(t => t.id === id)) return false;
+      const firstPod = state.pods.find(p => p.tenantId === id);
+      this.set({ activeTenantId: id, activePodId: firstPod ? firstPod.id : "" });
+      return true;
+    },
+    setTheme(theme) { this.set({ theme }); },
+    setUiLang(lang) { this.set({ uiLang: lang }); },
+    setVoiceLang(lang) { this.set({ voiceLang: lang }); },
+    startImpersonate(tenantId) { this.set({ impersonating: true, activeTenantId: tenantId, activeRole: "CLIENT_ADMIN" }); log("super-admin@zxsprd", `Started impersonating client admin of ${tenantId}`); },
+    stopImpersonate() { this.set({ impersonating: false, activeRole: "SUPER_ADMIN" }); log("super-admin@zxsprd", "Stopped impersonation"); },
+
+    /* ===== SUPER ADMIN ACTIONS ===== */
+    addTenant(data) {
+      const t = { ...data, id: `tnt-${Date.now()}`, assignedPods: 0, status: "Active", createdDate: new Date().toISOString().split("T")[0], currentOccupancy: 0 };
+      this.set({ tenants: [...state.tenants, t] });
+      log("super-admin@zxsprd", `Provisioned tenant ${t.name}`);
+      return t.id;
+    },
+    updateTenant(tid, updates) { this.set({ tenants: state.tenants.map(t => t.id === tid ? { ...t, ...updates } : t) }); },
+    toggleTenantStatus(tid) { this.updateTenant(tid, { status: state.tenants.find(t => t.id === tid)?.status === "Active" ? "Suspended" : "Active" }); },
+    updateTenantQuota(tid, max) { this.updateTenant(tid, { maxPods: max }); },
+    setFeatureFlag(name, val) { this.set({ featureFlags: { ...state.featureFlags, [name]: val } }); log("super-admin@zxsprd", `Feature flag ${name} = ${val}`); },
+    setPlatformSettings(patch) { this.set({ platformSettings: { ...state.platformSettings, ...patch } }); },
+    addApiKey(provider, keyRaw, region) {
+      const masked = keyRaw.slice(0, 7) + "-****-****-" + keyRaw.slice(-4);
+      const rec = { id: `ak-${Date.now()}`, tenantId: state.activeTenantId, provider, keyMasked: masked, region, status: "Active", lastRotated: new Date().toISOString().split("T")[0] };
+      this.set({ apiKeys: [...state.apiKeys, rec] });
+      log("super-admin@zxsprd", `Added API key for ${provider}`);
+    },
+    rotateApiKey(id) {
+      this.set({ apiKeys: state.apiKeys.map(k => k.id === id ? { ...k, status: "Active", lastRotated: new Date().toISOString().split("T")[0], keyMasked: k.keyMasked.slice(0, 7) + "-****-****-" + Math.random().toString(16).slice(2, 6) } : k) });
+      log("super-admin@zxsprd", `Rotated API key ${id}`);
+    },
+    revokeApiKey(id) { this.set({ apiKeys: state.apiKeys.map(k => k.id === id ? { ...k, status: "Revoked" } : k) }); },
+
+    /* ===== CLIENT ADMIN ACTIONS ===== */
+    addPod(data) {
+      const tenant = this.tenant(data.tenantId || state.activeTenantId);
+      if (!tenant || tenant.assignedPods >= tenant.maxPods) return false;
+      const pod = { ...data, id: `POD-${String(state.pods.length + 1).padStart(2, "0")}`, status: "Online", densityLevel: "Low", currentHeadcount: 0, currentMeetingId: null, mic1Role: "Host (Speaker 1)", mic2Role: "Guest (Speaker 2)", mic1Gain: 50, mic2Gain: 50 };
+      this.set({
+        pods: [...state.pods, pod],
+        tenants: state.tenants.map(t => t.id === pod.tenantId ? { ...t, assignedPods: t.assignedPods + 1 } : t)
+      });
+      log("client-admin", `Provisioned ${pod.id} @ ${pod.location}`);
+      return true;
+    },
+    deletePod(pid) {
+      const pod = state.pods.find(p => p.id === pid); if (!pod) return;
+      this.set({
+        pods: state.pods.filter(p => p.id !== pid),
+        tenants: state.tenants.map(t => t.id === pod.tenantId ? { ...t, assignedPods: Math.max(0, t.assignedPods - 1) } : t)
+      });
+    },
+    updatePodOverrides(pid, overrides) { this.set({ pods: state.pods.map(p => p.id === pid ? { ...p, ...overrides } : p) }); },
+    updateMicMapping(pid, mic1Role, mic2Role, mic1Gain, mic2Gain) { this.set({ pods: state.pods.map(p => p.id === pid ? { ...p, mic1Role, mic2Role, mic1Gain, mic2Gain } : p) }); },
+    setPodStatus(pid, status) { this.set({ pods: state.pods.map(p => p.id === pid ? { ...p, status } : p) }); },
+
+    addSession(data) { const s = { ...data, id: `sch-${Date.now()}`, status: "Scheduled" }; this.set({ schedule: [...state.schedule, s] }); return s.id; },
+    updateSessionStatus(sid, status) { this.set({ schedule: state.schedule.map(s => s.id === sid ? { ...s, status } : s) }); },
+    deleteSession(sid) { this.set({ schedule: state.schedule.filter(s => s.id !== sid) }); },
+
+    startMeeting(pid, hostName, title = null) {
+      const pod = state.pods.find(p => p.id === pid); if (!pod) return null;
+      const m = {
+        id: `mtg-${Date.now()}`, tenantId: state.activeTenantId, podId: pid,
+        title: title || `Ad-Hoc Meeting — ${new Date().toLocaleDateString()}`,
+        startTime: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), endTime: null,
+        hostName, status: "Recording", hitlStatus: "Draft", guests: [], rawTranscript: [],
+        aiSummary: "Meeting in progress...", sentimentScore: 0, actionItems: []
+      };
+      this.set({ meetings: [...state.meetings, m], pods: state.pods.map(p => p.id === pid ? { ...p, currentMeetingId: m.id } : p) });
+      return m.id;
+    },
+    appendTranscriptLine(mid, line) { this.set({ meetings: state.meetings.map(m => m.id === mid ? { ...m, rawTranscript: [...m.rawTranscript, line] } : m) }); },
+    endMeeting(mid) {
+      this.set({
+        meetings: state.meetings.map(m => m.id === mid ? { ...m, status: "Ended", endTime: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), hitlStatus: "PendingApproval", aiSummary: m.aiSummary === "Meeting in progress..." ? "Draft summary generated by AI. Awaiting human approval." : m.aiSummary } : m),
+        pods: state.pods.map(p => p.currentMeetingId === mid ? { ...p, currentMeetingId: null } : p)
+      });
+    },
+    checkInGuest(mid, guestData) {
+      const g = { ...guestData, id: `g-${Date.now()}`, checkedInAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) };
+      this.set({ meetings: state.meetings.map(m => m.id === mid ? { ...m, guests: [...m.guests, g] } : m) });
+    },
+    approveSummary(mid, edited) { this.set({ meetings: state.meetings.map(m => m.id === mid ? { ...m, hitlStatus: "Approved", aiSummary: edited || m.aiSummary } : m) }); log("client-admin", `Approved summary for ${mid}`); },
+    rejectSummary(mid) { this.set({ meetings: state.meetings.map(m => m.id === mid ? { ...m, hitlStatus: "Rejected" } : m) }); },
+    deleteMeeting(mid) { this.set({ meetings: state.meetings.filter(m => m.id !== mid) }); },
+
+    sendBroadcast(channelName, message) {
+      const bc = { id: `bc-${Date.now()}`, tenantId: state.activeTenantId, message, timestamp: new Date().toLocaleTimeString(), active: true };
+      this.set({ broadcasts: { ...state.broadcasts, [channelName]: state.broadcasts[channelName].map(b => b.tenantId === state.activeTenantId ? { ...b, active: false } : b).concat(bc) } });
+      log("client-admin", `Broadcast → ${channelName}: ${message.slice(0, 40)}`);
+    },
+    clearBroadcast(channelName) {
+      this.set({ broadcasts: { ...state.broadcasts, [channelName]: state.broadcasts[channelName].map(b => b.tenantId === state.activeTenantId ? { ...b, active: false } : b) } });
+    },
+
+    simulateCrowdShift() {
+      const tenant = this.tenant(); if (!tenant) return;
+      const delta = Math.floor(Math.random() * 40) - 15;
+      const occ = Math.max(0, Math.min(tenant.venueCapacity, (tenant.currentOccupancy || 0) + delta));
+      const pods = state.pods.map(p => {
+        if (p.tenantId !== tenant.id) return p;
+        const hc = Math.max(0, p.currentHeadcount + Math.floor(Math.random() * 10) - 3);
+        return { ...p, currentHeadcount: hc, densityLevel: hc > 100 ? "High" : hc > 50 ? "Medium" : "Low" };
+      });
+      this.set({
+        tenants: state.tenants.map(t => t.id === tenant.id ? { ...t, currentOccupancy: occ } : t),
+        pods,
+        crowdMetrics: { ...state.crowdMetrics, currentOccupancy: occ, ingressLastHour: Math.max(0, state.crowdMetrics.ingressLastHour + Math.floor(Math.random() * 10) - 5), egressLastHour: Math.max(0, state.crowdMetrics.egressLastHour + Math.floor(Math.random() * 10) - 5) }
+      });
+    },
+
+    addSponsor(data) { this.set({ sponsors: [...state.sponsors, { ...data, id: `sp-${Date.now()}` }] }); },
+    removeSponsor(id) { this.set({ sponsors: state.sponsors.filter(s => s.id !== id) }); },
+
+    addGuestProfile(data) {
+      const exists = state.guestProfiles.find(g => g.badgeId === data.badgeId);
+      if (exists) this.set({ guestProfiles: state.guestProfiles.map(g => g.badgeId === data.badgeId ? { ...g, ...data } : g) });
+      else this.set({ guestProfiles: [...state.guestProfiles, { ...data, id: `usr-${Date.now()}`, joinedSessions: [] }] });
+    },
+    logGuestInteraction(badgeId, mid) {
+      this.set({ guestProfiles: state.guestProfiles.map(g => g.badgeId === badgeId ? { ...g, joinedSessions: [...new Set([...g.joinedSessions, mid])] } : g) });
+    },
+
+    reset() { state = clone(ZXSeed); persist(); try { channel?.postMessage({ type: "state", state }); } catch (_) {} notify("reset"); }
+  };
+})();
+
+window.ZXSeed = ZXSeed;
+window.ZXStore = ZXStore;
+window.ZX_LANGS = ZX_LANGS;
+window.ZX_I18N = ZX_I18N;
+
+/* ---------------- SHARED UI HELPERS (theme, menus, toast, PWA) ---------------- */
+(function installSharedUI() {
+  // Apply theme ASAP to avoid flash
+  function applyTheme() {
+    const th = ZXStore.state.theme || "dark";
+    document.documentElement.setAttribute("data-theme", th);
+    document.documentElement.style.setProperty("--tenant-accent", ZXStore.tenant()?.primaryColor || "#3B82F6");
+  }
+  applyTheme();
+  ZXStore.subscribe(applyTheme);
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  window.zx$ = $; window.zx$$ = $$;
+  window.zxesc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // Toast
+  window.zxToast = function (msg, kind = "info") {
+    let t = $("#zxToast");
+    if (!t) { t = document.createElement("div"); t.id = "zxToast"; t.className = "toast"; document.body.appendChild(t); }
+    t.textContent = msg;
+    t.style.borderColor = kind === "error" ? "var(--red)" : kind === "success" ? "var(--green)" : "#334155";
+    t.classList.add("show");
+    clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600);
+  };
+
+  // Sidebar menu builder: ZXMenu.build(container, items, onSelect)
+  window.ZXMenu = {
+    build(containerSel, items, onSelect) {
+      const c = $(containerSel); if (!c) return;
+      c.innerHTML = items.map((it, i) => `
+        <button class="side-link ${i === 0 ? "active" : ""}" data-view="${it.id}">
+          <svg class="icon"><use href="#${it.icon || "i-grid"}"/></svg><span>${it.label}</span>
+          ${it.badge ? `<em class="side-badge">${it.badge}</em>` : ""}
+        </button>`).join("");
+      c.addEventListener("click", e => {
+        const b = e.target.closest(".side-link"); if (!b) return;
+        $$(".side-link", c).forEach(x => x.classList.toggle("active", x === b));
+        onSelect && onSelect(b.dataset.view);
+      });
+    },
+    show(viewId) {
+      $$("[data-panel]").forEach(p => p.hidden = p.dataset.panel !== viewId);
+    }
+  };
+
+  // Theme + Language toolbar injection
+  window.zxInitChrome = function () {
+    const tb = $("#chromeControls");
+    if (!tb) return;
+    tb.innerHTML = `
+      <button id="btnTheme" class="icon-btn" title="Toggle Dark / Light theme"><svg class="icon"><use href="#i-moon"/></svg></button>
+      <select id="selUiLang" class="mini-select" title="Interface language">${ZX_LANGS.map(l => `<option value="${l.code}">${l.label}</option>`).join("")}</select>
+      <select id="selVoiceLang" class="mini-select" title="Voice language (STT/TTS)">${ZX_LANGS.map(l => `<option value="${l.code}">🎤 ${l.label}</option>`).join("")}</select>
+      <button id="btnOffline" class="icon-btn" title="Offline / connection status"><svg class="icon"><use href="#i-wifi"/></svg></button>`;
+    $("#selUiLang").value = ZXStore.state.uiLang;
+    $("#selVoiceLang").value = ZXStore.state.voiceLang;
+    $("#btnTheme").onclick = () => { zxStoreSetTheme(ZXStore.state.theme === "dark" ? "light" : "dark"); };
+    $("#selUiLang").onchange = (e) => ZXStore.setUiLang(e.target.value);
+    $("#selVoiceLang").onchange = (e) => { ZXStore.setVoiceLang(e.target.value); zxToast("Voice language set to " + e.target.selectedOptions[0].text); };
+    const offBtn = $("#btnOffline");
+    const paintNet = () => { offBtn.innerHTML = `<svg class="icon"><use href="#${navigator.onLine ? "i-wifi" : "i-wifi-off"}"/></svg>`; offBtn.title = navigator.onLine ? "Online (cached assets served offline-ready)" : "OFFLINE — app still works from cache"; };
+    paintNet(); window.addEventListener("online", paintNet); window.addEventListener("offline", paintNet);
+  };
+  window.zxStoreSetTheme = (th) => ZXStore.setTheme(th);
+
+  // Service worker registration (graceful when opened via file://)
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+})();
