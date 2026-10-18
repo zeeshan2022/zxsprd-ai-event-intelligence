@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>ZXSPRD AI — Guest Portal</title>
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<link rel="stylesheet" href="styles.css" />
+<script src="data.js"></script>
+<style>
+  .badge-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 20px; text-align: center; }
+  .guest-header .chrome-controls { width: auto; }
+  .chip { display: inline-block; background: var(--inset); border: 1px solid var(--line-soft); border-radius: 20px; padding: 4px 12px; font-size: 11px; margin: 3px; }
+</style>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM18 18h3v3h-3zM14 21h3M21 14v3"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></symbol>
+  <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="m1 1 22 22M8.5 16.5a5 5 0 0 1 7 0M2 8.82a15 15 0 0 1 4.17-2.65M10.66 5c4.01-.36 8.14.9 11.34 3.76M16.85 11.25a10 10 0 0 1 2.22 1.68M5 13a10 10 0 0 1 5.24-2.76"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="3"/><circle cx="18" cy="5" r="3"/><path d="M12 19h4.5a3.5 3.5 0 0 0 0-7h-9a3.5 3.5 0 0 1 0-7H6"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+</svg>
+
+<div class="guest-app">
+  <div id="pushBanner"></div>
+  <header class="guest-header">
+    <div><b id="gpTenant" style="font-size:15px">—</b><div class="dim" style="font-size:11px" data-i18n="concierge">AI Concierge</div></div>
+    <div class="chrome-controls" id="chromeControls"></div>
+  </header>
+
+  <main class="guest-body">
+    <!-- HOME -->
+    <section data-screen="home">
+      <div class="badge-card" id="qrCard">
+        <h3 data-i18n="scan_badge">Scan your badge QR to check-in</h3>
+        <div class="qr-frame qr-pulse" style="margin-top:14px">
+          <svg id="qrSvg" viewBox="0 0 29 29" shape-rendering="crispEdges"></svg>
+          <div class="qr-scanline"></div>
+          <span class="qr-corner tl"></span><span class="qr-corner tr"></span><span class="qr-corner bl"></span><span class="qr-corner br"></span>
+        </div>
+        <div class="mono dim" style="margin-top:12px;font-size:12px" id="qrBadge">BDG-9941 · ELENA ROSTOVA</div>
+        <button class="btn btn-blue" style="margin-top:14px;width:100%;justify-content:center" id="btnSimScan">📷 Simulate Badge Scan at Pod</button>
+      </div>
+      <div style="margin-top:18px">
+        <h4 data-i18n="live_now" style="margin-bottom:8px">Live Now</h4>
+        <div id="homeLive"></div>
+        <h4 style="margin:14px 0 8px" data-i18n="next_session">Next Session</h4>
+        <div id="homeNext"></div>
+      </div>
+      <div id="homeAnnounce" style="margin-top:18px"></div>
+      <div id="homeSponsors" style="margin-top:18px"></div>
+    </section>
+
+    <!-- AGENDA -->
+    <section data-screen="agenda" hidden>
+      <h3 style="margin-bottom:12px" data-i18n="agenda">Agenda</h3>
+      <div id="agendaFull"></div>
+    </section>
+
+    <!-- VOICE CONCIERGE -->
+    <section data-screen="voice" hidden>
+      <h3 data-i18n="concierge">AI Concierge</h3>
+      <p class="muted" style="font-size:12px;margin:6px 0" data-i18n="ask_anything">Ask anything about the event</p>
+      <select id="gVoiceLang" class="form-select" style="margin-bottom:6px"></select>
+      <div class="voice-orb" id="orb"><svg class="icon" style="width:34px;height:34px"><use href="#i-mic"/></svg></div>
+      <div style="text-align:center;font-size:12px;color:var(--muted)" id="orbHint">Tap to speak · multilingual neural voice</div>
+      <div id="chatLog" style="margin-top:16px"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <input class="form-input" id="chatInput" placeholder="…or type your question">
+        <button class="btn btn-blue" id="btnChatSend"><svg class="icon"><use href="#i-send"/></svg></button>
+      </div>
+    </section>
+
+    <!-- JOURNEY -->
+    <section data-screen="journey" hidden>
+      <h3 style="margin-bottom:12px" data-i18n="journey">My Journey</h3>
+      <div id="journeyList"></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section data-screen="profile" hidden>
+      <h3 style="margin-bottom:12px" data-i18n="profile">Profile</h3>
+      <div class="session-card">
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="pfName" value="Elena Rostova"></div>
+          <div class="form-group"><label class="form-label">Badge ID</label><input class="form-input mono" id="pfBadge" value="BDG-9941"></div>
+          <div class="form-group full"><label class="form-label">Interests (comma separated)</label><input class="form-input" id="pfInterests" value="AI Governance, Cloud Security"></div>
+          <div class="form-group full"><button class="btn btn-blue" id="btnSaveProfile"><svg class="icon"><use href="#i-check"/></svg> Save Profile</button></div>
+        </div>
+      </div>
+      <a href="index.html" class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:10px"><svg class="icon"><use href="#i-grid"/></svg> Back to Launcher</a>
+    </section>
+  </main>
+
+  <nav class="dock">
+    <button class="dock-item active" data-nav="home"><svg class="icon"><use href="#i-home"/></svg><span data-i18n="home">Home</span></button>
+    <button class="dock-item" data-nav="agenda"><svg class="icon"><use href="#i-calendar"/></svg><span data-i18n="agenda">Agenda</span></button>
+    <button class="dock-item" data-nav="voice" id="dockVoice"><svg class="icon"><use href="#i-mic"/></svg><span data-i18n="concierge">Voice</span></button>
+    <button class="dock-item" data-nav="journey"><svg class="icon"><use href="#i-route"/></svg><span data-i18n="journey">Journey</span></button>
+    <button class="dock-item" data-nav="profile"><svg class="icon"><use href="#i-user"/></svg><span data-i18n="profile">Profile</span></button>
+  </nav>
+</div>
+
+<script>
+zxInitChrome();
+
+/* ---------- Deterministic decorative QR (seeded PRNG) ---------- */
+function seededRand(seedStr) {
+  let h = 1779033703 ^ seedStr.length;
+  for (let i = 0; i < seedStr.length; i++) { h = Math.imul(h ^ seedStr.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+  return () => { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296; };
+}
+function drawQR(seed) {
+  const N = 29, rnd = seededRand(seed || "BDG-9941");
+  const grid = Array.from({ length: N }, () => Array(N).fill(0));
+  const finder = (x, y) => { for (let i = -1; i < 8; i++) for (let j = -1; j < 8; j++) { const gx = x+i, gy = y+j; if (gx<0||gy<0||gx>=N||gy>=N) continue; grid[gy][gx] = (i>=0&&i<=6&&(j===0||j===6)) || (j>=0&&j<=6&&(i===0||i===6)) || (i>=2&&i<=4&&j>=2&&j<=4) ? 1 : 0; } };
+  finder(0,0); finder(N-7,0); finder(0,N-7);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const inF = (x<9&&y<9)||(x>=N-8&&y<9)||(x<9&&y>=N-8);
+    if (!inF) grid[y][x] = rnd() > .52 ? 1 : 0;
+  }
+  let rects = "";
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (grid[y][x]) rects += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
+  document.getElementById("qrSvg").innerHTML = `<g fill="#0f172a">${rects}</g>`;
+}
+
+/* ---------- Navigation ---------- */
+document.querySelectorAll(".dock-item").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".dock-item").forEach(x => x.classList.toggle("active", x === b));
+  document.querySelectorAll("[data-screen]").forEach(s => s.hidden = s.dataset.screen !== b.dataset.nav);
+});
+
+/* ---------- Multilingual Voice Concierge (STT + TTS via Web Speech API) ---------- */
+const KB = [
+  { k: ["hall a1", "main stage", "where"], en: "Hall A1 Main Stage is straight ahead past registration — the keynote starts there.", ar: "قاعة A1 الرئيسية مباشرة أمامك بعد التسجيل — تبدأ الجلسة الافتتاحية هناك.", fr: "Le Hall A1 Scène principale est droit devant après l'accréditation — le keynotes'y déroule.", es: "El Salón A1 está recto después de registro — la conferencia inaugural comienza allí.", de: "Halle A1 Hauptbühne ist geradeaus nach der Registrierung — dort beginnt die Keynote.", hi: "रजिस्ट्रेशन के बाद हॉल A1 सीधे सामने है — मुख्य भाषण वहीं शुरू होगा।", ur: "رجسٹریشن کے بعد ہال A1 سیدھے سامنے ہے — کلیدی تقریر وہاں شروع ہوگی۔", zh: "注册后直走即是A1主会场——主题演讲在此举行。" },
+  { k: ["food", "lunch", "coffee", "cafeteria"], en: "The cafeteria is in Hall B concourse; coffee stations are on every floor.", ar: "المقصف في بهو قاعة B؛ محطات القهوة في كل طابق.", fr: "La cafétéria est au parvis du Hall B ; des stations café à chaque étage.", es: "La cafetería está en el vestíbulo del Salón B; hay café en cada planta.", de: "Die Cafeteria ist in Halle B Vorplatz; Kaffeestationen auf jeder Etage.", hi: "कैंटीन हॉल B कॉन्कोर्स में है; हर मंज़िल पर कॉफी स्टेशन हैं।", ur: "کیفٹین ہال B میں ہے؛ ہر منزل پر کافی اسٹیشنز ہیں۔", zh: "餐厅位于B厅走廊；每层都有咖啡站。" },
+  { k: ["wifi", "internet", "network"], en: "Connect to 'WPS-Guest' — password is the year of your badge number.", ar: "اتصل بشبكة WPS-Guest — كلمة المرور هي رقم شهادتك.", fr: "Connectez-vous à « WPS-Guest » — le mot de passe est votre numéro de badge.", es: "Conéctese a «WPS-Guest» — la contraseña es su número de acreditación.", de: "Verbinden Sie sich mit »WPS-Guest« — Passwort ist Ihre Badge-Nummer.", hi: "'WPS-Guest' से जुड़ें — पासवर्ड आपके बैज नंबर का वर्ष है।", ur: "'WPS-Guest' سے جڑیں — پاس ورڈ آپ کے بیج نمبر ہے۔", zh: "连接“WPS-Guest”——密码是您的胸牌号码。" },
+  { k: ["summary", "recap", "keynote"], en: "Approved session summaries rotate on the public displays and in your journey feed.", ar: "تدور ملخصات الجلسات المعتمدة على الشاشات العامة وفي رحلة ملفك.", fr: "Les résumés approuvés tournent sur les écrans publics et dans votre parcours.", es: "Los resúmenes aprobados rotan en las pantallas públicas y en su recorrido.", de: "Zugelassene Zusammenfassungen laufen auf den öffentlichen Screens und in Ihrem Verlauf.", hi: "स्वीकृत सारांश पब्लिक डिस्प्ले और आपकी जर्नी फ़ीड में घूमते हैं।", ur: "منظور خلاصے پبلک ڈسپلے اور آپ کے سفر میں گھومتے ہیں۔", zh: "已批准的会议摘要将在公共显示屏和您的行程中轮播。" }
+];
+function kbAnswer(q) {
+  const ql = q.toLowerCase();
+  const hit = KB.find(e => e.k.some(k => ql.includes(k)));
+  const lang = ZXStore.state.voiceLang.split("-")[0];
+  if (!hit) return { text: ZXStore.t("ask_anything") + " — try: \"Where is Hall A1?\", \"WiFi?\", \"Food?\"", lang: "en-US" };
+  return { text: hit[lang] || hit.en, lang: ZXStore.state.voiceLang };
+}
+function speak(text, lang) {
+  if (!ZXStore.feature("multiLanguageVoice")) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang; u.rate = 1;
+    speechSynthesis.speak(u);
+  } catch (_) {}
+}
+let recog = null;
+document.getElementById("orb").onclick = () => {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { addChat("User", "Where is Hall A1?", true); respond("Where is Hall A1?"); zxToast("Speech recognition not supported here — used typed demo input."); return; }
+  if (recog) { recog.stop(); return; }
+  recog = new SR();
+  recog.lang = ZXStore.state.voiceLang; recog.interimResults = false;
+  document.getElementById("orb").classList.add("listening");
+  document.getElementById("orbHint").textContent = "🎙 Listening in " + ZXStore.state.voiceLang + "…";
+  recog.onresult = (e) => { const t = e.results[0][0].transcript; addChat("You", t, true); respond(t); };
+  recog.onerror = recog.onend = () => { document.getElementById("orb").classList.remove("listening"); document.getElementById("orbHint").textContent = "Tap to speak · multilingual neural voice"; recog = null; };
+  recog.start();
+};
+function respond(q) {
+  setTimeout(() => { const a = kbAnswer(q); addChat("AI Concierge", a.text, false); speak(a.text, a.lang); }, 450);
+}
+function addChat(who, text, isUser) {
+  const log = document.getElementById("chatLog");
+  log.insertAdjacentHTML("beforeend", `<div class="chat-bubble ${isUser ? "chat-user" : "chat-ai"}">${zxesc(text)}</div>`);
+  log.scrollTop = 1e6;
+}
+document.getElementById("btnChatSend").onclick = sendTxt;
+document.getElementById("chatInput").addEventListener("keydown", e => e.key === "Enter" && sendTxt());
+function sendTxt() { const v = chatInput.value.trim(); if (!v) return; addChat("You", v, true); chatInput.value = ""; respond(v); }
+
+/* ---------- Render ---------- */
+function applyI18n() {
+  document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = ZXStore.t(el.dataset.i18n));
+  document.documentElement.lang = ZXStore.state.uiLang;
+  document.documentElement.dir = (ZXStore.state.uiLang === "ar-AE" || ZXStore.state.uiLang === "ur-PK") ? "rtl" : "ltr";
+}
+function render() {
+  const t = ZXStore.tenant(); if (!t) return;
+  document.getElementById("gpTenant").textContent = t.headerText || t.name;
+  applyI18n();
+
+  // Voice language select limited to tenant pool
+  const pool = (t.tenantLangs && t.tenantLangs.length ? t.tenantLangs : ["en-US"]);
+  const vs = document.getElementById("gVoiceLang");
+  vs.innerHTML = pool.map(c => `<option value="${c}" ${c===ZXStore.state.voiceLang?"selected":""}>🎤 ${ZX_LANGS.find(l=>l.code===c)?.label||c}</option>`).join("");
+  vs.onchange = e => ZXStore.setVoiceLang(e.target.value);
+
+  // Home live/next
+  const live = ZXStore.meetings(t.id).filter(m => m.status === "Recording");
+  document.getElementById("homeLive").innerHTML = live.map(m => `<div class="session-card"><b>${zxesc(m.title)}</b><div class="dim" style="font-size:11px">${m.podId} · since ${m.startTime}</div></div>`).join("") || `<div class="session-card dim">No live sessions.</div>`;
+  const next = ZXStore.schedule(t.id).find(s => s.status === "Scheduled");
+  document.getElementById("homeNext").innerHTML = next ? `<div class="session-card"><b>${zxesc(next.title)}</b><div class="dim" style="font-size:11px">${next.podId} · ${next.startTime}–${next.endTime} · ${zxesc(next.speakerHost)}</div><button class="btn btn-green btn-sm" onclick="joinSession('${next.id}')"><span data-i18n="join">Join</span> 🎟️</button></div>` : `<div class="session-card dim">Nothing scheduled.</div>`;
+
+  // Agenda full
+  document.getElementById("agendaFull").innerHTML = ZXStore.schedule(t.id).map(s => `
+    <div class="session-card"><b>${zxesc(s.title)}</b><div class="dim" style="font-size:11px">${s.podId} · ${s.startTime}–${s.endTime}</div>
+    <span class="badge ${s.status==='Completed'?'badge-green':s.status==='Live'?'badge-red':'badge-blue'}">${s.status}</span></div>`).join("");
+
+  // Announcements (guestPortal push + loggedInUsers)
+  const anns = [...ZXStore.state.broadcasts.guestPortal, ...ZXStore.state.broadcasts.loggedInUsers].filter(b => b.tenantId === t.id && b.active);
+  document.getElementById("homeAnnounce").innerHTML = anns.length ? `<h4 style="margin-bottom:8px">🔔 <span data-i18n="announcements">Announcements</span></h4>` + anns.map(b => `<div class="session-card" style="border-color:var(--amber)"><b>${zxesc(b.message)}</b><div class="dim" style="font-size:11px">${b.timestamp}</div></div>`).join("") : "";
+
+  // Sponsors
+  document.getElementById("homeSponsors").innerHTML = ZXStore.feature("sponsorInjection") ? `<h4 style="margin-bottom:8px">🤝 Partners</h4>` + ZXStore.state.sponsors.map(sp => `<div class="session-card"><b style="color:var(--tenant-accent)">${zxesc(sp.name)}</b><div class="dim" style="font-size:12px">${zxesc(sp.message)}</div></div>`).join("") : "";
+
+  // Journey
+  const g = ZXStore.state.guestProfiles[0];
+  const joined = (g?.joinedSessions || []).map(mid => ZXStore.state.meetings.find(m => m.id === mid)).filter(Boolean);
+  document.getElementById("journeyList").innerHTML = (joined.length ? joined : ZXStore.meetings(t.id)).map(m => `
+    <div class="session-card"><b>${zxesc(m.title)}</b>
+    <div class="dim" style="font-size:11px">${m.podId} · ${m.startTime}–${m.endTime||"—"}</div>
+    ${(m.hitlStatus==="Approved") ? `<div style="margin-top:8px;font-size:12.5px">📝 ${zxesc(m.aiSummary)}</div>` : `<div class="dim" style="font-size:11px;margin-top:6px">⏳ Summary pending organizer approval</div>`}
+    ${ZXStore.feature("actionItemExtraction") && m.actionItems?.length ? `<div style="margin-top:8px">${m.actionItems.map(a=>`<span class="chip">☑ ${zxesc(a)}</span>`).join("")}</div>` : ""}
+    </div>`).join("");
+
+  // Push banner
+  const pb = anns.slice(-1)[0];
+  document.getElementById("pushBanner").innerHTML = pb ? `<div class="broadcast-banner">🔔 ${zxesc(pb.message)}<button class="broadcast-close" onclick="this.parentNode.remove()">✕</button></div>` : "";
+
+  // QR badge label from profile
+  const gp = ZXStore.state.guestProfiles[0];
+  if (gp) {
+    document.getElementById("qrBadge").textContent = `${gp.badgeId} · ${gp.name.toUpperCase()}`;
+    pfName.value = gp.name; pfBadge.value = gp.badgeId; pfInterests.value = (gp.interests || []).join(", ");
+    drawQR(gp.badgeId + "|" + gp.name);
+  }
+  // Hide voice tab if flag off
+  document.getElementById("dockVoice").style.display = ZXStore.feature("voiceConcierge") ? "" : "none";
+}
+window.joinSession = (sid) => {
+  const s = ZXStore.schedule().find(x => x.id === sid);
+  ZXStore.logGuestInteraction(ZXStore.state.guestProfiles[0]?.badgeId || "BDG-9941", s.id);
+  zxToast("Ticket added to My Journey 🎟️", "success");
+};
+document.getElementById("btnSimScan").onclick = () => {
+  const pod = ZXStore.pods()[0];
+  if (!pod) return zxToast("No pods available.", "error");
+  zxToast(`Scanned at ${pod.id} — host notified for check-in ✅`, "success");
+  ZXStore.sendBroadcast("internalPod", `Badge scan: ${ZXStore.state.guestProfiles[0]?.name || "Guest"} at ${pod.id}`);
+};
+document.getElementById("btnSaveProfile").onclick = () => {
+  ZXStore.addGuestProfile({ badgeId: pfBadge.value.trim(), name: pfName.value.trim(), email: ZXStore.state.guestProfiles[0]?.email || "", phone: "", role: "Delegate", interests: pfInterests.value.split(",").map(s => s.trim()).filter(Boolean) });
+  zxToast("Profile saved", "success");
+};
+
+let _raf = false;
+function scheduleRender(){ if(_raf)return; _raf=true; requestAnimationFrame(()=>{_raf=false; render();}); }
+render();
+ZXStore.subscribe(scheduleRender);
+</script>
+</body>
+</html>

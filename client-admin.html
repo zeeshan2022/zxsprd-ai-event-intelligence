@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ZXSPRD AI — Client Admin Console</title>
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<meta name="theme-color" content="#2563EB" />
+<link rel="stylesheet" href="styles.css" />
+<script src="data.js"></script>
+<style>
+  .density-bar { height: 8px; border-radius: 8px; background: var(--inset); overflow: hidden; min-width: 90px; }
+  .density-bar > div { height: 100%; border-radius: 8px; transition: width .6s var(--ease); }
+  .zone-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .approval-card { border: 1px solid var(--line); background: var(--inset); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/></symbol>
+  <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-smartphone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m20 6-11 11-5-5"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></symbol>
+  <symbol id="i-stamp" viewBox="0 0 24 24"><path d="M5 22h14M6 18h12v-3a6 6 0 0 0-2-4.5C14 8.5 14 7 14 6a2 2 0 1 0-4 0c0 1 0 2.5-2 4A6 6 0 0 0 6 15z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="8" cy="10" r="1.4"/><circle cx="12" cy="7.5" r="1.4"/><circle cx="16" cy="10" r="1.4"/><path d="M12 22a3 3 0 0 1-3-3c0-2 3-2.5 3-5a2 2 0 0 1 4 0c0 1 1 1.5 2 1.5A5 5 0 0 1 12 22z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.3M21 3v6h-6"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></symbol>
+  <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="m1 1 22 22M8.5 16.5a5 5 0 0 1 7 0M2 8.82a15 15 0 0 1 4.17-2.65M10.66 5c4.01-.36 8.14.9 11.34 3.76M16.85 11.25a10 10 0 0 1 2.22 1.68M5 13a10 10 0 0 1 5.24-2.76"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+</svg>
+
+<div id="impBar"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark" style="background:var(--tenant-accent)"><svg class="icon"><use href="#i-building"/></svg></div>
+    <div><div class="brand-name" id="brandName">ZXSPRD<span style="color:var(--tenant-accent)"> AI</span></div><div class="brand-sub">Client Admin · <span id="brandTenant">—</span></div></div>
+  </div>
+  <nav class="role-switch">
+    <a href="index.html" class="role-btn"><svg class="icon"><use href="#i-grid"/></svg> Launcher</a>
+    <a href="super-admin.html" class="role-btn"><svg class="icon"><use href="#i-shield"/></svg> Super Admin</a>
+    <a href="client-admin.html" class="role-btn active"><svg class="icon"><use href="#i-building"/></svg> Client Admin</a>
+    <a href="edge-kiosk.html" class="role-btn"><svg class="icon"><use href="#i-tablet"/></svg> Edge Kiosk</a>
+    <a href="public-display.html" class="role-btn"><svg class="icon"><use href="#i-tv"/></svg> Public Display</a>
+    <a href="guest-portal.html" class="role-btn"><svg class="icon"><use href="#i-smartphone"/></svg> Guest Portal</a>
+  </nav>
+  <div class="chrome-controls" id="chromeControls"></div>
+</header>
+
+<div class="app-shell">
+  <aside class="side-nav" id="caMenu"><div class="side-nav-title">Event Menu</div></aside>
+
+  <div class="content-area">
+
+    <!-- DASHBOARD -->
+    <section data-panel="dashboard">
+      <div class="grid-2" id="dashStats"></div>
+      <div class="panel">
+        <div class="panel-title"><svg class="icon"><use href="#i-activity"/></svg> Today at a Glance</div>
+        <div class="table-scroll" style="margin-top:12px"><table class="data-table"><thead><tr><th>Session</th><th>Pod</th><th>Time</th><th>Status</th></tr></thead><tbody id="dashSessions"></tbody></table></div>
+      </div>
+    </section>
+
+    <!-- PODS -->
+    <section data-panel="pods" hidden>
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <div class="panel-title"><svg class="icon"><use href="#i-tablet"/></svg> POD Provisioning &amp; Configuration</div>
+            <div class="panel-subtitle">Add edge pods (quota enforced by platform), map mic channels, set per-pod LLM/TTS overrides.</div>
+          </div>
+          <button class="btn btn-blue" id="btnAddPod"><svg class="icon"><use href="#i-plus"/></svg> Add New POD</button>
+        </div>
+        <div class="table-scroll"><table class="data-table">
+          <thead><tr><th>POD ID</th><th>Location / MAC</th><th>Mic Matrix</th><th>Overrides</th><th>Density</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead>
+          <tbody id="podBody"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- SCHEDULE -->
+    <section data-panel="schedule" hidden>
+      <div class="panel">
+        <div class="panel-header">
+          <div><div class="panel-title"><svg class="icon"><use href="#i-calendar"/></svg> Event Schedule Builder</div>
+          <div class="panel-subtitle">Assign sessions to pods — drives the kiosk auto-start and public countdown.</div></div>
+          <button class="btn btn-blue" id="btnAddSession"><svg class="icon"><use href="#i-plus"/></svg> New Session</button>
+        </div>
+        <div class="table-scroll"><table class="data-table">
+          <thead><tr><th>Title</th><th>Pod</th><th>Time</th><th>Speakers</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead>
+          <tbody id="schedBody"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- ANNOUNCEMENTS -->
+    <section data-panel="announcements" hidden>
+      <div class="panel">
+        <div class="panel-title"><svg class="icon"><use href="#i-send"/></svg> 4-Channel Announcement Engine</div>
+        <div class="panel-subtitle" style="margin-bottom:16px">Broadcast instantly to pods, venue screens, guest portal and logged-in users. Cross-tab live demo: open other views in separate tabs.</div>
+        <div class="form-grid">
+          <div class="form-group"><label class="form-label">Channel</label>
+            <select class="form-select" id="bcChannel">
+              <option value="internalPod">Internal Pod Alerts (kiosk banner)</option>
+              <option value="allScreens">All Screens (signage alert)</option>
+              <option value="guestPortal">Guest Portal Push</option>
+              <option value="loggedInUsers">Logged-In Users Only</option>
+            </select></div>
+          <div class="form-group"><label class="form-label">Message</label><input class="form-input" id="bcMsg" placeholder="e.g. Keynote moved to Hall A1 Main Stage"></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px">
+          <button class="btn btn-blue" id="btnSendBc"><svg class="icon"><use href="#i-send"/></svg> Broadcast Now</button>
+          <button class="btn btn-ghost" id="btnClearBc">Clear Active</button>
+        </div>
+        <div id="bcHistory" style="margin-top:18px"></div>
+      </div>
+    </section>
+
+    <!-- APPROVALS -->
+    <section data-panel="approvals" hidden>
+      <div class="panel">
+        <div class="panel-title"><svg class="icon"><use href="#i-stamp"/></svg> HITL Approval Queue (Human-in-the-Loop)</div>
+        <div class="panel-subtitle" style="margin-bottom:16px">AI summaries are never published to displays until approved here. Platform policy enforces this flow.</div>
+        <div id="approvalList"></div>
+      </div>
+    </section>
+
+    <!-- RAW TRANSCRIPTS -->
+    <section data-panel="transcripts" hidden>
+      <div class="panel">
+        <div class="panel-title"><svg class="icon"><use href="#i-file"/></svg> Raw Transcripts Vault</div>
+        <div class="panel-subtitle" style="margin-bottom:16px">Full speaker-separated transcripts for every meeting. Retention follows the platform purge policy.</div>
+        <div class="form-group" style="max-width:420px;margin-bottom:16px"><label class="form-label">Select Meeting</label><select class="form-select" id="trSelect"></select></div>
+        <div class="transcript-body" id="trBody"></div>
+      </div>
+    </section>
+
+    <!-- CROWD -->
+    <section data-panel="crowd" hidden id="crowdPanel">
+      <div class="panel">
+        <div class="panel-header">
+          <div><div class="panel-title"><svg class="icon"><use href="#i-users"/></svg> Crowd &amp; Spatial Management</div>
+          <div class="panel-subtitle">Live occupancy vs capacity, ingress/egress flows and density hot-zones.</div></div>
+          <button class="btn btn-ghost" id="btnSimCrowd"><svg class="icon"><use href="#i-refresh"/></svg> Simulate Movement</button>
+        </div>
+        <div class="grid-2" id="crowdStats"></div>
+        <h4 style="margin:18px 0 10px">Hot Zones</h4>
+        <div id="zoneList"></div>
+      </div>
+    </section>
+
+    <!-- SPONSORS -->
+    <section data-panel="sponsors" hidden id="sponsorPanel">
+      <div class="panel">
+        <div class="panel-header">
+          <div><div class="panel-title"><svg class="icon"><use href="#i-gift"/></svg> Sponsor Content Injection</div>
+          <div class="panel-subtitle">Partner messages appear on Public Display rotation &amp; Guest Portal.</div></div>
+          <button class="btn btn-blue" id="btnAddSponsor"><svg class="icon"><use href="#i-plus"/></svg> Add Sponsor</button>
+        </div>
+        <div id="sponsorList"></div>
+      </div>
+    </section>
+
+    <!-- APPEARANCE (tenant-scoped, respects super admin locks → no overlap) -->
+    <section data-panel="appearance" hidden>
+      <div class="panel">
+        <div class="panel-title"><svg class="icon"><use href="#i-palette"/></svg> Appearance &amp; Branding</div>
+        <div class="panel-subtitle" style="margin-bottom:16px">Event-level look &amp; feel. Platform-level theme/language locks are managed only in Super Admin.</div>
+        <div id="appearBox"></div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<!-- Pod Modal -->
+<div class="modal-overlay" id="podModal">
+  <div class="modal-card">
+    <div class="modal-header"><div class="modal-title">Provision New POD</div><button class="close-btn" onclick="document.getElementById('podModal').classList.remove('active')"><svg class="icon"><use href="#i-x"/></svg></button></div>
+    <form id="podForm" class="form-grid">
+      <div class="form-group full"><label class="form-label">Physical Location</label><input class="form-input" id="pfLoc" required placeholder="e.g. DWTC Hall A1 — Zone 3"></div>
+      <div class="form-group"><label class="form-label">MAC Address</label><input class="form-input mono" id="pfMac" required placeholder="AC:DE:48:00:XX:XX"></div>
+      <div class="form-group"><label class="form-label">Standby Timeout (min)</label><input type="number" class="form-input" id="pfTimeout" value="10" min="1"></div>
+      <div class="form-group full" style="display:flex;gap:10px;justify-content:flex-end"><button type="button" class="btn btn-ghost" onclick="document.getElementById('podModal').classList.remove('active')">Cancel</button><button type="submit" class="btn btn-blue">Deploy POD</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Session Modal -->
+<div class="modal-overlay" id="sessModal">
+  <div class="modal-card">
+    <div class="modal-header"><div class="modal-title">Schedule New Session</div><button class="close-btn" onclick="document.getElementById('sessModal').classList.remove('active')"><svg class="icon"><use href="#i-x"/></svg></button></div>
+    <form id="sessForm" class="form-grid">
+      <div class="form-group full"><label class="form-label">Session Title</label><input class="form-input" id="sfTitle" required></div>
+      <div class="form-group"><label class="form-label">Pod</label><select class="form-select" id="sfPod"></select></div>
+      <div class="form-group"><label class="form-label">Start / End</label><div style="display:flex;gap:8px"><input class="form-input" id="sfStart" placeholder="10:00 AM" required><input class="form-input" id="sfEnd" placeholder="10:45 AM" required></div></div>
+      <div class="form-group"><label class="form-label">Host Speaker</label><input class="form-input" id="sfHost" required></div>
+      <div class="form-group"><label class="form-label">Guest Speaker</label><input class="form-input" id="sfGuest"></div>
+      <div class="form-group full" style="display:flex;gap:10px;justify-content:flex-end"><button type="button" class="btn btn-ghost" onclick="document.getElementById('sessModal').classList.remove('active')">Cancel</button><button type="submit" class="btn btn-blue">Save Session</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Sponsor Modal -->
+<div class="modal-overlay" id="spModal">
+  <div class="modal-card">
+    <div class="modal-header"><div class="modal-title">Add Sponsor</div><button class="close-btn" onclick="document.getElementById('spModal').classList.remove('active')"><svg class="icon"><use href="#i-x"/></svg></button></div>
+    <form id="spForm" class="form-grid">
+      <div class="form-group full"><label class="form-label">Sponsor Name</label><input class="form-input" id="spfName" required></div>
+      <div class="form-group full"><label class="form-label">Message</label><textarea class="form-textarea" id="spfMsg" required></textarea></div>
+      <div class="form-group full" style="display:flex;gap:10px;justify-content:flex-end"><button type="button" class="btn btn-ghost" onclick="document.getElementById('spModal').classList.remove('active')">Cancel</button><button type="submit" class="btn btn-blue">Save Sponsor</button></div>
+    </form>
+  </div>
+</div>
+
+<script>
+zxInitChrome();
+
+const MENU_ALL = [
+  { id: "dashboard", label: "Dashboard", icon: "i-grid" },
+  { id: "pods", label: "POD Management", icon: "i-tablet" },
+  { id: "schedule", label: "Schedule Builder", icon: "i-calendar" },
+  { id: "announcements", label: "Announcements", icon: "i-send" },
+  { id: "approvals", label: "Approvals", icon: "i-stamp", badgeId: "pend" },
+  { id: "transcripts", label: "Raw Transcripts", icon: "i-file" },
+  { id: "crowd", label: "Crowd Management", icon: "i-users", flag: "crowdAnalytics" },
+  { id: "sponsors", label: "Sponsors", icon: "i-gift", flag: "sponsorInjection" },
+  { id: "appearance", label: "Appearance & Branding", icon: "i-palette" }
+];
+
+function buildMenu() {
+  const items = MENU_ALL.filter(m => !m.flag || ZXStore.feature(m.flag));
+  ZXMenu.build("#caMenu", items, v => ZXMenu.show(v));
+  ZXMenu.show(items[0].id);
+}
+buildMenu();
+
+function paintImpBar() {
+  const el = document.getElementById("impBar");
+  el.innerHTML = ZXStore.state.impersonating ? `
+    <div class="impersonate-bar">
+      <span>⚠ SUPER ADMIN IMPERSONATING CLIENT ADMIN — ${zxesc(ZXStore.tenant()?.name || "")}. Super-Admin-only settings are hidden here (no overlap).</span>
+      <button onclick="ZXStore.stopImpersonate();location.href='super-admin.html'">Exit Impersonation</button>
+    </div>` : "";
+}
+
+function render() {
+  paintImpBar();
+  const t = ZXStore.tenant(); if (!t) return;
+  document.getElementById("brandTenant").textContent = t.name;
+  const pods = ZXStore.pods(t.id), meetings = ZXStore.meetings(t.id), sched = ZXStore.schedule(t.id);
+  const pend = meetings.filter(m => m.hitlStatus === "PendingApproval").length;
+
+  // Dashboard
+  document.getElementById("dashStats").innerHTML = [
+    ["Pods Deployed", `${pods.length}/${t.maxPods}`], ["Live Meetings", meetings.filter(m=>m.status==="Recording").length],
+    ["Approvals Pending", pend], ["Venue Occupancy", `${t.currentOccupancy}/${t.venueCapacity}`]
+  ].map(([l,v]) => `<div class="stat-card"><div class="stat-label">${l}</div><div class="stat-value">${v}</div></div>`).join("");
+  document.getElementById("dashSessions").innerHTML = sched.slice(0,6).map(s => `
+    <tr><td><b>${zxesc(s.title)}</b></td><td class="mono">${s.podId}</td><td class="mono">${s.startTime}–${s.endTime}</td>
+    <td><span class="badge ${s.status==='Completed'?'badge-green':s.status==='Live'?'badge-red':'badge-blue'}">${s.status}</span></td></tr>`).join("");
+
+  // Pods
+  document.getElementById("podBody").innerHTML = pods.map(p => {
+    const dn = p.densityLevel === "High" ? "var(--red)" : p.densityLevel === "Medium" ? "var(--amber)" : "var(--green)";
+    return `<tr>
+      <td><b class="mono">${p.id}</b>${p.currentMeetingId?` <span class="badge badge-red"><span class="rec-dot"></span>REC</span>`:""}</td>
+      <td>${zxesc(p.location)}<div class="dim mono" style="font-size:10.5px">${zxesc(p.macAddress)}</div></td>
+      <td style="min-width:230px">
+        CH1 <select class="form-select" style="padding:4px 6px;font-size:11px" onchange="ZXStore.updateMicMapping('${p.id}',this.value,p.mic2Role,p.mic1Gain,p.mic2Gain)">
+          ${["Host (Speaker 1)","Keynote Speaker","Panel Moderator"].map(o=>`<option ${o===p.mic1Role?"selected":""}>${o}</option>`).join("")}</select>
+        <input type="range" min="0" max="100" value="${p.mic1Gain}" onchange="ZXStore.updateMicMapping('${p.id}',p.mic1Role,p.mic2Role,+this.value,p.mic2Gain)" title="Mic 1 gain">
+        CH2 <select class="form-select" style="padding:4px 6px;font-size:11px" onchange="ZXStore.updateMicMapping('${p.id}',p.mic1Role,this.value,p.mic1Gain,p.mic2Gain)">
+          ${["Guest (Speaker 2)","Audience Q&A","Interpreter"].map(o=>`<option ${o===p.mic2Role?"selected":""}>${o}</option>`).join("")}</select>
+        <input type="range" min="0" max="100" value="${p.mic2Gain}" onchange="ZXStore.updateMicMapping('${p.id}',p.mic1Role,p.mic2Role,p.mic1Gain,+this.value)" title="Mic 2 gain">
+      </td>
+      <td style="min-width:170px">
+        <select class="form-select" style="font-size:11px;padding:5px" onchange="ZXStore.updatePodOverrides('${p.id}',{llmOverride:this.value||null})">
+          <option value="">LLM: Tenant default</option>${ZXStore.state.llmCatalog.map(m=>`<option ${m===p.llmOverride?"selected":""}>${m}</option>`).join("")}</select>
+        <select class="form-select" style="font-size:11px;padding:5px;margin-top:6px" onchange="ZXStore.updatePodOverrides('${p.id}',{ttsOverride:this.value||null})">
+          <option value="">TTS: Tenant default</option>${ZXStore.state.ttsCatalog.map(m=>`<option ${m===p.ttsOverride?"selected":""}>${m}</option>`).join("")}</select>
+      </td>
+      <td><div class="density-bar"><div style="width:${Math.min(100,p.currentHeadcount/1.6)}%;background:${dn}"></div></div><span class="dim" style="font-size:10.5px">${p.currentHeadcount} ppl · ${p.densityLevel}</span></td>
+      <td><span class="badge ${p.status==='Online'?'badge-green':'badge-slate'}">${p.status}</span></td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="ZXStore.setPodStatus('${p.id}','${p.status==='Online'?'Standby':'Online'}')">${p.status==='Online'?'Standby':'Wake'}</button>
+        <button class="btn btn-red btn-sm" onclick="if(confirm('Decommission ${p.id}?'))ZXStore.deletePod('${p.id}')"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg></button>
+      </td></tr>`;
+  }).join("");
+
+  // Schedule
+  document.getElementById("schedBody").innerHTML = sched.map(s => `
+    <tr><td><b>${zxesc(s.title)}</b></td><td class="mono">${s.podId}</td><td class="mono">${s.startTime} – ${s.endTime}</td>
+    <td>${zxesc(s.speakerHost)} ${s.speakerGuest?`&amp; ${zxesc(s.speakerGuest)}`:""}</td>
+    <td><span class="badge ${s.status==='Completed'?'badge-green':s.status==='Live'?'badge-red':'badge-blue'}">${s.status}</span></td>
+    <td style="text-align:right;white-space:nowrap">
+      ${s.status!=="Completed"?`<button class="btn btn-green btn-sm" onclick="startFromSession('${s.id}')">▶ Start Now</button>`:""}
+      <button class="btn btn-red btn-sm" onclick="ZXStore.deleteSession('${s.id}')"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg></button>
+    </td></tr>`).join("");
+  window.startFromSession = (sid) => {
+    const s = ZXStore.state.schedule.find(x => x.id === sid);
+    ZXStore.startMeeting(s.podId, s.speakerHost, s.title);
+    ZXStore.updateSessionStatus(sid, "Live");
+    zxToast("Session started on " + s.podId, "success");
+  };
+
+  // Announcements history
+  const CH_LABEL = { internalPod: "Pod Alerts", allScreens: "All Screens", guestPortal: "Guest Portal", loggedInUsers: "Logged-In Users" };
+  document.getElementById("bcHistory").innerHTML = Object.keys(CH_LABEL).map(ch => {
+    const list = ZXStore.state.broadcasts[ch].filter(b => b.tenantId === t.id).slice(-3).reverse();
+    const rows = list.map(b => `
+      <div class="flag-row"><div><div class="flag-name">${zxesc(b.message)}</div><div class="flag-desc">${b.timestamp}</div></div>
+      <span class="badge ${b.active ? "badge-amber" : "badge-slate"}">${b.active ? "LIVE" : "history"}</span></div>`).join("");
+    return `<h4 style="margin:14px 0 8px">${CH_LABEL[ch]}</h4>` + (rows || `<div class="dim" style="font-size:12px">No broadcasts yet.</div>`);
+  }).join("");
+
+  // Approvals
+  document.getElementById("approvalList").innerHTML = meetings.filter(m => m.status === "Ended").map(m => `
+    <div class="approval-card">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <b>${zxesc(m.title)} <span class="dim mono" style="font-weight:400">· ${m.podId} · ${m.startTime}–${m.endTime}</span></b>
+        <span class="badge ${m.hitlStatus==='Approved'?'badge-green':m.hitlStatus==='Rejected'?'badge-red':'badge-amber'}">${m.hitlStatus}</span>
+      </div>
+      <textarea class="form-textarea" id="sum-${m.id}" style="margin-top:10px">${zxesc(m.aiSummary)}</textarea>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-green btn-sm" onclick="ZXStore.approveSummary('${m.id}', document.getElementById('sum-${m.id}').value);zxToast('Published to displays','success')"><svg class="icon" style="width:13px;height:13px"><use href="#i-check"/></svg> Approve &amp; Publish</button>
+        <button class="btn btn-red btn-sm" onclick="ZXStore.rejectSummary('${m.id}')">Reject / Regenerate</button>
+        <button class="btn btn-ghost btn-sm" onclick="ZXStore.deleteMeeting('${m.id}')"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg></button>
+      </div>
+    </div>`).join("") || `<div class="dim">Approval queue empty — nothing pending.</div>`;
+
+  // Transcripts
+  const sel = document.getElementById("trSelect");
+  const cur = sel.value;
+  sel.innerHTML = meetings.map(m => `<option value="${m.id}">${zxesc(m.title)} (${m.podId})</option>`).join("");
+  if (cur && [...sel.options].some(o => o.value === cur)) sel.value = cur;
+  paintTranscript();
+  function paintTranscript() {
+    const m = meetings.find(x => x.id === sel.value);
+    document.getElementById("trBody").innerHTML = m ? m.rawTranscript.map(l => `
+      <div class="t-line"><div class="t-meta"><span>${l.time}</span><span class="t-speaker">${zxesc(l.speaker)}</span></div>${zxesc(l.text)}</div>`).join("") || `<div class="dim">No transcript lines.</div>` : `<div class="dim">Select a meeting.</div>`;
+  }
+  sel.onchange = paintTranscript;
+
+  // Crowd
+  const cm = ZXStore.state.crowdMetrics;
+  document.getElementById("crowdStats").innerHTML = [
+    ["Current Occupancy", `${cm.currentOccupancy}`], ["Venue Capacity", `${t.venueCapacity}`],
+    ["Ingress (last hour)", `+${cm.ingressLastHour}`], ["Egress (last hour)", `-${cm.egressLastHour}`], ["Peak Hour", cm.peakHour]
+  ].map(([l,v]) => `<div class="stat-card"><div class="stat-label">${l}</div><div class="stat-value">${v}</div></div>`).join("");
+  document.getElementById("zoneList").innerHTML = cm.hotZones.map(z => {
+    const c = z.status === "Critical" ? "var(--red)" : z.status === "Moderate" ? "var(--amber)" : "var(--green)";
+    return `<div class="zone-row"><span style="width:190px;font-size:12.5px">${zxesc(z.zone)}</span>
+      <div class="density-bar" style="flex:1"><div style="width:${z.density}%;background:${c}"></div></div>
+      <span class="mono" style="font-size:11px;color:${c}">${z.density}% ${z.status}</span></div>`;
+  }).join("");
+
+  // Sponsors
+  document.getElementById("sponsorList").innerHTML = ZXStore.state.sponsors.map(sp => `
+    <div class="flag-row"><div><div class="flag-name">${zxesc(sp.name)}</div><div class="flag-desc">${zxesc(sp.message)}</div></div>
+    <button class="btn btn-red btn-sm" onclick="ZXStore.removeSponsor('${sp.id}')"><svg class="icon" style="width:13px;height:13px"><use href="#i-trash"/></svg></button></div>`).join("") || `<div class="dim">No sponsors configured.</div>`;
+
+  // Appearance (event scope only; locked controls respect super admin)
+  const lockTheme = ZXStore.state.platformSettings.globalThemeLock || !t.allowTenantTheme;
+  const lockLangs = !t.allowTenantLangs;
+  document.getElementById("appearBox").innerHTML = `
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Header Text</label><input class="form-input" id="apHeader" value="${zxesc(t.headerText)}"></div>
+      <div class="form-group"><label class="form-label">Footer Text</label><input class="form-input" id="apFooter" value="${zxesc(t.footerText)}"></div>
+      <div class="form-group"><label class="form-label">Brand Color</label><input type="color" id="apColor" value="${t.primaryColor}"></div>
+      <div class="form-group"><label class="form-label">Event Theme</label>
+        <select class="form-select" id="apTheme" ${lockTheme ? "disabled" : ""}>
+          <option value="dark" ${t.tenantTheme==="dark"?"selected":""}>Dark</option>
+          <option value="light" ${t.tenantTheme==="light"?"selected":""}>Light</option>
+        </select>
+        ${lockTheme ? '<div class="flag-desc" style="color:var(--amber)">🔒 Locked by Super Admin policy</div>' : ""}</div>
+      <div class="form-group full"><label class="form-label">Event Languages (voice + UI)</label>
+        ${ZX_LANGS.map(l => `<label style="display:inline-flex;align-items:center;gap:4px;margin-right:12px;font-size:12px"><input type="checkbox" ${(t.tenantLangs||[]).includes(l.code)?"checked":""} ${lockLangs?"disabled":""} onchange="toggleEvLang('${l.code}',this.checked)"> ${l.label}</label>`).join("")}
+        ${lockLangs ? '<div class="flag-desc" style="color:var(--amber)">🔒 Language pool locked by Super Admin</div>' : ""}</div>
+      <div class="form-group full"><button class="btn btn-blue" id="apSave">Save Appearance</button></div>
+    </div>`;
+  document.getElementById("apSave").onclick = () => {
+    ZXStore.updateTenant(t.id, { headerText: apHeader.value, footerText: apFooter.value, primaryColor: apColor.value });
+    if (!lockTheme) { ZXStore.updateTenant(t.id, { tenantTheme: apTheme.value }); zxStoreSetTheme(apTheme.value); }
+    zxToast("Appearance saved", "success");
+  };
+}
+window.toggleEvLang = (code, on) => {
+  const t = ZXStore.tenant(); const langs = new Set(t.tenantLangs || []);
+  on ? langs.add(code) : langs.delete(code);
+  ZXStore.updateTenant(t.id, { tenantLangs: [...langs] });
+};
+
+// Modals & buttons
+document.getElementById("btnAddPod").onclick = () => document.getElementById("podModal").classList.add("active");
+document.getElementById("podForm").onsubmit = (e) => {
+  e.preventDefault();
+  const ok = ZXStore.addPod({ tenantId: ZXStore.state.activeTenantId, location: pfLoc.value.trim(), macAddress: pfMac.value.trim(), standbyTimeoutMins: +pfTimeout.value });
+  document.getElementById("podModal").classList.remove("active"); podForm.reset();
+  ok ? zxToast("POD deployed", "success") : zxToast("Pod quota reached — ask platform owner to raise it.", "error");
+};
+document.getElementById("btnAddSession").onclick = () => {
+  sfPod.innerHTML = ZXStore.pods().map(p => `<option value="${p.id}">${p.id} — ${zxesc(p.location)}</option>`).join("");
+  document.getElementById("sessModal").classList.add("active");
+};
+document.getElementById("sessForm").onsubmit = (e) => {
+  e.preventDefault();
+  ZXStore.addSession({ tenantId: ZXStore.state.activeTenantId, podId: sfPod.value, title: sfTitle.value.trim(), startTime: sfStart.value.trim(), endTime: sfEnd.value.trim(), speakerHost: sfHost.value.trim(), speakerGuest: sfGuest.value.trim() });
+  document.getElementById("sessModal").classList.remove("active"); sessForm.reset(); zxToast("Session scheduled", "success");
+};
+document.getElementById("btnAddSponsor").onclick = () => document.getElementById("spModal").classList.add("active");
+document.getElementById("spForm").onsubmit = (e) => {
+  e.preventDefault();
+  ZXStore.addSponsor({ name: spfName.value.trim(), message: spfMsg.value.trim(), logoUrl: "" });
+  document.getElementById("spModal").classList.remove("active"); spForm.reset(); zxToast("Sponsor added", "success");
+};
+document.getElementById("btnSendBc").onclick = () => {
+  const msg = document.getElementById("bcMsg").value.trim();
+  if (!msg) return zxToast("Type a message first", "error");
+  ZXStore.sendBroadcast(bcChannel.value, msg); bcMsg.value = ""; zxToast("Broadcast pushed to all connected screens", "success");
+};
+document.getElementById("btnClearBc").onclick = () => ZXStore.clearBroadcast(bcChannel.value);
+document.getElementById("btnSimCrowd").onclick = () => ZXStore.simulateCrowdShift();
+
+let _raf=false; function scheduleRender(){ if(_raf)return; _raf=true; requestAnimationFrame(()=>{_raf=false; render();}); }
+render();
+ZXStore.subscribe(scheduleRender);
+let lastFlagCount = Object.keys(ZXStore.state.featureFlags).filter(f => ZXStore.feature(f)).length;
+ZXStore.subscribe(() => {
+  const n = Object.keys(ZXStore.state.featureFlags).filter(f => ZXStore.feature(f)).length;
+  if (n !== lastFlagCount) { lastFlagCount = n; buildMenu(); }
+});
+</script>
+</body>
+</html>

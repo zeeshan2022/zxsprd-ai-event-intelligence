@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ZXSPRD AI — Event Intelligence Launcher</title>
+<meta name="description" content="Offline-capable PWA demo: multi-tenant AI event intelligence platform." />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<meta name="theme-color" content="#2563EB" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<link rel="stylesheet" href="styles.css" />
+<script src="data.js"></script>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M9 6h.01M15 6h.01M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/></symbol>
+  <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-smartphone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></symbol>
+  <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="m1 1 22 22M8.5 16.5a5 5 0 0 1 7 0M2 8.82a15 15 0 0 1 4.17-2.65M10.66 5c4.01-.36 8.14.9 11.34 3.76M16.85 11.25a10 10 0 0 1 2.22 1.68M5 13a10 10 0 0 1 5.24-2.76"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+</svg>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark"><svg class="icon"><use href="#i-activity"/></svg></div>
+    <div>
+      <div class="brand-name">ZXSPRD<span style="color:var(--tenant-accent)"> AI</span></div>
+      <div class="brand-sub">Event Intelligence Platform · Final Demo v7</div>
+    </div>
+  </div>
+  <div class="chrome-controls" id="chromeControls"></div>
+</header>
+
+<main class="page">
+  <section class="panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title"><svg class="icon"><use href="#i-building"/></svg> Select Tenant Context</div>
+        <div class="panel-subtitle">All views below operate inside the selected tenant (white-label branding, pods &amp; data).</div>
+      </div>
+      <button class="btn btn-ghost" id="btnReset">Reset Demo Data</button>
+    </div>
+    <div class="launch-grid" id="tenantGrid"></div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <div>
+        <div class="panel-title"><svg class="icon"><use href="#i-activity"/></svg> Operational Views</div>
+        <div class="panel-subtitle">Every view is a full dashboard with its own configuration menu. Works offline once loaded (PWA).</div>
+      </div>
+      <span class="badge badge-green" id="pwaBadge">Installable / Offline-ready</span>
+    </div>
+    <div class="launch-grid">
+      <a class="launch-card" href="super-admin.html">
+        <div class="card-icon"><svg class="icon"><use href="#i-shield"/></svg></div>
+        <h3>Super Admin Console</h3>
+        <p>Tenants, API keys, feature on/off flags, global model router, telemetry, themes &amp; languages control, impersonation.</p>
+        <span class="badge badge-blue">Platform Owner</span>
+      </a>
+      <a class="launch-card" href="client-admin.html">
+        <div class="card-icon"><svg class="icon"><use href="#i-building"/></svg></div>
+        <h3>Client Admin Console</h3>
+        <p>POD provisioning &amp; mic matrix, schedule, announcements, approvals queue, raw transcripts, crowd management, sponsors.</p>
+        <span class="badge badge-green">Event Organizer</span>
+      </a>
+      <a class="launch-card" href="edge-kiosk.html">
+        <div class="card-icon"><svg class="icon"><use href="#i-tablet"/></svg></div>
+        <h3>Edge Kiosk (Pod)</h3>
+        <p>Start/end meetings, live transcription, guest check-in, multilingual voice concierge.</p>
+        <span class="badge badge-amber">Device View</span>
+      </a>
+      <a class="launch-card" href="public-display.html">
+        <div class="card-icon"><svg class="icon"><use href="#i-tv"/></svg></div>
+        <h3>Public Display Signage</h3>
+        <p>Auto-rotating slides: trends, agenda countdown, alerts, sponsors, ticker.</p>
+        <span class="badge badge-slate">TV / Signage</span>
+      </a>
+      <a class="launch-card" href="guest-portal.html">
+        <div class="card-icon"><svg class="icon"><use href="#i-smartphone"/></svg></div>
+        <h3>Guest Portal PWA</h3>
+        <p>Animated QR badge, agenda, journey, voice concierge in 8 languages, profile.</p>
+        <span class="badge badge-blue">Attendee Mobile</span>
+      </a>
+    </div>
+  </section>
+</main>
+
+<script>
+zxInitChrome();
+const grid = document.getElementById("tenantGrid");
+function paintTenants() {
+  grid.innerHTML = ZXStore.state.tenants.map(t => `
+    <div class="launch-card ${t.id === ZXStore.state.activeTenantId ? "is-selected" : ""}" data-t="${t.id}" style="cursor:pointer;border-color:${t.id===ZXStore.state.activeTenantId?t.primaryColor:'var(--line)'}">
+      <div class="card-icon" style="color:${t.primaryColor}"><svg class="icon"><use href="#i-building"/></svg></div>
+      <h3>${zxesc(t.name)}</h3>
+      <p>${zxesc(t.subdomain)} · ${zxesc(t.tier)} · Pods ${t.assignedPods}/${t.maxPods}</p>
+      <span class="badge ${t.status==='Active'?'badge-green':'badge-red'}">${t.status}</span>
+    </div>`).join("");
+}
+paintTenants();
+grid.addEventListener("click", e => {
+  const c = e.target.closest("[data-t]"); if (!c) return;
+  ZXStore.setTenant(c.dataset.t); zxToast("Context switched to " + ZXStore.tenant().name);
+});
+document.getElementById("btnReset").onclick = () => { if (confirm("Reset all demo data?")) { ZXStore.reset(); location.reload(); } };
+ZXStore.subscribe(paintTenants);
+</script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ZXSPRD AI — Public Display Signage</title>
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="styles.css" />
+<script src="data.js"></script>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/></symbol>
+  <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-smartphone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3zM12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></symbol>
+  <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="m1 1 22 22M8.5 16.5a5 5 0 0 1 7 0M2 8.82a15 15 0 0 1 4.17-2.65M10.66 5c4.01-.36 8.14.9 11.34 3.76M16.85 11.25a10 10 0 0 1 2.22 1.68M5 13a10 10 0 0 1 5.24-2.76"/></symbol>
+</svg>
+
+<div class="signage">
+  <div id="alertBanner"></div>
+  <header class="signage-header">
+    <div style="display:flex;align-items:center;gap:14px">
+      <span class="brand-mark" style="background:var(--tenant-accent)"><svg class="icon"><use href="#i-tv"/></svg></span>
+      <div><div class="signage-event" id="sgTitle">—</div><div class="dim mono" style="font-size:11px">LIVE INTELLIGENCE SIGNAGE · AUTO ROTATION</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="chrome-controls" id="chromeControls"></div>
+      <div class="signage-clock" id="clock">--:--:--</div>
+    </div>
+  </header>
+
+  <div class="signage-slides" id="slides">
+    <!-- Slide: Live now -->
+    <div class="slide active" id="sl-live">
+      <h2 style="font-size:clamp(22px,3vw,40px)">🔴 <span data-i18n="live_now">Live Now</span></h2>
+      <div id="liveList" style="display:flex;flex-direction:column;gap:14px"></div>
+    </div>
+    <!-- Slide: Agenda + countdown -->
+    <div class="slide" id="sl-agenda">
+      <h2 style="font-size:clamp(20px,2.6vw,34px)">📅 <span data-i18n="agenda">Agenda</span> — Next Session Countdown</h2>
+      <div id="nextMeta" class="muted" style="font-size:clamp(14px,1.6vw,22px)"></div>
+      <div class="countdown" id="countdown"></div>
+      <div id="agendaList" style="display:flex;flex-direction:column;gap:8px;margin-top:10px"></div>
+    </div>
+    <!-- Slide: Trends -->
+    <div class="slide" id="sl-trends">
+      <h2 style="font-size:clamp(20px,2.6vw,34px)">📈 <span data-i18n="trending">Trending Topics</span> (AI-extracted from live audio)</h2>
+      <div class="trend-list" id="trendList"></div>
+    </div>
+    <!-- Slide: Sponsors -->
+    <div class="slide" id="sl-sponsors">
+      <h2 style="font-size:clamp(20px,2.6vw,34px)">🤝 Our Partners</h2>
+      <div class="sponsor-strip" id="sponsorStrip"></div>
+    </div>
+  </div>
+
+  <div class="ticker"><span class="ticker-text" id="ticker">Loading event intelligence feed…</span></div>
+  <div class="signage-progress"><div id="progBar"></div></div>
+
+  <footer style="padding:8px 24px;display:flex;justify-content:space-between;border-top:1px solid var(--line);flex-wrap:wrap;gap:6px">
+    <span class="dim mono" style="font-size:10.5px" id="sgFooter">Powered by ZXSPRD AI</span>
+    <nav class="role-switch">
+      <a href="index.html" class="role-btn"><svg class="icon"><use href="#i-grid"/></svg> Launcher</a>
+      <a href="edge-kiosk.html" class="role-btn"><svg class="icon"><use href="#i-tablet"/></svg> Kiosk</a>
+      <a href="guest-portal.html" class="role-btn"><svg class="icon"><use href="#i-smartphone"/></svg> Guest</a>
+    </nav>
+  </footer>
+</div>
+
+<script>
+zxInitChrome();
+const slidesOrder = ["sl-live", "sl-agenda", "sl-trends", "sl-sponsors"];
+let idx = 0;
+const SLIDE_MS = 8000;
+let elapsed = 0;
+
+function applyI18n() {
+  document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = ZXStore.t(el.dataset.i18n));
+  document.documentElement.lang = ZXStore.state.uiLang;
+  document.documentElement.dir = (ZXStore.state.uiLang === "ar-AE" || ZXStore.state.uiLang === "ur-PK") ? "rtl" : "ltr";
+}
+
+function renderContent() {
+  const t = ZXStore.tenant(); if (!t) return;
+  document.getElementById("sgTitle").textContent = t.headerText || t.name;
+  document.getElementById("sgFooter").textContent = t.footerText || "Powered by ZXSPRD AI";
+  applyI18n();
+
+  // Live sessions (recording meetings on this tenant's pods)
+  const live = ZXStore.meetings(t.id).filter(m => m.status === "Recording");
+  document.getElementById("liveList").innerHTML = live.length ? live.map(m => `
+    <div class="trend-item" style="font-size:clamp(14px,1.8vw,24px)"><span class="rec-dot"></span>
+      <b>${zxesc(m.title)}</b><span class="badge badge-red">${m.podId}</span>
+      <span class="muted" style="margin-left:auto;font-size:.7em">since ${m.startTime}</span></div>`).join("")
+    : `<div class="muted" style="font-size:clamp(14px,1.6vw,22px)">No sessions currently recording. Enjoy the intermission ✨</div>`;
+
+  // Agenda + countdown to next scheduled session
+  const sched = ZXStore.schedule(t.id).filter(s => s.status === "Scheduled");
+  const next = sched[0];
+  document.getElementById("nextMeta").textContent = next ? `${next.title} · ${next.podId} · ${next.startTime}` : "All sessions complete.";
+  document.getElementById("agendaList").innerHTML = sched.slice(0, 5).map(s => `
+    <div class="trend-item" style="padding:10px 14px;font-size:clamp(12px,1.3vw,18px)"><span class="mono dim">${s.startTime}</span><b>${zxesc(s.title)}</b><span class="badge badge-blue" style="margin-left:auto">${s.podId}</span></div>`).join("");
+
+  // Trends (respect sentiment flag)
+  const showSent = ZXStore.feature("sentimentAnalysis");
+  const max = Math.max(...ZXStore.state.trendingTopics.map(x => x.mentions), 1);
+  document.getElementById("trendList").innerHTML = ZXStore.state.trendingTopics.map(tt => `
+    <div class="trend-item" style="font-size:clamp(13px,1.5vw,20px)">
+      <b style="min-width:220px">${zxesc(tt.keyword)}</b>
+      <div class="trend-bar"><div style="width:${(tt.mentions / max) * 100}%"></div></div>
+      <span class="mono" style="font-size:.8em">${tt.mentions}</span>
+      ${showSent ? `<span class="badge ${tt.sentiment==='Positive'?'badge-green':tt.sentiment==='Negative'?'badge-red':'badge-slate'}">${tt.sentiment}</span>` : ""}
+    </div>`).join("");
+
+  // Sponsors (respect injection flag)
+  document.getElementById("sponsorStrip").style.display = ZXStore.feature("sponsorInjection") ? "flex" : "none";
+  document.getElementById("sponsorStrip").innerHTML = ZXStore.state.sponsors.map(sp => `
+    <div class="sponsor-chip" style="font-size:clamp(13px,1.5vw,20px)"><b style="color:var(--tenant-accent)">${zxesc(sp.name)}</b><span class="muted">${zxesc(sp.message)}</span></div>`).join("");
+
+  // Ticker = approved summaries + crowd note
+  const approved = ZXStore.meetings(t.id).filter(m => m.hitlStatus === "Approved").map(m => `✅ ${m.title}: ${m.aiSummary}`);
+  const crowdNote = ZXStore.feature("crowdAnalytics") ? `👥 Occupancy ${t.currentOccupancy}/${t.venueCapacity}` : "";
+  document.getElementById("ticker").textContent = [crowdNote, ...approved].filter(Boolean).join("   •••   ") || "Welcome — official event intelligence feed.";
+
+  // Alert banner (allScreens channel) overrides rotation visually
+  const bc = ZXStore.state.broadcasts.allScreens.filter(b => b.tenantId === t.id && b.active).slice(-1)[0];
+  document.getElementById("alertBanner").innerHTML = bc ? `<div class="broadcast-banner" style="font-size:clamp(14px,1.6vw,22px);padding:16px 24px">🚨 ${zxesc(bc.message)}</div>` : "";
+}
+
+function showSlide(i) {
+  document.querySelectorAll(".slide").forEach((el, n) => el.classList.toggle("active", n === i));
+}
+setInterval(() => {
+  elapsed += 100;
+  document.getElementById("progBar").style.width = ((elapsed / SLIDE_MS) * 100) + "%";
+  if (elapsed >= SLIDE_MS) {
+    elapsed = 0;
+    let tries = 0;
+    do { idx = (idx + 1) % slidesOrder.length; tries++; }
+    while (((slidesOrder[idx] === "sl-sponsors" && !ZXStore.feature("sponsorInjection")) ||
+            (slidesOrder[idx] === "sl-trends" && !ZXStore.feature("sentimentAnalysis"))) && tries < 4);
+    showSlide(idx);
+  }
+}, 100);
+
+// Countdown ticking each second
+setInterval(() => {
+  document.getElementById("clock").textContent = new Date().toLocaleTimeString();
+  const t = ZXStore.tenant(); if (!t) return;
+  const next = ZXStore.schedule(t.id).find(s => s.status === "Scheduled");
+  const cd = document.getElementById("countdown");
+  if (!next) { cd.innerHTML = ""; return; }
+  // demo: treat startTime as today's time
+  const target = new Date();
+  const m = next.startTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (m) {
+    let h = +m[1] % 12; if (/pm/i.test(m[3])) h += 12;
+    target.setHours(h, +m[2], 0, 0);
+    if (target < new Date()) target.setDate(target.getDate() + 1);
+  }
+  const diff = Math.max(0, target - new Date());
+  const units = [["Hours", Math.floor(diff/36e5)], ["Minutes", Math.floor(diff/6e4)%60], ["Seconds", Math.floor(diff/1e3)%60]];
+  cd.innerHTML = units.map(([l,v]) => `<div class="countdown-unit"><div class="countdown-num">${String(v).padStart(2,"0")}</div><div class="countdown-label">${l}</div></div>`).join("");
+}, 1000);
+
+let _raf=false; function scheduleRender(){ if(_raf)return; _raf=true; requestAnimationFrame(()=>{_raf=false; renderContent();}); }
+renderContent();
+ZXStore.subscribe(scheduleRender);
+</script>
+</body>
+</html>
