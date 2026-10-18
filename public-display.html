@@ -63,27 +63,28 @@
       <h2 style="font-size:clamp(20px,2.6vw,34px)">🤝 Our Partners</h2>
       <div class="sponsor-strip" id="sponsorStrip"></div>
     </div>
+    <!-- Slide: Crowd & Venue (controlled by Super Admin flag publicDisplayCrowdCard) -->
+    <div class="slide" id="sl-crowd" hidden>
+      <h2 style="font-size:clamp(20px,2.6vw,34px)">👥 Crowd &amp; Spatial Update — <span id="cdVenueName" class="mono" style="font-size:.7em"></span></h2>
+      <div style="display:flex;gap:clamp(16px,3vw,50px);align-items:center;flex-wrap:wrap">
+        <div id="crowdMiniMap" style="position:relative;width:min(46vw,640px);aspect-ratio:16/9;background:var(--inset);border:1px solid var(--line);border-radius:14px;overflow:hidden"></div>
+        <div style="flex:1;min-width:260px;display:flex;flex-direction:column;gap:12px" id="crowdMiniStats"></div>
+      </div>
+    </div>
   </div>
 
   <div class="ticker"><span class="ticker-text" id="ticker">Loading event intelligence feed…</span></div>
   <div class="signage-progress"><div id="progBar"></div></div>
-
-  <footer style="padding:8px 24px;display:flex;justify-content:space-between;border-top:1px solid var(--line);flex-wrap:wrap;gap:6px">
-    <span class="dim mono" style="font-size:10.5px" id="sgFooter">Powered by ZXSPRD AI</span>
-    <nav class="role-switch">
-      <a href="index.html" class="role-btn"><svg class="icon"><use href="#i-grid"/></svg> Launcher</a>
-      <a href="edge-kiosk.html" class="role-btn"><svg class="icon"><use href="#i-tablet"/></svg> Kiosk</a>
-      <a href="guest-portal.html" class="role-btn"><svg class="icon"><use href="#i-smartphone"/></svg> Guest</a>
-    </nav>
-  </footer>
 </div>
 
 <script>
-zxInitChrome();
-const slidesOrder = ["sl-live", "sl-agenda", "sl-trends", "sl-sponsors"];
+zxInitChrome({ hideLang: true }); // Public display: theme switch only — no language selectors
+const slidesOrder = ["sl-live", "sl-agenda", "sl-trends", "sl-sponsors", "sl-crowd"];
 let idx = 0;
 const SLIDE_MS = 8000;
 let elapsed = 0;
+
+
 
 function applyI18n() {
   document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = ZXStore.t(el.dataset.i18n));
@@ -94,8 +95,23 @@ function applyI18n() {
 function renderContent() {
   const t = ZXStore.tenant(); if (!t) return;
   document.getElementById("sgTitle").textContent = t.headerText || t.name;
-  document.getElementById("sgFooter").textContent = t.footerText || "Powered by ZXSPRD AI";
   applyI18n();
+
+  // Crowd slide visibility (Super Admin controls publicDisplayCrowdCard) + rotation skip list
+  const showCrowd = ZXStore.feature("crowdAnalytics") && (ZXStore.state.platformSettings || {}).publicDisplayCrowdCard !== false;
+  document.getElementById("sl-crowd").hidden = !showCrowd;
+  if (showCrowd) {
+    const cm = ZXStore.state.crowdMetrics || {};
+    document.getElementById("cdVenueName").textContent = (cm.venueMap && cm.venueMap.name) || "Venue";
+    document.getElementById("crowdMiniMap").innerHTML = zxVenueMapHTML({ w: 640, h: 360, fs: 15 });
+    const pct = Math.round((t.currentOccupancy / t.venueCapacity) * 100);
+    document.getElementById("crowdMiniStats").innerHTML = `
+      <div class="trend-item" style="font-size:clamp(14px,1.7vw,24px)"><b>🏢 Occupancy</b><span style="margin-left:auto;font-weight:900;color:${pct>85?'#ef4444':pct>60?'#f59e0b':'#22c55e'}">${t.currentOccupancy.toLocaleString()} / ${t.venueCapacity.toLocaleString()} (${pct}%)</span></div>
+      <div class="trend-item" style="font-size:clamp(13px,1.5vw,20px)"><b>⬇️ Ingress (last hr)</b><span style="margin-left:auto" class="mono">+${cm.ingressLastHour||0}</span></div>
+      <div class="trend-item" style="font-size:clamp(13px,1.5vw,20px)"><b>⬆️ Egress (last hr)</b><span style="margin-left:auto" class="mono">−${cm.egressLastHour||0}</span></div>
+      <div class="trend-item" style="font-size:clamp(13px,1.5vw,20px)"><b>🔥 Peak hour</b><span style="margin-left:auto" class="mono">${cm.peakHour||"—"}</span></div>
+      ${(cm.hotZones||[]).map(z=>`<div class="trend-item" style="font-size:clamp(12px,1.4vw,18px)"><b>${zxesc(z.zone)}</b><span class="badge ${z.status==='Critical'?'badge-red':z.status==='Moderate'?'badge-amber':'badge-green'}" style="margin-left:auto">${z.density}% · ${z.status}</span></div>`).join("")}`;
+  }
 
   // Live sessions (recording meetings on this tenant's pods)
   const live = ZXStore.meetings(t.id).filter(m => m.status === "Recording");
@@ -147,9 +163,13 @@ setInterval(() => {
   if (elapsed >= SLIDE_MS) {
     elapsed = 0;
     let tries = 0;
-    do { idx = (idx + 1) % slidesOrder.length; tries++; }
-    while (((slidesOrder[idx] === "sl-sponsors" && !ZXStore.feature("sponsorInjection")) ||
-            (slidesOrder[idx] === "sl-trends" && !ZXStore.feature("sentimentAnalysis"))) && tries < 4);
+    const skip = () => {
+      const id = slidesOrder[idx];
+      return (id === "sl-sponsors" && !ZXStore.feature("sponsorInjection")) ||
+             (id === "sl-trends" && !ZXStore.feature("sentimentAnalysis")) ||
+             (id === "sl-crowd" && document.getElementById("sl-crowd").hidden);
+    };
+    do { idx = (idx + 1) % slidesOrder.length; tries++; } while (skip() && tries < 8);
     showSlide(idx);
   }
 }, 100);
