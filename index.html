@@ -13,6 +13,7 @@
 <script src="data.js"></script>
 </head>
 <body>
+<a class="skip-link" href="#launcherMain">Skip to content</a>
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
@@ -21,6 +22,7 @@
   <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
   <symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
   <symbol id="i-smartphone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
   <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></symbol>
   <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="m1 1 22 22M8.5 16.5a5 5 0 0 1 7 0M2 8.82a15 15 0 0 1 4.17-2.65M10.66 5c4.01-.36 8.14.9 11.34 3.76M16.85 11.25a10 10 0 0 1 2.22 1.68M5 13a10 10 0 0 1 5.24-2.76"/></symbol>
@@ -32,13 +34,28 @@
     <div class="brand-mark"><svg class="icon"><use href="#i-activity"/></svg></div>
     <div>
       <div class="brand-name">ZXSPRD<span style="color:var(--tenant-accent)"> AI</span></div>
-      <div class="brand-sub">Event Intelligence Platform · Final Demo v7</div>
+      <div class="brand-sub">Event Intelligence Platform · Final Demo v8</div>
     </div>
   </div>
   <div class="chrome-controls" id="chromeControls"></div>
 </header>
 
-<main class="page">
+<div id="platformNotice"></div>
+  <section class="hero-band panel" style="margin:22px 0 6px;padding:22px 24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">
+      <div>
+        <b style="font-size:17px">Welcome to the ZXSPRD AI control room 🎛️</b>
+        <div class="dim" style="margin-top:4px;font-size:12.5px">Everything below is one shared live state — open two views side by side and watch them sync instantly.</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="stat-pill">Tenants <b id="stTenants">—</b></span>
+        <span class="stat-pill">Pods <b id="stPods">—</b></span>
+        <span class="stat-pill">Live meetings <b id="stLive">—</b></span>
+        <span class="stat-pill">Occupancy <b id="stOcc">—</b></span>
+      </div>
+    </div>
+  </section>
+  <main class="page" id="launcherMain">
   <section class="panel">
     <div class="panel-header">
       <div>
@@ -95,23 +112,46 @@
 
 <script>
 zxInitChrome();
+zxPlatformBanner();
+if (typeof zxEnableInstallPrompt === "function") zxEnableInstallPrompt();
+
+// Live platform pulse pills in the hero band
+function paintPulse() {
+  const t = ZXStore.tenant();
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set("stTenants", ZXStore.state.tenants.length);
+  set("stPods", ZXStore.state.pods.length);
+  set("stLive", ZXStore.state.meetings.filter(m => m.status === "Recording").length);
+  set("stOcc", t ? `${(t.currentOccupancy||0).toLocaleString()}` : "—");
+}
+paintPulse();
+
 const grid = document.getElementById("tenantGrid");
 function paintTenants() {
   grid.innerHTML = ZXStore.state.tenants.map(t => `
-    <div class="launch-card ${t.id === ZXStore.state.activeTenantId ? "is-selected" : ""}" data-t="${t.id}" style="cursor:pointer;border-color:${t.id===ZXStore.state.activeTenantId?t.primaryColor:'var(--line)'}">
+    <div class="launch-card ${t.id === ZXStore.state.activeTenantId ? "selected-card" : ""}" data-t="${t.id}" style="cursor:pointer;border-color:${t.id===ZXStore.state.activeTenantId?t.primaryColor:'var(--line)'}">
       <div class="card-icon" style="color:${t.primaryColor}"><svg class="icon"><use href="#i-building"/></svg></div>
       <h3>${zxesc(t.name)}</h3>
       <p>${zxesc(t.subdomain)} · ${zxesc(t.tier)} · Pods ${t.assignedPods}/${t.maxPods}</p>
       <span class="badge ${t.status==='Active'?'badge-green':'badge-red'}">${t.status}</span>
+      ${t.id === ZXStore.state.activeTenantId ? '<span class="badge badge-blue" style="margin-left:6px">✓ Current context</span>' : ""}
     </div>`).join("");
 }
 paintTenants();
-grid.addEventListener("click", e => {
-  const c = e.target.closest("[data-t]"); if (!c) return;
+function selectTenantCard(c) {
+  if (!c) return;
   ZXStore.setTenant(c.dataset.t); zxToast("Context switched to " + ZXStore.tenant().name);
-});
+}
+grid.addEventListener("click", e => selectTenantCard(e.target.closest("[data-t]")));
+grid.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectTenantCard(e.target.closest("[data-t]")); } });
 document.getElementById("btnReset").onclick = () => { if (confirm("Reset all demo data?")) { ZXStore.reset(); location.reload(); } };
-ZXStore.subscribe(paintTenants);
+ZXStore.subscribe(() => { paintTenants(); paintPulse(); });
+
+// Scroll-reveal animation for cards (graceful fallback if unsupported)
+try {
+  const io = new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .1 });
+  document.querySelectorAll(".launch-card").forEach((c, i) => { c.classList.add("reveal"); c.style.transitionDelay = (i * 45) + "ms"; io.observe(c); });
+} catch (_) {}
 </script>
 </body>
 </html>
