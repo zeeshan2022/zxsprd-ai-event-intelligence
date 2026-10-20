@@ -46,6 +46,7 @@
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
   <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></symbol>
   <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="m1 1 22 22M8.5 16.5a5 5 0 0 1 7 0M2 8.82a15 15 0 0 1 4.17-2.65M10.66 5c4.01-.36 8.14.9 11.34 3.76M16.85 11.25a10 10 0 0 1 2.22 1.68M5 13a10 10 0 0 1 5.24-2.76"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
 </svg>
 
 <header class="topbar">
@@ -53,6 +54,7 @@
     <div class="brand-mark"><svg class="icon"><use href="#i-shield"/></svg></div>
     <div><div class="brand-name">ZXSPRD<span style="color:var(--tenant-accent)"> AI</span></div><div class="brand-sub">Super Admin Console · Platform Owner</div></div>
   </div>
+  <button class="btn btn-ghost btn-sm menu-toggle no-ripple" id="btnMenuToggle" aria-expanded="false" aria-controls="saMenu" title="Show / hide the platform menu (M)"><svg class="icon"><use href="#i-menu"/></svg> Menu</button>
   <nav class="role-switch">
     <a href="index.html" class="role-btn"><svg class="icon"><use href="#i-grid"/></svg> Launcher</a>
     <a href="super-admin.html" class="role-btn active"><svg class="icon"><use href="#i-shield"/></svg> Super Admin</a>
@@ -232,7 +234,9 @@
 <script>
 zxInitChrome();
 if (typeof zxPlatformBanner === "function") zxPlatformBanner();
-if (typeof zxEnableInstallPrompt === "function") zxEnableInstallPrompt();
+// Install App button — always available on this console too (native prompt when supported, guided fallback otherwise)
+if (typeof zxEnableInstallPrompt === "function") zxEnableInstallPrompt({ force: true });
+if (typeof zxEnableShortcuts === "function") zxEnableShortcuts(); // press "/" to jump between sections
 document.getElementById("btnExportState").onclick = () => {
   const ok = ZXStore.exportState();
   zxToast(ok ? "State snapshot downloaded 📦" : "Export failed", ok ? "success" : "error");
@@ -248,16 +252,64 @@ const MENU = [
   { id: "languages", label: "Languages Control", icon: "i-globe" },
   { id: "impersonate", label: "Impersonation", icon: "i-eye" }
 ];
-// Robust menu build: retry until the sidebar exists so buttons can never be missing.
-(function buildSaMenu(attempt) {
-  const host = document.getElementById("saMenu");
-  if (host && typeof ZXMenu !== "undefined") {
+/* Menu builder with guaranteed buttons:
+   - builds immediately; retries until DOM ready (max ~4s)
+   - verifies the sidebar actually contains .side-link buttons; if not, falls back
+     to a topbar tab strip so navigation can NEVER be missing. */
+let saMenuBuilt = false;
+function buildSaMenu() {
+  if (saMenuBuilt) return true;
+  try {
+    const host = document.getElementById("saMenu");
+    if (!host || typeof ZXMenu === "undefined") return false;
     ZXMenu.build("#saMenu", MENU, v => ZXMenu.show(v));
+    if (!host.querySelector(".side-link")) return false;
     ZXMenu.show("dashboard");
-  } else if (attempt < 20) {
-    setTimeout(() => buildSaMenu(attempt + 1), 50);
+    saMenuBuilt = true;
+    return true;
+  } catch (_) { return false; }
+}
+function saMenuFallbackTabs() {
+  if (document.getElementById("saTabStrip")) return;
+  const nav = document.createElement("nav");
+  nav.id = "saTabStrip";
+  nav.className = "tab-strip";
+  nav.setAttribute("role", "tablist");
+  nav.innerHTML = MENU.map((m, i) => `<button type="button" class="tab-btn ${i === 0 ? "active" : ""}" data-view="${m.id}" role="tab">${m.label}</button>`).join("");
+  nav.addEventListener("click", e => {
+    const b = e.target.closest(".tab-btn"); if (!b) return;
+    nav.querySelectorAll(".tab-btn").forEach(x => x.classList.toggle("active", x === b));
+    ZXMenu.show(b.dataset.view);
+  });
+  const shell = document.querySelector(".app-shell");
+  shell && shell.parentNode.insertBefore(nav, shell);
+}
+buildSaMenu();
+let saAttempts = 0;
+const saTry = setInterval(() => {
+  if (buildSaMenu()) { clearInterval(saTry); return; }
+  if (++saAttempts >= 80) {          // ~4 seconds, then never leave the user stranded
+    clearInterval(saTry);
+    if (typeof ZXMenu !== "undefined") saMenuFallbackTabs();
+    zxToast("Sidebar unavailable — showing top tab navigation instead.", "info");
   }
-})(0);
+}, 50);
+// Mobile / narrow screens: Menu toggle button + "M" shortcut
+(function wireMenuToggle() {
+  const btn = document.getElementById("btnMenuToggle");
+  if (!btn) return;
+  const toggle = (force) => {
+    const nav = document.getElementById("saMenu");
+    if (!nav) return;
+    const open = force !== undefined ? force : !nav.classList.contains("open");
+    nav.classList.toggle("open", open);
+    btn.setAttribute("aria-expanded", String(open));
+  };
+  btn.onclick = () => toggle();
+  document.addEventListener("keydown", e => {
+    if ((e.key === "m" || e.key === "M") && !/input|select|textarea/i.test((document.activeElement || {}).tagName || "")) toggle();
+  });
+})();
 
 const FLAG_DESC = {
   voiceConcierge: ["Voice Concierge", "Interactive AI voice assistant on kiosk & guest portal"],

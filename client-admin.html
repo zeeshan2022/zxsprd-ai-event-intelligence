@@ -47,6 +47,7 @@
   <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></symbol>
   <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="m1 1 22 22M8.5 16.5a5 5 0 0 1 7 0M2 8.82a15 15 0 0 1 4.17-2.65M10.66 5c4.01-.36 8.14.9 11.34 3.76M16.85 11.25a10 10 0 0 1 2.22 1.68M5 13a10 10 0 0 1 5.24-2.76"/></symbol>
   <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
 </svg>
 
 <div id="impBar"></div>
@@ -56,6 +57,7 @@
     <div class="brand-mark" style="background:var(--tenant-accent)"><svg class="icon"><use href="#i-building"/></svg></div>
     <div><div class="brand-name" id="brandName">ZXSPRD<span style="color:var(--tenant-accent)"> AI</span></div><div class="brand-sub">Client Admin · <span id="brandTenant">—</span></div></div>
   </div>
+  <button class="btn btn-ghost btn-sm menu-toggle no-ripple" id="btnMenuToggle" aria-expanded="false" aria-controls="caMenu" title="Show / hide the event menu (M)"><svg class="icon"><use href="#i-menu"/></svg> Menu</button>
   <nav class="role-switch">
     <a href="index.html" class="role-btn"><svg class="icon"><use href="#i-grid"/></svg> Launcher</a>
     <a href="super-admin.html" class="role-btn"><svg class="icon"><use href="#i-shield"/></svg> Super Admin</a>
@@ -246,6 +248,7 @@
 zxInitChrome();
 if (typeof zxPlatformBanner === "function") zxPlatformBanner();
 if (typeof zxEnableInstallPrompt === "function") zxEnableInstallPrompt({ force: true, autoHideMs: 10000 }); // show Install App for 10s, then fade away
+if (typeof zxEnableShortcuts === "function") zxEnableShortcuts(); // press "/" to jump between sections
 
 const MENU_ALL = [
   { id: "dashboard", label: "Dashboard", icon: "i-grid" },
@@ -463,11 +466,31 @@ document.getElementById("btnSimCrowd").onclick = () => ZXStore.simulateCrowdShif
 let _raf=false; function scheduleRender(){ if(_raf)return; _raf=true; requestAnimationFrame(()=>{_raf=false; render();}); }
 render();
 ZXStore.subscribe(scheduleRender);
-let lastFlagCount = Object.keys(ZXStore.state.featureFlags).filter(f => ZXStore.feature(f)).length;
+// Live approvals badge on the sidebar menu
+(function paintPendBadge() {
+  const pend = ZXStore.meetings().filter(m => m.hitlStatus === "PendingApproval").length;
+  ZXMenu.setBadge("pend", pend || null);
+})();
 ZXStore.subscribe(() => {
-  const n = Object.keys(ZXStore.state.featureFlags).filter(f => ZXStore.feature(f)).length;
-  if (n !== lastFlagCount) { lastFlagCount = n; buildMenu(); }
+  const pend = ZXStore.meetings().filter(m => m.hitlStatus === "PendingApproval").length;
+  ZXMenu.setBadge("pend", pend || null);
 });
+// Mobile / narrow screens: Menu toggle button + "M" shortcut
+(function wireMenuToggle() {
+  const btn = document.getElementById("btnMenuToggle");
+  if (!btn) return;
+  const toggle = (force) => {
+    const nav = document.getElementById("caMenu");
+    if (!nav) return;
+    const open = force !== undefined ? force : !nav.classList.contains("open");
+    nav.classList.toggle("open", open);
+    btn.setAttribute("aria-expanded", String(open));
+  };
+  btn.onclick = () => toggle();
+  document.addEventListener("keydown", e => {
+    if ((e.key === "m" || e.key === "M") && !/input|select|textarea/i.test((document.activeElement || {}).tagName || "")) toggle();
+  });
+})();
 </script>
 </body>
 </html>

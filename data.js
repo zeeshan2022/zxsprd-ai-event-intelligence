@@ -567,22 +567,45 @@ window.ZX_I18N = ZX_I18N;
   };
 
   // Sidebar menu builder: ZXMenu.build(container, items, onSelect)
+  // Robust version: never wipes the container's static title, wires its own click
+  // handler (so menus can't end up "without buttons"), and supports live badges.
   window.ZXMenu = {
+    _bound: new WeakSet(),
     build(containerSel, items, onSelect) {
-      const c = $(containerSel); if (!c) return;
-      c.innerHTML = items.map((it, i) => `
-        <button class="side-link ${i === 0 ? "active" : ""}" data-view="${it.id}">
+      const c = typeof containerSel === "string" ? $(containerSel) : containerSel;
+      if (!c) return false;
+      let list = c.querySelector(".side-list");
+      if (!list) {
+        list = document.createElement("div");
+        list.className = "side-list";
+        c.appendChild(list);
+      }
+      list.innerHTML = items.map((it, i) => `
+        <button type="button" class="side-link ${i === 0 ? "active" : ""}" data-view="${it.id}" aria-current="${i === 0 ? "page" : "false"}">
           <svg class="icon"><use href="#${it.icon || "i-grid"}"/></svg><span>${it.label}</span>
-          ${it.badge ? `<em class="side-badge">${it.badge}</em>` : ""}
+          ${it.badge ? `<em class="side-badge" ${it.badgeId ? `data-badge-id="${it.badgeId}"` : ""}>${it.badge}</em>` : (it.badgeId ? `<em class="side-badge" data-badge-id="${it.badgeId}" hidden></em>` : "")}
         </button>`).join("");
-      c.addEventListener("click", e => {
-        const b = e.target.closest(".side-link"); if (!b) return;
-        $$(".side-link", c).forEach(x => x.classList.toggle("active", x === b));
-        onSelect && onSelect(b.dataset.view);
-      });
+      if (!ZXMenu._bound.has(c)) {
+        ZXMenu._bound.add(c);
+        c.addEventListener("click", e => {
+          const b = e.target.closest(".side-link"); if (!b) return;
+          $$(".side-link", c).forEach(x => { x.classList.toggle("active", x === b); x.setAttribute("aria-current", x === b ? "page" : "false"); });
+          onSelect && onSelect(b.dataset.view);
+        });
+      }
+      return true;
     },
     show(viewId) {
-      $$("[data-panel]").forEach(p => p.hidden = p.dataset.panel !== viewId);
+      const panels = $$("[data-panel]");
+      panels.forEach(p => p.hidden = p.dataset.panel !== viewId);
+      // If nothing matched (e.g. a stale state restored a removed panel id), open the first panel so the UI is never blank.
+      if (panels.length && !panels.some(p => !p.hidden)) { panels[0].hidden = false; }
+    },
+    setBadge(badgeId, value) {
+      const el = document.querySelector(`.side-badge[data-badge-id="${badgeId}"]`);
+      if (!el) return;
+      if (value === null || value === undefined || value === 0 || value === "") { el.hidden = true; }
+      else { el.hidden = false; el.textContent = value; }
     }
   };
 
@@ -685,6 +708,49 @@ window.ZX_I18N = ZX_I18N;
     return svg + agents;
   };
 
+  /* ---------------- GLOBAL KEYBOARD SHORTCUTS (admins: "/" jumps to a section) ---------------- */
+  window.zxEnableShortcuts = function () {
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const ae = document.activeElement;
+      if (/input|select|textarea/i.test(ae ? ae.tagName : "") || (ae && ae.isContentEditable)) return;
+      const links = Array.from(document.querySelectorAll(".side-link"));
+      if (!links.length) return;
+      e.preventDefault();
+      let wrap = document.getElementById("zxQuickNav");
+      if (wrap) { wrap.remove(); return; }
+      wrap = document.createElement("div");
+      wrap.id = "zxQuickNav";
+      wrap.className = "quicknav";
+      wrap.innerHTML = `<div class="quicknav-card"><input class="form-input quicknav-input" placeholder="Jump to section… (Esc to close)" aria-label="Jump to section"><div class="quicknav-list">${links.map((l, i) => `<button type="button" class="quicknav-item" data-i="${i}">${l.textContent.trim()}</button>`).join("")}</div></div>`;
+      document.body.appendChild(wrap);
+      const input = wrap.querySelector(".quicknav-input");
+      const items = Array.from(wrap.querySelectorAll(".quicknav-item"));
+      const close = () => wrap.remove();
+      const pick = (i) => { close(); const el = links[i]; if (el) { el.click(); el.focus(); } };
+      input.focus();
+      let cur = 0;
+      const paintSel = () => items.forEach((it, i) => it.classList.toggle("sel", i === cur));
+      paintSel();
+      const filtered = () => items.forEach(it => { it.hidden = !it.textContent.toLowerCase().includes(input.value.toLowerCase()); });
+      input.addEventListener("input", () => { filtered(); const vis = items.filter(x => !x.hidden); cur = 0; if (vis[0]) { cur = items.indexOf(vis[0]); } paintSel(); });
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key === "Escape") { close(); return; }
+        if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+          ev.preventDefault();
+          const vis = items.filter(x => !x.hidden);
+          if (!vis.length) return;
+          const pos = vis.indexOf(items[cur]);
+          const np = ev.key === "ArrowDown" ? Math.min(vis.length - 1, pos + 1) : Math.max(0, pos - 1);
+          cur = items.indexOf(vis[np]); paintSel();
+          items[cur].scrollIntoView({ block: "nearest" });
+        } else if (ev.key === "Enter") { ev.preventDefault(); pick(cur); }
+      });
+      items.forEach(it => it.addEventListener("click", () => pick(+it.dataset.i)));
+      wrap.addEventListener("click", (ev) => { if (ev.target === wrap) close(); });
+    });
+  };
+
   // Service worker registration (graceful when opened via file://)
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     window.addEventListener("load", () => {
@@ -693,13 +759,13 @@ window.ZX_I18N = ZX_I18N;
   }
 })();
 
-/* ---------------- SHARED ENHANCEMENT HELPERS (v8.1) ---------------- */
+/* ---------------- SHARED ENHANCEMENT HELPERS (v8.2) ---------------- */
 (function installEnhancements() {
-  if (!location.protocol.startsWith("http")) return; // file:// — SW unavailable
-
-  // PWA install prompt → floating "Install App" button + badge state
-  // opts.autoHideMs: show the button for N ms then fade away (views like kiosk/guest/display use 10000).
-  // opts.force: show the button even without a native beforeinstallprompt event (demo/preview aid).
+  // PWA install prompt → floating "Install App" button + badge state.
+  // Works on http(s) AND file:// (demo mode): when no native beforeinstallprompt
+  // event exists, the button still appears and explains manual installation.
+  // opts.autoHideMs: show the button for N ms then fade away (views use 10000).
+  // opts.force: show the button even without a native beforeinstallprompt event.
   window.zxEnableInstallPrompt = function (opts) {
     opts = opts || {};
     let deferred = null;
@@ -708,11 +774,14 @@ window.ZX_I18N = ZX_I18N;
       const b = document.getElementById("pwaBadge");
       if (b) { b.textContent = txt; b.className = "badge " + cls; }
     };
+    const isHttp = location.protocol.startsWith("http");
     const makeBtn = () => {
       if (document.getElementById("btnInstallPwa")) return document.getElementById("btnInstallPwa");
       const btn = document.createElement("button");
       btn.id = "btnInstallPwa";
+      btn.type = "button";
       btn.className = "btn btn-blue install-fab";
+      btn.setAttribute("aria-label", "Install this app on your device");
       btn.innerHTML = `<svg class="icon"><use href="#i-download"/></svg> Install App`;
       btn.onclick = async () => {
         clearTimeout(hideTimer); // don't vanish mid-interaction
