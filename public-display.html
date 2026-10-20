@@ -35,6 +35,7 @@
       <div><div class="signage-event" id="sgTitle">—</div><div class="dim mono" style="font-size:11px">LIVE INTELLIGENCE SIGNAGE · AUTO ROTATION</div></div>
     </div>
     <div style="display:flex;align-items:center;gap:14px">
+      <div class="slide-dots" id="slideDots" title="Tap a dot to jump to that slide"></div>
       <div class="chrome-controls" id="chromeControls"></div>
       <div class="signage-clock" id="clock">--:--:--</div>
     </div>
@@ -78,11 +79,33 @@
 </div>
 
 <script>
-zxInitChrome({ hideLang: true }); // Public display: theme switch only — no language selectors
+zxInitChrome({ hideLang: true }); // Public display: theme switch only — English-only demo, no language selectors
 const slidesOrder = ["sl-live", "sl-agenda", "sl-trends", "sl-sponsors", "sl-crowd"];
 let idx = 0;
 const SLIDE_MS = 8000;
 let elapsed = 0;
+
+/* ---- Signage UX enhancements (v9) ---- */
+// Manual slide selection from the progress dots (never breaks auto-rotation)
+window.showSlideAt = (i) => { idx = i; elapsed = 0; document.getElementById("progBar").style.width = "0%"; showSlide(i); };
+function paintDots() {
+  const wrap = document.getElementById("slideDots");
+  if (!wrap) return;
+  wrap.innerHTML = slidesOrder.map((id, i) => {
+    const hidden = id === "sl-crowd" && document.getElementById("sl-crowd").hidden;
+    return `<button class="dot ${i === idx ? "on" : ""}" ${hidden ? "disabled" : ""} title="${id.replace("sl-","")}" onclick="showSlideAt(${i})"></button>`;
+  }).join("");
+}
+function nextLiveCount(t) {
+  const next = ZXStore.schedule(t.id).find(s => s.status === "Scheduled");
+  if (!next) return null;
+  const m = next.startTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!m) return null;
+  let h = +m[1] % 12; if (/pm/i.test(m[3])) h += 12;
+  const target = new Date(); target.setHours(h, +m[2], 0, 0);
+  if (target < new Date()) target.setDate(target.getDate() + 1);
+  return target;
+}
 
 
 
@@ -121,12 +144,12 @@ function renderContent() {
       <span class="muted" style="margin-left:auto;font-size:.7em">since ${m.startTime}</span></div>`).join("")
     : `<div class="muted" style="font-size:clamp(14px,1.6vw,22px)">No sessions currently recording. Enjoy the intermission ✨</div>`;
 
-  // Agenda + countdown to next scheduled session
+  // Agenda + countdown to next scheduled session (track & room shown when available)
   const sched = ZXStore.schedule(t.id).filter(s => s.status === "Scheduled");
   const next = sched[0];
-  document.getElementById("nextMeta").textContent = next ? `${next.title} · ${next.podId} · ${next.startTime}` : "All sessions complete.";
+  document.getElementById("nextMeta").textContent = next ? `${next.title} · ${next.room ? next.room + " · " : ""}${next.podId} · ${next.startTime}` : "All sessions complete.";
   document.getElementById("agendaList").innerHTML = sched.slice(0, 5).map(s => `
-    <div class="trend-item" style="padding:10px 14px;font-size:clamp(12px,1.3vw,18px)"><span class="mono dim">${s.startTime}</span><b>${zxesc(s.title)}</b><span class="badge badge-blue" style="margin-left:auto">${s.podId}</span></div>`).join("");
+    <div class="trend-item" style="padding:10px 14px;font-size:clamp(12px,1.3vw,18px)"><span class="mono dim">${s.startTime}</span><b>${zxesc(s.title)}</b>${s.track ? `<span class="track-badge">${zxesc(s.track)}</span>` : ""}<span class="badge badge-blue" style="margin-left:auto">${s.podId}</span></div>`).join("");
 
   // Trends (respect sentiment flag)
   const showSent = ZXStore.feature("sentimentAnalysis");
@@ -139,10 +162,11 @@ function renderContent() {
       ${showSent ? `<span class="badge ${tt.sentiment==='Positive'?'badge-green':tt.sentiment==='Negative'?'badge-red':'badge-slate'}">${tt.sentiment}</span>` : ""}
     </div>`).join("");
 
-  // Sponsors (respect injection flag)
+  // Sponsors (respect injection flag) — tier badge + booth number from mock data
+  const tierOrder = { Diamond: 0, Platinum: 1, Gold: 2, Silver: 3 };
   document.getElementById("sponsorStrip").style.display = ZXStore.feature("sponsorInjection") ? "flex" : "none";
-  document.getElementById("sponsorStrip").innerHTML = ZXStore.state.sponsors.map(sp => `
-    <div class="sponsor-chip" style="font-size:clamp(13px,1.5vw,20px)"><b style="color:var(--tenant-accent)">${zxesc(sp.name)}</b><span class="muted">${zxesc(sp.message)}</span></div>`).join("");
+  document.getElementById("sponsorStrip").innerHTML = [...ZXStore.state.sponsors].sort((a, b) => (tierOrder[a.tier] ?? 9) - (tierOrder[b.tier] ?? 9)).map(sp => `
+    <div class="sponsor-chip" style="font-size:clamp(13px,1.5vw,20px)"><b style="color:var(--tenant-accent)">${zxesc(sp.name)}</b><span class="badge tier-${(sp.tier || "").toLowerCase()}">${zxesc(sp.tier || "Partner")}</span><span class="muted">${zxesc(sp.message)}</span>${sp.booth ? `<span class="dim mono" style="font-size:.75em">${zxesc(sp.booth)}</span>` : ""}</div>`).join("");
 
   // Ticker = approved summaries + crowd note
   const approved = ZXStore.meetings(t.id).filter(m => m.hitlStatus === "Approved").map(m => `✅ ${m.title}: ${m.aiSummary}`);

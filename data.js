@@ -9,19 +9,13 @@
  */
 
 /* ---------------- I18N DICTIONARY (Multilingual UI + Voice) ---------------- */
+/* Demo language pool — English-only display labels (mock data is English). */
 const ZX_LANGS = [
-  { code: "en-US", label: "English" },
-  { code: "ar-AE", label: "العربية (Arabic)" },
-  { code: "fr-FR", label: "Français (French)" },
-  { code: "es-ES", label: "Español (Spanish)" },
-  { code: "de-DE", label: "Deutsch (German)" },
-  { code: "hi-IN", label: "हिन्दी (Hindi)" },
-  { code: "ur-PK", label: "اردو (Urdu)" },
-  { code: "zh-CN", label: "中文 (Chinese)" }
+  { code: "en-US", label: "English" }
 ];
 
 const ZX_I18N = {
-  "en-US": { welcome: "Welcome", next_session: "Next Session", live_now: "Live Now", trending: "Trending Topics", agenda: "Agenda", journey: "My Journey", concierge: "AI Concierge", profile: "Profile", announcements: "Announcements", scan_badge: "Scan your badge QR to check-in", ask_anything: "Ask anything about the event", floor: "Floor Guide", checked_in: "Checked In", join: "Join", leave: "Leave", home: "Home" },
+  "en-US": { welcome: "Welcome", next_session: "Next Session", live_now: "Live Now", trending: "Trending Topics", agenda: "Agenda", journey: "My Journey", concierge: "AI Concierge", profile: "Profile", announcements: "Announcements", scan_badge: "Scan your badge QR to check-in", ask_anything: "Ask anything about the event", floor: "Floor Guide", checked_in: "Checked In", join: "Join", leave: "Leave", home: "Home", for_you: "For You — based on your interests", my_schedule: "My Schedule", add_journey: "Add to Journey", partners: "Partners", temp_session: "Temporary Guest Session", end_session: "End session & start over", send_details: "Send my details to myself", no_live: "No sessions live right now — next one starts soon!", nothing_scheduled: "Nothing scheduled. Enjoy the expo!" },
   "ar-AE": { welcome: "مرحباً", next_session: "الجلسة القادمة", live_now: "الآن مباشر", trending: "المواضيع الرائجة", agenda: "جدول الأعمال", journey: "رحلتي", concierge: "المرشد الذكي", profile: "الملف الشخصي", announcements: "الإعلانات", scan_badge: "امسح رمز QR للتحقق من دخولك", ask_anything: "اسأل أي شيء عن الفعالية", floor: "دليل الطوابق", checked_in: "تم تسجيل الدخول", join: "انضمام", leave: "مغادرة", home: "الرئيسية" },
   "fr-FR": { welcome: "Bienvenue", next_session: "Session suivante", live_now: "En direct", trending: "Sujets tendance", agenda: "Programme", journey: "Mon parcours", concierge: "Concierge IA", profile: "Profil", announcements: "Annonces", scan_badge: "Scannez votre QR pour l'enregistrement", ask_anything: "Posez vos questions sur l'événement", floor: "Guide des étages", checked_in: "Enregistré", join: "Rejoindre", leave: "Quitter", home: "Accueil" },
   "es-ES": { welcome: "Bienvenido", next_session: "Próxima sesión", live_now: "En vivo", trending: "Temas destacados", agenda: "Agenda", journey: "Mi recorrido", concierge: "Conserje IA", profile: "Perfil", announcements: "Anuncios", scan_badge: "Escanea tu QR para registrarte", ask_anything: "Pregunta lo que quieras sobre el evento", floor: "Guía de pisos", checked_in: "Registrado", join: "Unirse", leave: "Salir", home: "Inicio" },
@@ -59,7 +53,7 @@ function zxDemoPassword(d = new Date()) {
 window.zxDemoPassword = zxDemoPassword;
 
 const ZXSeed = {
-  version: 8, // Final Demo schema v8 — Arabic demo data, venue map, crowd history, temp sessions
+  version: 9, // Final Demo schema v9 — English-only demo data, richer mock content, UX enhancements
   activeRole: "SUPER_ADMIN",
   activeTenantId: "tenant-wps-2026",
   activePodId: "POD-01",
@@ -138,37 +132,55 @@ const ZXSeed = {
   ],
 
   schedule: [
-    { id: "sch-1", tenantId: "tenant-wps-2026", podId: "POD-01", title: "حوكمة الذكاء الاصطناعي في إنفاذ القانون السيادي", startTime: "10:00 AM", endTime: "10:45 AM", speakerHost: "عبدالله المطيري", speakerGuest: "فاطمة الظاهري", status: "Scheduled" },
-    { id: "sch-2", tenantId: "tenant-wps-2026", podId: "POD-02", title: "الاستدلال على الحافة لتحليلات الحدود الفورية", startTime: "11:00 AM", endTime: "11:45 AM", speakerHost: "العقيد ماجد السويدي", speakerGuest: "نورة القحطاني", status: "Scheduled" },
-    { id: "sch-3", tenantId: "tenant-wps-2026", podId: "POD-03", title: "كلمة افتتاحية مغلقة: سلامة الذكاء الاصطناعي الوطنية", startTime: "09:00 AM", endTime: "09:40 AM", speakerHost: "معالي سيف المنصوري", speakerGuest: "خالد الشامسي", status: "Completed" },
-    { id: "sch-4", tenantId: "tenant-tech-expo", podId: "POD-04", title: "الكلمة الرئيسية: المؤسسة الوكيلة", startTime: "02:00 PM", endTime: "02:45 PM", speakerHost: "مريم الكتبي", speakerGuest: "سلطان الدوسري", status: "Scheduled" }
+    { id: "sch-1", tenantId: "tenant-wps-2026", podId: "POD-01", title: "AI Governance in Sovereign Law Enforcement", track: "Governance", room: "Hall A1 — Main Stage", tags: ["AI Governance", "Cloud Security"], startTime: "10:00 AM", endTime: "10:45 AM", speakerHost: "Abdullah Al-Mutairi", speakerGuest: "Fatima Al-Zahra", status: "Scheduled" },
+    { id: "sch-2", tenantId: "tenant-wps-2026", podId: "POD-02", title: "Edge Inference for Real-Time Border Analytics", track: "Technology", room: "Hall A1 — Zone 2", tags: ["Edge Inference", "Border Analytics"], startTime: "11:00 AM", endTime: "11:45 AM", speakerHost: "Col. Majed Al-Suwaidi", speakerGuest: "Noura Al-Qahtani", status: "Scheduled" },
+    { id: "sch-3", tenantId: "tenant-wps-2026", podId: "POD-03", title: "Closing Keynote: National AI Safety Framework", track: "Keynote", room: "Hall B2 — VIP", tags: ["AI Governance", "Smart Cities"], startTime: "12:30 PM", endTime: "01:15 PM", speakerHost: "H.E. Saif Al-Mansouri", speakerGuest: "Khaled Al-Shamsi", status: "Scheduled" },
+    { id: "sch-5", tenantId: "tenant-wps-2026", podId: "POD-01", title: "Workshop: Zero-Trust Architecture for Public Safety Networks", track: "Workshop", room: "Hall A2 — Workshops", tags: ["Cybersecurity", "Cloud Security"], startTime: "02:00 PM", endTime: "03:00 PM", speakerHost: "Dr. Aisha Rahman", speakerGuest: "Omar Al-Hosani", status: "Scheduled" },
+    { id: "sch-6", tenantId: "tenant-wps-2026", podId: "POD-02", title: "Panel: Digital Twins & Predictive Policing — Ethics at Scale", track: "Panel", room: "Hall A1 — Zone 2", tags: ["Smart Cities", "Big Data"], startTime: "03:30 PM", endTime: "04:15 PM", speakerHost: "Layla Haddad", speakerGuest: "Viktor Petrov", status: "Scheduled" },
+    { id: "sch-7", tenantId: "tenant-wps-2026", podId: "POD-03", title: "Fireside Chat: Onboarding the Next 1,000 Delegates", track: "Networking", room: "Hall B2 — VIP", tags: ["IoT", "Generative AI"], startTime: "04:30 PM", endTime: "05:00 PM", speakerHost: "Sarah Mitchell", speakerGuest: "Rashid Al-Falasi", status: "Scheduled" },
+    { id: "sch-8", tenantId: "tenant-wps-2026", podId: "POD-01", title: "Opening Briefing: Sovereign Cloud Compliance Matrix", track: "Keynote", room: "Hall A1 — Main Stage", tags: ["Cloud Security", "Blockchain"], startTime: "09:00 AM", endTime: "09:40 AM", speakerHost: "H.E. Saif Al-Mansouri", speakerGuest: "Khaled Al-Shamsi", status: "Completed" },
+    { id: "sch-4", tenantId: "tenant-tech-expo", podId: "POD-04", title: "Keynote: The Agentic Enterprise — From Copilots to Coworkers", track: "Keynote", room: "Expo Hall 3 — Startup Stage", tags: ["Generative AI"], startTime: "02:00 PM", endTime: "02:45 PM", speakerHost: "Mariam Al-Ketbi", speakerGuest: "Sultan Al-Dosari", status: "Scheduled" }
   ],
 
   meetings: [
     {
       id: "mtg-101", tenantId: "tenant-wps-2026", podId: "POD-03",
-      title: "كلمة افتتاحية مغلقة: سلامة الذكاء الاصطناعي الوطنية", startTime: "09:00 AM", endTime: "09:40 AM",
-      hostName: "معالي سيف المنصوري", status: "Ended", hitlStatus: "PendingApproval",
-      guests: [{ id: "g1", badgeId: "BDG-9941", name: "فاطمة الظاهري", email: "fatima@zxsprd.ae", phone: "+971500000000", role: "VIP", checkedInAt: "08:55 AM" }],
+      title: "Opening Briefing: Sovereign Cloud Compliance Matrix", startTime: "09:00 AM", endTime: "09:40 AM",
+      hostName: "H.E. Saif Al-Mansouri", status: "Ended", hitlStatus: "PendingApproval",
+      guests: [{ id: "g1", badgeId: "BDG-9941", name: "Fatima Al-Zahra", email: "fatima@zxsprd.ae", phone: "+971500000000", role: "VIP", checkedInAt: "08:55 AM" }],
       rawTranscript: [
-        { time: "09:00:12", speaker: "معالي سيف المنصوري", text: "أهلاً بالجميع. نستعرض اليوم مصفوفة الامتثال للسحابة السيادية للبيانات." },
-        { time: "09:02:45", speaker: "خالد الشامسي", text: "كيف يتحقق التدمير الآلي للبيانات خلال ثلاثين يوماً من الامتثال للأنظمة الوطنية؟" },
-        { time: "09:05:10", speaker: "معالي سيف المنصوري", text: "يعتمد النظام على التقطيع التشفيري؛ بمجرد إغلاق النافذة تُتلف المفاتيح نهائياً." }
+        { time: "09:00:12", speaker: "H.E. Saif Al-Mansouri", text: "Good morning everyone. Today we walk through the compliance matrix for the sovereign data cloud." },
+        { time: "09:02:45", speaker: "Khaled Al-Shamsi", text: "How is the automated 30-day data destruction enforced against national regulations?" },
+        { time: "09:05:10", speaker: "H.E. Saif Al-Mansouri", text: "The system relies on cryptographic shredding — once the retention window closes, the keys are destroyed permanently." },
+        { time: "09:08:32", speaker: "Fatima Al-Zahra", text: "Can auditors access immutable logs without exposing the underlying content?" },
+        { time: "09:10:05", speaker: "H.E. Saif Al-Mansouri", text: "Yes. Zero-knowledge attestation gives regulators proof of deletion while keeping payload data confidential." }
       ],
-      aiSummary: "تناولت الجلسة امتثال السحابة السيادية للبيانات مع التركيز على آلية التدمير الآلي للبيانات خلال ثلاثين يوماً باستخدام التقطيع التشفيري لضمان الامتثال للأنظمة الوطنية.",
-      sentimentScore: 85, actionItems: ["مراجعة وثائق التقطيع التشفيري.", "التحقق من سجلات الإتلاف."]
+      aiSummary: "The session covered sovereign-cloud compliance with a focus on the automated 30-day data-destruction mechanism using cryptographic shredding. Speakers confirmed that regulators can verify deletion through zero-knowledge attestations without exposing payload data.",
+      sentimentScore: 85, actionItems: ["Review cryptographic shredding documentation.", "Verify destruction audit logs."]
     },
     {
       id: "mtg-102", tenantId: "tenant-wps-2026", podId: "POD-01",
-      title: "جلسة طارئة: فريق مكافحة الجرائم السيبرانية العابرة للحدود", startTime: "08:15 AM", endTime: "08:50 AM",
-      hostName: "العقيد ماجد السويدي", status: "Ended", hitlStatus: "Approved",
+      title: "Emergency Session: Cross-Border Cybercrime Task Force", startTime: "08:15 AM", endTime: "08:50 AM",
+      hostName: "Col. Majed Al-Suwaidi", status: "Ended", hitlStatus: "Approved",
       guests: [],
       rawTranscript: [
-        { time: "08:15:40", speaker: "العقيد ماجد السويدي", text: "نحتاج دليل استجابة مشترك للحوادث يستهدف البنية التحتية للموانئ." },
-        { time: "08:22:03", speaker: "نورة القحطاني", text: "متفقون. لنبدأ تجريب مشاركة الإشارات الفورية بين مراكز العمليات في دبي وأبوظبي." }
+        { time: "08:15:40", speaker: "Col. Majed Al-Suwaidi", text: "We need a joint incident-response playbook targeting port infrastructure." },
+        { time: "08:22:03", speaker: "Noura Al-Qahtani", text: "Agreed. Let's start piloting real-time threat-indicator sharing between the Dubai and Abu Dhabi operations centres." },
+        { time: "08:31:17", speaker: "Khaled Al-Shamsi", text: "Legal clearance for indicator exchange should not block the pilot — we can anonymise payloads at the edge." }
       ],
-      aiSummary: "اتفق المشاركون على صياغة دليل مشترك للاستجابة لحوادث البنية التحتية للموانئ، وعلى بدء تجربة مشاركة الإشارات الفورية بين مركزي عمليات دبي وأبوظبي.",
-      sentimentScore: 72, actionItems: ["إعداد الدليل المشترك.", "جدولة تكامل مراكز العمليات."]
+      aiSummary: "Participants agreed to draft a joint incident-response playbook for port infrastructure and to begin a real-time indicator-sharing pilot between the Dubai and Abu Dhabi operations centres, with payload anonymisation handled at the edge.",
+      sentimentScore: 72, actionItems: ["Prepare the joint response playbook.", "Schedule operations-centre integration."]
+    },
+    {
+      id: "mtg-103", tenantId: "tenant-wps-2026", podId: "POD-02",
+      title: "Live Demo: Neural Transcription Under Load", startTime: "09:50 AM", endTime: null,
+      hostName: "Dr. Aisha Rahman", status: "Recording", hitlStatus: "Draft",
+      guests: [{ id: "g2", badgeId: "BDG-4823", name: "Khaled Al-Shamsi", email: "khaled@zxsprd.ae", phone: "+971501112233", role: "Delegate", checkedInAt: "09:48 AM" }],
+      rawTranscript: [
+        { time: "09:50:22", speaker: "Dr. Aisha Rahman", text: "We are pushing forty concurrent audio channels through the edge node right now." },
+        { time: "09:52:41", speaker: "Audience Q&A", text: "What happens to latency if the uplink drops completely?" }
+      ],
+      aiSummary: "Meeting in progress...", sentimentScore: 0, actionItems: []
     }
   ],
 
@@ -185,43 +197,46 @@ const ZXSeed = {
     venueMap: {
       name: "DWTC — Dubai World Trade Centre",
       zones: [
-        { id: "z-hall-a1", label: "قاعة A1 — المسرح الرئيسي", x: 0.05, y: 0.07, w: 0.4, h: 0.4, capacity: 1800 },
-        { id: "z-hall-a2", label: "قاعة A2 — الورش", x: 0.05, y: 0.55, w: 0.28, h: 0.36, capacity: 900 },
-        { id: "z-hall-b2", label: "قاعة B2 — كبار الشخصيات", x: 0.55, y: 0.55, w: 0.2, h: 0.36, capacity: 500 },
-        { id: "z-expo-3", label: "قاعة Expo 3 — الشركات الناشئة", x: 0.55, y: 0.07, w: 0.4, h: 0.4, capacity: 1200 },
-        { id: "z-concourse", label: "البهو والمقصف", x: 0.36, y: 0.5, w: 0.16, h: 0.12, capacity: 600 },
-        { id: "z-entrance", label: "البوابة الرئيسية والتسجيل", x: 0.81, y: 0.55, w: 0.14, h: 0.36, capacity: 400 }
+        { id: "z-hall-a1", label: "Hall A1 — Main Stage", x: 0.05, y: 0.07, w: 0.4, h: 0.4, capacity: 1800 },
+        { id: "z-hall-a2", label: "Hall A2 — Workshops", x: 0.05, y: 0.55, w: 0.28, h: 0.36, capacity: 900 },
+        { id: "z-hall-b2", label: "Hall B2 — VIP Lounge", x: 0.55, y: 0.55, w: 0.2, h: 0.36, capacity: 500 },
+        { id: "z-expo-3", label: "Expo Hall 3 — Startup Zone", x: 0.55, y: 0.07, w: 0.4, h: 0.4, capacity: 1200 },
+        { id: "z-concourse", label: "Concourse & Café", x: 0.36, y: 0.5, w: 0.16, h: 0.12, capacity: 600 },
+        { id: "z-entrance", label: "Main Gate & Registration", x: 0.81, y: 0.55, w: 0.14, h: 0.36, capacity: 400 }
       ]
     },
     agents: [] // simulated people-flow dots (auto-generated at runtime)
   },
 
   sponsors: [
-    { id: "sp-1", name: "البنك الأهلي", logoUrl: "", message: "زوروا الجناح ٤٢ لتجربة الحلول المصرفية المدعومة بالذكاء الاصطناعي." },
-    { id: "sp-2", name: "اتصالات", logoUrl: "", message: "شبكة الجيل الخامس الحصرية للفعالية تغطي جميع القاعات." },
-    { id: "sp-3", name: "مجموعة الإمارات الجوية", logoUrl: "", message: "سافر معنا — خصومات خاصة لجميع المشاركين في القمة." }
+    { id: "sp-1", name: "Al Rajhi Bank", tier: "Diamond", booth: "B-42", logoUrl: "", message: "Visit booth 42 to try our AI-powered banking experience." },
+    { id: "sp-2", name: "e& (etisalat)", tier: "Platinum", booth: "B-07", logoUrl: "", message: "Exclusive 5G event network covering every hall and concourse." },
+    { id: "sp-3", name: "Emirates Air Group", tier: "Gold", booth: "B-15", logoUrl: "", message: "Fly with us — special delegate discounts for all summit attendees." }
   ],
 
   broadcasts: { internalPod: [], allScreens: [], guestPortal: [], loggedInUsers: [] },
 
   trendingTopics: [
-    { keyword: "السحابة السيادية", mentions: 142, sentiment: "Positive" },
-    { keyword: "التقطيع التشفيري", mentions: 98, sentiment: "Neutral" },
-    { keyword: "الاستدلال على الحافة", mentions: 76, sentiment: "Positive" },
-    { keyword: "إتلاف البيانات", mentions: 54, sentiment: "Negative" },
-    { keyword: "الأمن السيبراني", mentions: 61, sentiment: "Positive" }
+    { keyword: "Sovereign Cloud", mentions: 142, sentiment: "Positive" },
+    { keyword: "Cryptographic Shredding", mentions: 98, sentiment: "Neutral" },
+    { keyword: "Edge Inference", mentions: 76, sentiment: "Positive" },
+    { keyword: "Data Destruction", mentions: 54, sentiment: "Negative" },
+    { keyword: "Cybersecurity", mentions: 61, sentiment: "Positive" },
+    { keyword: "AI Governance", mentions: 88, sentiment: "Positive" }
   ],
 
   guestProfiles: [
-    { id: "usr-1", badgeId: "BDG-9941", name: "فاطمة الظاهري", email: "fatima@zxsprd.ae", phone: "+971500000000", interests: ["حوكمة الذكاء الاصطناعي", "أمن السحابة"], joinedSessions: ["mtg-101"] },
-    { id: "usr-2", badgeId: "BDG-4823", name: "خالد الشامسي", email: "khaled@zxsprd.ae", phone: "+971501112233", interests: ["الاستدلال على الحافة", "الأمن السيبراني"], joinedSessions: ["mtg-102"] },
-    { id: "usr-3", badgeId: "BDG-7702", name: "نورة القحطاني", email: "noura@zxsprd.ae", phone: "+971504445566", interests: ["تحليلات الحدود", "المدن الذكية"], joinedSessions: [] }
+    { id: "usr-1", badgeId: "BDG-9941", name: "Fatima Al-Zahra", title: "Director of AI Policy · Smart Dubai", company: "Dubai DDA", email: "fatima@zxsprd.ae", phone: "+971500000000", interests: ["AI Governance", "Cloud Security"], joinedSessions: ["mtg-101"] },
+    { id: "usr-2", badgeId: "BDG-4823", name: "Khaled Al-Shamsi", title: "Cyber Threat Analyst · NCIS", company: "NCIS UAE", email: "khaled@zxsprd.ae", phone: "+971501112233", interests: ["Edge Inference", "Cybersecurity"], joinedSessions: ["mtg-102"] },
+    { id: "usr-3", badgeId: "BDG-7702", name: "Noura Al-Qahtani", title: "Chief Data Officer · NEOM", company: "NEOM", email: "noura@zxsprd.ae", phone: "+971504445566", interests: ["Border Analytics", "Smart Cities"], joinedSessions: [] },
+    { id: "usr-4", badgeId: "BDG-1187", name: "James O'Connor", title: "Deputy Commissioner · INTERPOL", company: "INTERPOL Lyon", email: "james.oconnor@interpol.example", phone: "+33612345678", interests: ["Blockchain", "Big Data"], joinedSessions: [] },
+    { id: "usr-5", badgeId: "BDG-6310", name: "Aisha Rahman", title: "ML Professor · Khalifa University", company: "Khalifa University", email: "a.rahman@ku.ac.ae", phone: "+971507778899", interests: ["Generative AI", "IoT"], joinedSessions: [] }
   ],
 
   tempGuestSessions: [],
 
-  // Predefined topics — guests just click to select (Arabic demo)
-  interestTopics: ["حوكمة الذكاء الاصطناعي", "الأمن السيبراني", "أمن السحابة", "الاستدلال على الحافة", "تحليلات الحدود", "المدن الذكية", "البلوك تشين", "إنترنت الأشياء", "البيانات الضخمة", "الذكاء الاصطناعي التوليدي"],
+  // Predefined topics — guests just click to select (English demo)
+  interestTopics: ["AI Governance", "Cybersecurity", "Cloud Security", "Edge Inference", "Border Analytics", "Smart Cities", "Blockchain", "IoT", "Big Data", "Generative AI"],
 
   documents: [],
   voiceQueries: [],
@@ -266,6 +281,15 @@ const ZXStore = (() => {
   window.addEventListener("storage", (e) => {
     if (e.key === KEY && e.newValue) { try { state = JSON.parse(e.newValue); notify("cross-tab"); } catch (_) {} }
   });
+
+  /* ---- Demo guard: mock data is English-only. Normalise legacy saved state,
+         then re-apply on any external (cross-tab) update so no view can drift. */
+  function enforceEnglishDemo() {
+    if (!ZX_LANGS.some(l => l.code === state.uiLang)) state.uiLang = "en-US";
+    if (!ZX_LANGS.some(l => l.code === state.voiceLang)) state.voiceLang = "en-US";
+    (state.tenants || []).forEach(t => { t.tenantLangs = ZXStore.langPool(t.tenantLangs); });
+  }
+  enforceEnglishDemo();
   persist();
 
   function log(actor, action) {
@@ -278,6 +302,7 @@ const ZXStore = (() => {
 
     set(patch, source = "local") {
       state = { ...state, ...(typeof patch === "function" ? patch(state) : patch) };
+      if (source === "cross-tab") enforceEnglishDemo(); // demo guard: never leave English-only pool
       persist();
       if (source !== "cross-tab") { try { channel?.postMessage({ type: "state", state }); } catch (_) {} }
       notify(source);
@@ -290,7 +315,9 @@ const ZXStore = (() => {
     schedule(tid = state.activeTenantId) { return state.schedule.filter(s => s.tenantId === tid); },
     meetings(tid = state.activeTenantId) { return state.meetings.filter(m => m.tenantId === tid); },
     apiKeys(tid = state.activeTenantId) { return state.apiKeys.filter(k => k.tenantId === tid); },
-    t(key) { return (ZX_I18N[state.uiLang] || ZX_I18N["en-US"])[key] || ZX_I18N["en-US"][key] || key; },
+    t(key) { const l = ZX_I18N[state.uiLang] || ZX_I18N["en-US"]; return (l && l[key] != null) ? l[key] : ((ZX_I18N["en-US"] || {})[key] != null ? ZX_I18N["en-US"][key] : key); },
+    /* Demo language pool — keeps every view English-only even for legacy saved state */
+    langPool(codes) { const avail = ZX_LANGS.map(l => l.code); const sel = (codes || []).filter(c => avail.includes(c)); return sel.length ? sel : ["en-US"]; },
     feature(name) { return !!state.featureFlags[name]; },
 
     /* CONTEXT / THEME / LANGUAGE */
@@ -457,7 +484,7 @@ const ZXStore = (() => {
 
     /* ===== TEMPORARY GUEST SESSIONS (interest-based, no badge) ===== */
     createTempGuestSession(data) {
-      const sg = { id: `tmp-${Date.now()}`, name: data.name || "ضيف", interests: data.interests || [], createdAt: new Date().toISOString(), joinedSessions: [] };
+      const sg = { id: `tmp-${Date.now()}`, name: data.name || "Valued Guest", interests: data.interests || [], createdAt: new Date().toISOString(), joinedSessions: [] };
       this.set({ tempGuestSessions: [...(state.tempGuestSessions || []), sg] });
       return sg;
     },
@@ -495,9 +522,15 @@ window.ZX_I18N = ZX_I18N;
 
 /* ---------------- SHARED UI HELPERS (theme, menus, toast, PWA) ---------------- */
 (function installSharedUI() {
-  // Apply theme ASAP to avoid flash
+  // Apply theme ASAP to avoid flash. Tenant language pool is English-only for the demo;
+  // tenant theme follows Super Admin policy unless a global theme lock is set.
   function applyTheme() {
-    const th = ZXStore.state.theme || "dark";
+    const s = ZXStore.state;
+    let th = s.theme || "dark";
+    if (!s.platformSettings?.globalThemeLock) {
+      const tt = ZXStore.tenant()?.tenantTheme;
+      if (tt === "light" || tt === "dark") th = tt;
+    }
     document.documentElement.setAttribute("data-theme", th);
     document.documentElement.style.setProperty("--tenant-accent", ZXStore.tenant()?.primaryColor || "#3B82F6");
   }

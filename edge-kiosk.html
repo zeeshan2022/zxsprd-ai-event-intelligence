@@ -105,8 +105,7 @@ const podSel = document.getElementById("podSelect");
 let recTimer = null, tick = 0;
 
 function voiceLangs() {
-  const t = ZXStore.tenant();
-  return (t?.tenantLangs && t.tenantLangs.length ? t.tenantLangs : ["en-US"]);
+  return ZXStore.langPool(ZXStore.tenant()?.tenantLangs);
 }
 function paintVoiceSel() {
   const list = voiceLangs();
