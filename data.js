@@ -909,8 +909,15 @@ window.ZX_I18N = ZX_I18N;
     if (typeof zxApplyViewAppIdentity === "function") zxApplyViewAppIdentity();
     const tb = $("#chromeControls");
     if (!tb) return;
+    // Preserve statically-authored controls (e.g. Super Admin's Export / Publish to GitHub
+    // buttons) instead of wiping them when the injected toolbar HTML replaces innerHTML.
+    const preserved = (opts.preserveControls || [])
+      .map(id => (typeof id === "string" ? document.getElementById(id) : id))
+      .filter(Boolean)
+      .map(el => el.cloneNode(true));
     const langs = (opts.chromeLangs && opts.chromeLangs.length ? ZX_LANGS.filter(l => opts.chromeLangs.includes(l.code)) : ZX_LANGS);
     tb.innerHTML = `
+      ${preserved.map(el => el.outerHTML).join("")}
       <button id="btnTheme" class="icon-btn" title="Toggle Dark / Light theme"><svg class="icon"><use href="#i-moon"/></svg></button>
       ${opts.hideLang ? "" : `
       <select id="selUiLang" class="mini-select" title="Interface language">${langs.map(l => `<option value="${l.code}">${l.label}</option>`).join("")}</select>
