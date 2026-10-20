@@ -347,3 +347,7 @@ html.theme-anim, html.theme-anim * { transition: background-color .35s var(--eas
 
 /* Launcher selected-tenant card */
 .launch-card.selected-card { border-color: var(--tenant-accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--tenant-accent) 45%, transparent), var(--shadow-md); }
+
+/* Install-App FAB fade-out (10s auto-hide on view pages) */
+.install-fab { transition: opacity .45s ease, transform .45s ease; }
+.install-fab.fade-out { opacity: 0; transform: translateY(12px); pointer-events: none; }

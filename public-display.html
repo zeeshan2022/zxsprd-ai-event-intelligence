@@ -25,6 +25,7 @@
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
   <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></symbol>
   <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="m1 1 22 22M8.5 16.5a5 5 0 0 1 7 0M2 8.82a15 15 0 0 1 4.17-2.65M10.66 5c4.01-.36 8.14.9 11.34 3.76M16.85 11.25a10 10 0 0 1 2.22 1.68M5 13a10 10 0 0 1 5.24-2.76"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
 </svg>
 
 <div class="signage">
@@ -79,11 +80,48 @@
 
 <script>
 zxInitChrome({ hideLang: true }); // Public display: theme switch only — no language selectors
+if (typeof zxPlatformBanner === "function") zxPlatformBanner();
+if (typeof zxEnableInstallPrompt === "function") zxEnableInstallPrompt({ force: true, autoHideMs: 10000 }); // show Install App for 10s, then fade away
 const slidesOrder = ["sl-live", "sl-agenda", "sl-trends", "sl-sponsors", "sl-crowd"];
 let idx = 0;
 const SLIDE_MS = 8000;
 let elapsed = 0;
+let paused = false;   // pause-on-hover / manual pause
+let hintTimer = null;
 
+/* ---------- Signage controls UX: hover hints, keyboard nav, pause ---------- */
+function sgHint(msg) {
+  let h = document.getElementById("sgHint");
+  if (!h) {
+    h = document.createElement("div");
+    h.id = "sgHint";
+    h.setAttribute("role", "status");
+    h.style.cssText = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:99;background:rgba(2,6,23,.85);color:#fff;padding:14px 26px;border-radius:12px;font-size:clamp(14px,1.6vw,22px);border:1px solid rgba(255,255,255,.15);backdrop-filter:blur(6px);pointer-events:none;transition:opacity .4s";
+    document.body.appendChild(h);
+  }
+  h.textContent = msg; h.style.opacity = "1";
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => { h.style.opacity = "0"; }, 1600);
+}
+function visibleSlides() {
+  return slidesOrder.map((id, i) => ({ id, i })).filter(s => !document.getElementById(s.id).hidden);
+}
+function goTo(i) {
+  const vis = visibleSlides();
+  if (!vis.length) return;
+  idx = vis[((i % vis.length) + vis.length) % vis.length].i;
+  elapsed = 0; showSlide(idx);
+}
+window.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowRight" || e.key === "PageDown") { goTo(idx + 1); sgHint("→ Next slide"); }
+  else if (e.key === "ArrowLeft" || e.key === "PageUp") { goTo(idx - 1); sgHint("← Previous slide"); }
+  else if (e.key === " ") { e.preventDefault(); paused = !paused; sgHint(paused ? "⏸ Paused" : "▶ Resumed"); }
+});
+// Pause rotation while the operator's cursor hovers the stage (resumes on leave)
+document.getElementById("slides").addEventListener("mouseenter", () => { paused = true; });
+document.getElementById("slides").addEventListener("mouseleave", () => { paused = false; });
+// Click a slide area to jump to the next one (useful for touch screens)
+document.getElementById("slides").addEventListener("click", () => { goTo(idx + 1); });
 
 
 function applyI18n() {
@@ -158,6 +196,7 @@ function showSlide(i) {
   document.querySelectorAll(".slide").forEach((el, n) => el.classList.toggle("active", n === i));
 }
 setInterval(() => {
+  if (paused) return; // hover / manual pause freezes rotation & progress bar
   elapsed += 100;
   document.getElementById("progBar").style.width = ((elapsed / SLIDE_MS) * 100) + "%";
   if (elapsed >= SLIDE_MS) {
@@ -173,6 +212,9 @@ setInterval(() => {
     showSlide(idx);
   }
 }, 100);
+
+// Show the controls hint once on load for operators standing at the screen
+setTimeout(() => sgHint("← → change slide · Space pause · click next"), 1200);
 
 // Countdown ticking each second
 setInterval(() => {
