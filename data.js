@@ -544,8 +544,14 @@ window.ZX_I18N = ZX_I18N;
 
   // Maintenance-mode / offline awareness banner (non-blocking)
   window.zxPlatformBanner = function () {
-    const mount = document.getElementById("platformNotice");
-    if (!mount) return;
+    let mount = document.getElementById("platformNotice");
+    if (!mount) { // auto-mount under the topbar so every view benefits from maintenance/offline notices
+      const tb = document.querySelector(".topbar, .app-header, header");
+      if (!tb || !document.body) return;
+      mount = document.createElement("div");
+      mount.id = "platformNotice";
+      tb.after(mount);
+    }
     const paint = () => {
       const ps = ZXStore.state.platformSettings || {};
       if (ps.maintenanceMode) {
