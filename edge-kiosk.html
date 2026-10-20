@@ -104,7 +104,7 @@
 <script>
 zxInitChrome();
 if (typeof zxPlatformBanner === "function") zxPlatformBanner();
-if (typeof zxEnableInstallPrompt === "function") zxEnableInstallPrompt();
+if (typeof zxEnableInstallPrompt === "function") zxEnableInstallPrompt({ force: true, autoHideMs: 10000 }); // show Install App for 10s, then fade away
 const podSel = document.getElementById("podSelect");
 let recTimer = null, tick = 0;
 

@@ -183,7 +183,7 @@
 <script>
 zxInitChrome();
 zxPlatformBanner();
-if (typeof zxEnableInstallPrompt === "function") zxEnableInstallPrompt();
+if (typeof zxEnableInstallPrompt === "function") zxEnableInstallPrompt({ force: true, autoHideMs: 10000 }); // show Install App for 10s, then fade away
 
 /* ---------- Session identity: badge guest OR temp guest ---------- */
 let SESSION = null; // { kind: 'badge'|'temp', name, badgeId, interests, email, phone }

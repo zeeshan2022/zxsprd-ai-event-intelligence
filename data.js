@@ -698,34 +698,55 @@ window.ZX_I18N = ZX_I18N;
   if (!location.protocol.startsWith("http")) return; // file:// — SW unavailable
 
   // PWA install prompt → floating "Install App" button + badge state
-  window.zxEnableInstallPrompt = function () {
+  // opts.autoHideMs: show the button for N ms then fade away (views like kiosk/guest/display use 10000).
+  // opts.force: show the button even without a native beforeinstallprompt event (demo/preview aid).
+  window.zxEnableInstallPrompt = function (opts) {
+    opts = opts || {};
     let deferred = null;
+    let hideTimer = null;
     const setBadge = (txt, cls) => {
       const b = document.getElementById("pwaBadge");
       if (b) { b.textContent = txt; b.className = "badge " + cls; }
+    };
+    const makeBtn = () => {
+      if (document.getElementById("btnInstallPwa")) return document.getElementById("btnInstallPwa");
+      const btn = document.createElement("button");
+      btn.id = "btnInstallPwa";
+      btn.className = "btn btn-blue install-fab";
+      btn.innerHTML = `<svg class="icon"><use href="#i-download"/></svg> Install App`;
+      btn.onclick = async () => {
+        clearTimeout(hideTimer); // don't vanish mid-interaction
+        if (!deferred) { zxToast('To install: open browser menu → "Install app / Add to Home screen"', "info"); return; }
+        deferred.prompt();
+        const res = await deferred.userChoice.catch(() => ({ outcome: "dismissed" }));
+        zxToast(res.outcome === "accepted" ? "Installing ZXSPRD AI 🎉" : "Install dismissed", res.outcome === "accepted" ? "success" : "info");
+        deferred = null;
+        btn.remove();
+        setBadge("Installed / Offline-ready", "badge-green");
+      };
+      document.body.appendChild(btn);
+      if (opts.autoHideMs) {
+        hideTimer = setTimeout(() => {
+          btn.classList.add("fade-out");
+          setTimeout(() => btn.remove(), 450);
+        }, opts.autoHideMs);
+      }
+      return btn;
     };
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
       deferred = e;
       setBadge("Installable · tap Install", "badge-blue");
-      if (!document.getElementById("btnInstallPwa")) {
-        const btn = document.createElement("button");
-        btn.id = "btnInstallPwa";
-        btn.className = "btn btn-blue install-fab";
-        btn.innerHTML = `<svg class="icon"><use href="#i-download"/></svg> Install App`;
-        btn.onclick = async () => {
-          if (!deferred) return zxToast("Already installed or not supported here.");
-          deferred.prompt();
-          const res = await deferred.userChoice.catch(() => ({ outcome: "dismissed" }));
-          zxToast(res.outcome === "accepted" ? "Installing ZXSPRD AI 🎉" : "Install dismissed", res.outcome === "accepted" ? "success" : "info");
-          deferred = null;
-          btn.remove();
-          setBadge("Installed / Offline-ready", "badge-green");
-        };
-        document.body.appendChild(btn);
-      }
+      makeBtn();
     });
+    // Demo fallback: browsers only fire beforeinstallprompt in real installable contexts,
+    // so on the view pages we surface the button anyway (it explains manual install if tapped).
+    if (opts.force) {
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", makeBtn);
+      else makeBtn();
+    }
     window.addEventListener("appinstalled", () => {
+      clearTimeout(hideTimer);
       document.getElementById("btnInstallPwa")?.remove();
       setBadge("Installed ✓", "badge-green");
       zxToast("App installed — launch it from your home screen!", "success");

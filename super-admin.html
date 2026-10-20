@@ -248,8 +248,16 @@ const MENU = [
   { id: "languages", label: "Languages Control", icon: "i-globe" },
   { id: "impersonate", label: "Impersonation", icon: "i-eye" }
 ];
-ZXMenu.build("#saMenu", MENU, v => ZXMenu.show(v));
-ZXMenu.show("dashboard");
+// Robust menu build: retry until the sidebar exists so buttons can never be missing.
+(function buildSaMenu(attempt) {
+  const host = document.getElementById("saMenu");
+  if (host && typeof ZXMenu !== "undefined") {
+    ZXMenu.build("#saMenu", MENU, v => ZXMenu.show(v));
+    ZXMenu.show("dashboard");
+  } else if (attempt < 20) {
+    setTimeout(() => buildSaMenu(attempt + 1), 50);
+  }
+})(0);
 
 const FLAG_DESC = {
   voiceConcierge: ["Voice Concierge", "Interactive AI voice assistant on kiosk & guest portal"],

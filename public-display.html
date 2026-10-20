@@ -25,6 +25,7 @@
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
   <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></symbol>
   <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="m1 1 22 22M8.5 16.5a5 5 0 0 1 7 0M2 8.82a15 15 0 0 1 4.17-2.65M10.66 5c4.01-.36 8.14.9 11.34 3.76M16.85 11.25a10 10 0 0 1 2.22 1.68M5 13a10 10 0 0 1 5.24-2.76"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
 </svg>
 
 <div class="signage">
@@ -80,7 +81,7 @@
 <script>
 zxInitChrome({ hideLang: true }); // Public display: theme switch only — no language selectors
 if (typeof zxPlatformBanner === "function") zxPlatformBanner();
-if (typeof zxEnableInstallPrompt === "function") zxEnableInstallPrompt();
+if (typeof zxEnableInstallPrompt === "function") zxEnableInstallPrompt({ force: true, autoHideMs: 10000 }); // show Install App for 10s, then fade away
 const slidesOrder = ["sl-live", "sl-agenda", "sl-trends", "sl-sponsors", "sl-crowd"];
 let idx = 0;
 const SLIDE_MS = 8000;
