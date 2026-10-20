@@ -233,7 +233,7 @@ const ZXSeed = {
 
 /* ---------------- STORE ENGINE ---------------- */
 const ZXStore = (() => {
-  const KEY = "zxsprd-global-state-v7";
+  const KEY = "zxsprd-global-state-v8";
   const clone = (o) => JSON.parse(JSON.stringify(o));
   const listeners = new Set();
   let channel = null, storageOK = true;
@@ -259,7 +259,7 @@ const ZXStore = (() => {
 
   try {
     if ("BroadcastChannel" in window) {
-      channel = new BroadcastChannel("zxsprd-state-v7");
+      channel = new BroadcastChannel("zxsprd-state-v8");
       channel.onmessage = (e) => { if (e.data?.type === "state") { state = e.data.state; notify("cross-tab"); } };
     }
   } catch (e) {}
@@ -484,7 +484,22 @@ const ZXStore = (() => {
       this.set({ guestProfiles: state.guestProfiles.map(g => g.badgeId === badgeId ? { ...g, joinedSessions: [...new Set([...g.joinedSessions, mid])] } : g) });
     },
 
-    reset() { state = clone(ZXSeed); persist(); try { channel?.postMessage({ type: "state", state }); } catch (_) {} notify("reset"); }
+    /* NOTE: previous duplicate reset() removed — single canonical reset above. */
+    publishSummary(mid) { this.approveSummary(mid); },
+
+    /* Export current state as a downloadable JSON snapshot (Super/Client Admin) */
+    exportState() {
+      try {
+        const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `zxsprd-state-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        log("admin", "Exported state snapshot");
+        return true;
+      } catch (e) { return false; }
+    }
   };
 })();
 
@@ -509,14 +524,40 @@ window.ZX_I18N = ZX_I18N;
   window.zx$ = $; window.zx$$ = $$;
   window.zxesc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-  // Toast
+  // Toast — stacked container so rapid toasts never overwrite each other
   window.zxToast = function (msg, kind = "info") {
-    let t = $("#zxToast");
-    if (!t) { t = document.createElement("div"); t.id = "zxToast"; t.className = "toast"; document.body.appendChild(t); }
+    let wrap = $("#zxToastWrap");
+    if (!wrap) { wrap = document.createElement("div"); wrap.id = "zxToastWrap"; wrap.className = "toast-wrap"; document.body.appendChild(wrap); }
+    const t = document.createElement("div");
+    t.className = "toast-item toast-" + kind;
     t.textContent = msg;
-    t.style.borderColor = kind === "error" ? "var(--red)" : kind === "success" ? "var(--green)" : "#334155";
-    t.classList.add("show");
-    clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600);
+    wrap.appendChild(t);
+    requestAnimationFrame(() => t.classList.add("show"));
+    setTimeout(() => { t.classList.remove("show"); setTimeout(() => t.remove(), 300); }, 2800);
+    while (wrap.children.length > 4) wrap.firstChild.remove();
+  };
+
+  // Skeleton loaders for perceived performance during async renders
+  window.zxSkeleton = function (rows = 3) {
+    return `<div class="skel-stack">${`<div class="skel skel-row"></div>`.repeat(rows)}</div>`;
+  };
+
+  // Maintenance-mode / offline awareness banner (non-blocking)
+  window.zxPlatformBanner = function () {
+    const mount = document.getElementById("platformNotice");
+    if (!mount) return;
+    const paint = () => {
+      const ps = ZXStore.state.platformSettings || {};
+      if (ps.maintenanceMode) {
+        mount.innerHTML = `<div class="broadcast-banner" style="background:var(--red);color:#fff">🛠️ Platform under maintenance — live features may be limited.</div>`;
+      } else if (!navigator.onLine) {
+        mount.innerHTML = `<div class="broadcast-banner" style="background:var(--panel-2);color:var(--muted)">📡 Offline mode — serving from local cache. Everything keeps working.</div>`;
+      } else mount.innerHTML = "";
+    };
+    paint();
+    ZXStore.subscribe(paint);
+    window.addEventListener("online", paint);
+    window.addEventListener("offline", paint);
   };
 
   // Sidebar menu builder: ZXMenu.build(container, items, onSelect)
@@ -560,6 +601,20 @@ window.ZX_I18N = ZX_I18N;
     }
     $("#btnTheme").onclick = () => { zxStoreSetTheme(ZXStore.state.theme === "dark" ? "light" : "dark"); };
     const offBtn = $("#btnOffline");
+    // keep the theme button icon in sync with current theme (moon in dark, sun in light)
+    const paintThemeIcon = () => {
+      const isDark = ZXStore.state.theme !== "light";
+      $("#btnTheme").innerHTML = `<svg class="icon"><use href="#${isDark ? "i-moon" : "i-sun"}"/></svg>`;
+      $("#btnTheme").title = isDark ? "Switch to Light theme (or press T)" : "Switch to Dark theme (or press T)";
+    };
+    paintThemeIcon();
+    ZXStore.subscribe(paintThemeIcon);
+    // keyboard shortcut: T toggles theme (ignored while typing in inputs)
+    window.addEventListener("keydown", (e) => {
+      if ((e.key === "t" || e.key === "T") && !/input|select|textarea/i.test(document.activeElement?.tagName || "")) {
+        zxStoreSetTheme(ZXStore.state.theme === "dark" ? "light" : "dark");
+      }
+    });
     const paintNet = () => { offBtn.innerHTML = `<svg class="icon"><use href="#${navigator.onLine ? "i-wifi" : "i-wifi-off"}"/></svg>`; offBtn.title = navigator.onLine ? "Online (cached assets served offline-ready)" : "OFFLINE — app still works from cache"; };
     paintNet(); window.addEventListener("online", paintNet); window.addEventListener("offline", paintNet);
   };
@@ -614,8 +669,8 @@ window.ZX_I18N = ZX_I18N;
       const z = (vm.zones || [])[i % (vm.zones || []).length];
       if (!z) return;
       const px = (z.x + z.w * 0.8) * W, py = (z.y + z.h * 0.85) * H;
-      svg += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="7" fill="var(--tenant-accent)" stroke="#fff" stroke-width="2"/>`;
-      svg += `<text x="${px.toFixed(1)}" y="${(py-12).toFixed(1)}" font-size="${(opts.fs||13)-2}" text-anchor="middle" fill="var(--muted)">${p.id} (${p.currentHeadcount})</text>`;
+      svg += `<circle class="pod-marker${p.currentMeetingId ? " pod-rec" : ""}" cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="7" fill="var(--tenant-accent)" stroke="#fff" stroke-width="2"/>`;
+      svg += `<text x="${px.toFixed(1)}" y="${(py-12).toFixed(1)}" font-size="${(opts.fs||13)-2}" text-anchor="middle" fill="var(--muted)">${p.id}${p.currentMeetingId ? " ●REC" : ` (${p.currentHeadcount})`}</text>`;
     });
     svg += `</svg>`;
     // animated people-flow dots (CSS transition for smooth movement)
@@ -630,4 +685,60 @@ window.ZX_I18N = ZX_I18N;
       navigator.serviceWorker.register("sw.js").catch(() => {});
     });
   }
+})();
+
+/* ---------------- SHARED ENHANCEMENT HELPERS (v8.1) ---------------- */
+(function installEnhancements() {
+  if (!location.protocol.startsWith("http")) return; // file:// — SW unavailable
+
+  // PWA install prompt → floating "Install App" button + badge state
+  window.zxEnableInstallPrompt = function () {
+    let deferred = null;
+    const setBadge = (txt, cls) => {
+      const b = document.getElementById("pwaBadge");
+      if (b) { b.textContent = txt; b.className = "badge " + cls; }
+    };
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferred = e;
+      setBadge("Installable · tap Install", "badge-blue");
+      if (!document.getElementById("btnInstallPwa")) {
+        const btn = document.createElement("button");
+        btn.id = "btnInstallPwa";
+        btn.className = "btn btn-blue install-fab";
+        btn.innerHTML = `<svg class="icon"><use href="#i-download"/></svg> Install App`;
+        btn.onclick = async () => {
+          if (!deferred) return zxToast("Already installed or not supported here.");
+          deferred.prompt();
+          const res = await deferred.userChoice.catch(() => ({ outcome: "dismissed" }));
+          zxToast(res.outcome === "accepted" ? "Installing ZXSPRD AI 🎉" : "Install dismissed", res.outcome === "accepted" ? "success" : "info");
+          deferred = null;
+          btn.remove();
+          setBadge("Installed / Offline-ready", "badge-green");
+        };
+        document.body.appendChild(btn);
+      }
+    });
+    window.addEventListener("appinstalled", () => {
+      document.getElementById("btnInstallPwa")?.remove();
+      setBadge("Installed ✓", "badge-green");
+      zxToast("App installed — launch it from your home screen!", "success");
+    });
+  };
+
+  // Subtle click feedback on every button (never blocks existing handlers)
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest("button:not(.no-ripple), .launch-card, .entry-btn, .ctrl-btn, .idle-btn");
+    if (!el || el.disabled) return;
+    el.classList.remove("clicked");
+    void el.offsetWidth; // restart animation
+    el.classList.add("clicked");
+  }, true);
+
+  // Respect reduced-motion preferences globally
+  try {
+    if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.documentElement.classList.add("reduce-motion");
+    }
+  } catch (_) {}
 })();
