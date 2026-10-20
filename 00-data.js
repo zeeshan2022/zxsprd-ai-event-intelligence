@@ -568,21 +568,34 @@ window.ZX_I18N = ZX_I18N;
 
   // Sidebar menu builder: ZXMenu.build(container, items, onSelect)
   window.ZXMenu = {
+    _handlers: new WeakMap(),
     build(containerSel, items, onSelect) {
-      const c = $(containerSel); if (!c) return;
-      c.innerHTML = items.map((it, i) => `
-        <button class="side-link ${i === 0 ? "active" : ""}" data-view="${it.id}">
+      const c = typeof containerSel === "string" ? $(containerSel) : containerSel;
+      if (!c) return false;
+      c.innerHTML = `<div class="side-nav-title">${c.dataset.menuTitle || "Menu"}</div>` + (items || []).map((it, i) => `
+        <button class="side-link ${i === 0 ? "active" : ""}" data-view="${it.id}" type="button">
           <svg class="icon"><use href="#${it.icon || "i-grid"}"/></svg><span>${it.label}</span>
           ${it.badge ? `<em class="side-badge">${it.badge}</em>` : ""}
         </button>`).join("");
-      c.addEventListener("click", e => {
+      // replace (never stack) the click handler so rebuilds can't double-fire
+      const prev = this._handlers.get(c);
+      if (prev) c.removeEventListener("click", prev);
+      const handler = e => {
         const b = e.target.closest(".side-link"); if (!b) return;
         $$(".side-link", c).forEach(x => x.classList.toggle("active", x === b));
         onSelect && onSelect(b.dataset.view);
-      });
+      };
+      this._handlers.set(c, handler);
+      c.addEventListener("click", handler);
+      return true;
     },
     show(viewId) {
-      $$("[data-panel]").forEach(p => p.hidden = p.dataset.panel !== viewId);
+      const panels = $$("[data-panel]");
+      panels.forEach(p => p.hidden = p.dataset.panel !== viewId);
+      // if the requested panel is missing, never leave the user with a blank screen
+      if (viewId !== "*" && !panels.some(p => p.dataset.panel === viewId) && panels.length) {
+        panels.forEach((p, i) => p.hidden = i !== 0);
+      }
     }
   };
 
