@@ -271,7 +271,7 @@ function render() {
       <td><span class="badge badge-slate">${t.tier}</span></td>
       <td><span class="mono">${t.assignedPods}/${t.maxPods}</span> <input type="number" min="${t.assignedPods}" value="${t.maxPods}" style="width:64px;background:var(--inset);border:1px solid var(--line);border-radius:7px;padding:3px 6px;color:var(--text)" onchange="ZXStore.updateTenantQuota('${t.id}', +this.value)"></td>
       <td><span class="badge ${t.status==='Active'?'badge-green':'badge-red'}">${t.status}</span></td>
-      <td><span class="badge badge-blue">${t.tenantTheme}</span> ${(t.tenantLangs||[]).map(l=>`<span class="badge badge-slate">${l.split('-')[0]}</span>`).join(" ")}</td>
+      <td><span class="badge badge-blue">${t.tenantTheme}</span> ${ZXStore.langPool(t.tenantLangs).map(l=>`<span class="badge badge-slate">${l.split('-')[0]}</span>`).join(" ")}</td>
       <td style="text-align:right;white-space:nowrap">
         <button class="btn btn-ghost btn-sm" onclick="openTenantEdit('${t.id}')">Edit</button>
         <button class="btn ${t.status==='Active'?'btn-red':'btn-green'} btn-sm" onclick="ZXStore.toggleTenantStatus('${t.id}')">${t.status==='Active'?'Suspend':'Activate'}</button>

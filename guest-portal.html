@@ -31,6 +31,31 @@
   .scan-status { text-align: center; font-family: ui-monospace, monospace; font-size: 13px; color: var(--cyan); min-height: 20px; }
   .progress-bar { height: 8px; border-radius: 6px; background: var(--inset); overflow: hidden; margin: 14px auto 4px; max-width: 260px; }
   .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--tenant-accent), var(--cyan)); transition: width .3s linear; }
+  /* ===== UX enhancements (v9) ===== */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  [data-screen]:not([hidden]) { animation: fadeUp .28s ease both; }
+  .entry-btn { transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
+  .entry-btn:hover { transform: translateY(-2px); }
+  .entry-btn:active { transform: scale(.98); }
+  .chip { transition: all .15s ease; }
+  .chip.sel { transform: none; box-shadow: 0 2px 10px rgba(59,130,246,.35); }
+  .track-badge { display: inline-block; font-size: 10.5px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; padding: 3px 9px; border-radius: 14px; background: color-mix(in srgb, var(--tenant-accent) 14%, transparent); color: var(--tenant-accent); border: 1px solid color-mix(in srgb, var(--tenant-accent) 35%, transparent); }
+  .tier-diamond { color: #a5b4fc; border-color: rgba(165,180,252,.4); background: rgba(165,180,252,.1); }
+  .tier-platinum { color: #94a3b8; border-color: rgba(148,163,184,.4); background: rgba(148,163,184,.1); }
+  .tier-gold { color: var(--amber); border-color: rgba(245,158,11,.4); background: rgba(245,158,11,.1); }
+  .qr-scanline { position: absolute; left: 8%; right: 8%; height: 3px; top: 0; background: linear-gradient(90deg, transparent, var(--cyan), transparent); box-shadow: 0 0 12px var(--cyan); animation: lasermove 1.3s ease-in-out infinite alternate; }
+  .fav-btn { float: right; border: none; background: transparent; cursor: pointer; font-size: 17px; line-height: 1; padding: 2px 6px; border-radius: 8px; transition: transform .12s ease, background .12s ease; }
+  .fav-btn:hover { background: var(--inset); transform: scale(1.15); }
+  .agenda-filterbar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .agenda-filterbar .chip { font-size: 12px; padding: 5px 12px; }
+  .quick-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .qa-btn { flex: 1; min-width: 96px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--text); font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all .15s ease; }
+  .qa-btn:hover { border-color: var(--tenant-accent); box-shadow: 0 0 14px rgba(59,130,246,.15); }
+  .empty-state { text-align: center; padding: 18px 12px; color: var(--muted); font-size: 13px; }
+  .empty-state .big { font-size: 30px; display: block; margin-bottom: 6px; }
+  .sponsor-booth { float: right; font-size: 11px; font-weight: 800; color: var(--muted); background: var(--inset); border: 1px solid var(--line-soft); border-radius: 10px; padding: 2px 8px; }
+  .live-count { font-size: 11px; color: var(--red); font-weight: 800; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 </style>
 </head>
 <body>
@@ -72,12 +97,12 @@
         </div>
         <button class="entry-btn" id="btnEnterGuest">
           <span class="big">👋</span>
-          <span>ادخل كضيف — Enter as Guest</span>
+          <span>Enter as Guest</span>
           <small>Temporary session · pick your interests · no badge needed</small>
         </button>
         <button class="entry-btn" id="btnEnterBadge">
           <span class="big">🪪</span>
-          <span>امسح بطاقتك — Scan Your Badge / Login</span>
+          <span>Scan Your Badge / Login</span>
           <small>QR badge check-in · personalised journey &amp; profile</small>
         </button>
         <a href="index.html" class="btn btn-ghost" style="justify-content:center;margin-top:6px"><svg class="icon"><use href="#i-grid"/></svg> Back to Launcher</a>
@@ -87,9 +112,9 @@
     <!-- ============ GUEST: pick predefined interests ============ -->
     <section data-screen="interests" hidden>
       <div class="badge-card">
-        <h3>اختر اهتماماتك — Pick your interests</h3>
+        <h3>Pick your interests</h3>
         <p class="muted" style="font-size:12px;margin:8px 0 14px">Tap topics that matter to you. We will personalise your agenda, alerts and concierge.</p>
-        <input class="form-input" id="tgName" placeholder="الاسم (اختياري) — Your name (optional)" style="margin-bottom:14px">
+        <input class="form-input" id="tgName" placeholder="Your name (optional)" style="margin-bottom:14px">
         <div id="interestChips" style="text-align:left"></div>
         <button class="btn btn-blue" id="btnContinueInterests" style="width:100%;justify-content:center;margin-top:18px" disabled>
           <svg class="icon"><use href="#i-check"/></svg> Continue
@@ -132,7 +157,8 @@
 
     <!-- AGENDA -->
     <section data-screen="agenda" hidden>
-      <h3 style="margin-bottom:12px" data-i18n="agenda">Agenda</h3>
+      <h3 style="margin-bottom:10px" data-i18n="agenda">Agenda</h3>
+      <div class="agenda-filterbar" id="agendaFilterBar"></div>
       <div id="agendaFull"></div>
     </section>
 
@@ -145,7 +171,7 @@
       <div style="text-align:center;font-size:12px;color:var(--muted)" id="orbHint">Tap to speak · multilingual neural voice</div>
       <div id="chatLog" style="margin-top:16px"></div>
       <div style="display:flex;gap:8px;margin-top:12px">
-        <input class="form-input" id="chatInput" placeholder="…أو اكتب سؤالك / type your question">
+        <input class="form-input" id="chatInput" placeholder="Type your question…">
         <button class="btn btn-blue" id="btnChatSend"><svg class="icon"><use href="#i-send"/></svg></button>
       </div>
     </section>
@@ -179,6 +205,16 @@ zxInitChrome();
 /* ---------- Session identity: badge guest OR temp guest ---------- */
 let SESSION = null; // { kind: 'badge'|'temp', name, badgeId, interests, email, phone }
 const selInterests = new Set();
+let agendaTrackFilter = "All";   // Agenda track filter (new UX feature)
+let favSet = new Set();          // session favourites (new UX feature)
+try { favSet = new Set(JSON.parse(localStorage.getItem("zx-favs") || "[]")); } catch (_) {}
+function toggleFav(sid) {
+  if (!SESSION) { zxToast("Enter the portal first to save sessions."); return; }
+  favSet.has(sid) ? favSet.delete(sid) : favSet.add(sid);
+  try { localStorage.setItem("zx-favs", JSON.stringify([...favSet])); } catch (_) {}
+  zxToast(favSet.has(sid) ? "Saved to your shortlist ⭐" : "Removed from shortlist");
+  render();
+}
 
 function showScreen(id) {
   document.querySelectorAll("[data-screen]").forEach(s => s.hidden = s.dataset.screen !== id);
@@ -222,12 +258,18 @@ document.getElementById("interestChips").addEventListener("click", e => {
   selInterests.has(t) ? selInterests.delete(t) : selInterests.add(t);
   renderInterestChips();
 });
+/* Agenda track filter chips (new UX) */
+document.getElementById("agendaFilterBar").addEventListener("click", e => {
+  const c = e.target.closest("[data-tr]"); if (!c) return;
+  agendaTrackFilter = c.dataset.tr;
+  render();
+});
 function updateContinueBtn() { document.getElementById("btnContinueInterests").disabled = selInterests.size === 0; }
 document.getElementById("btnContinueInterests").onclick = () => {
-  const sg = ZXStore.createTempGuestSession({ name: document.getElementById("tgName").value.trim() || "ضيف", interests: [...selInterests] });
+  const sg = ZXStore.createTempGuestSession({ name: document.getElementById("tgName").value.trim() || "Guest", interests: [...selInterests] });
   ZXStore.setActiveTempGuest(sg.id);
   SESSION = { kind: "temp", name: sg.name, badgeId: sg.id, interests: sg.interests, email: "", phone: "" };
-  zxToast(`مرحباً ${sg.name} — temporary session created ✨`, "success");
+  zxToast(`Welcome ${sg.name} — temporary session created ✨`, "success");
   enterContent();
 };
 
@@ -247,7 +289,7 @@ function runScanAnimation(g) {
     [2400,"Verifying credentials ✓"],
     [3200,"Matching attendee profile…"],
     [4000,"Syncing journey & preferences…"],
-    [4700,`✅ مرحباً ${g.name} — Welcome! Checked in at POD-01`]
+    [4700,`✅ Welcome ${g.name}! Checked in at POD-01`]
   ];
   const st = document.getElementById("scanStatus"), fill = document.getElementById("scanFill");
   steps.forEach(([ms, txt], i) => setTimeout(() => { st.textContent = txt; fill.style.width = ((i + 1) / steps.length * 100) + "%"; }, ms));
@@ -286,17 +328,22 @@ document.querySelectorAll(".dock-item").forEach(b => b.onclick = () => {
 
 /* ---------- Multilingual Voice Concierge (STT + TTS via Web Speech API) ---------- */
 const KB = [
-  { k: ["hall a1","qaa","a1","main stage","where","وين","المكان","قاع"], en: "Hall A1 Main Stage is straight ahead past registration — the keynote starts there.", ar: "قاعة A1 الرئيسية مباشرة أمامك بعد التسجيل — تبدأ الجلسة الافتتاحية هناك.", fr: "Le Hall A1 Scène principale est droit devant après l'accréditation.", es: "El Salón A1 está recto después de registro.", de: "Halle A1 Hauptbühne ist geradeaus nach der Registrierung.", hi: "रजिस्ट्रेशन के बाद हॉल A1 सीधे सामने है।", ur: "رجسٹریشن کے بعد ہال A1 سیدھے سامنے ہے۔", zh: "注册后直走即是A1主会场。" },
-  { k: ["food","lunch","coffee"," cafeteria","اكل","طعام","قهوه"], en: "The cafeteria is in Hall B concourse; coffee stations are on every floor.", ar: "المقصف في بهو قاعة B؛ محطات القهوة في كل طابق.", fr: "La cafétéria est au parvis du Hall B.", es: "La cafetería está en el vestíbulo del Salón B.", de: "Die Cafeteria ist in Halle B Vorplatz.", hi: "कैंटीन हॉल B कॉन्कोर्स में है।", ur: "کیفٹین ہال B میں ہے۔", zh: "餐厅位于B厅走廊。" },
-  { k: ["wifi","internet","network","واي"], en: "Connect to 'WPS-Guest' — password is your badge number.", ar: "اتصل بشبكة WPS-Guest — كلمة المرور رقم بطاقتك.", fr: "Connectez-vous à « WPS-Guest ».", es: "Conéctese a «WPS-Guest».", de: "Verbinden Sie sich mit »WPS-Guest«.", hi: "'WPS-Guest' से जुड़ें।", ur: "'WPS-Guest' سے جڑیں۔", zh: "连接“WPS-Guest”。" },
-  { k: ["summary","recap","keynote","ملخص"], en: "Approved session summaries rotate on the public displays and in your journey feed.", ar: "تدور ملخصات الجلسات المعتمدة على الشاشات العامة وفي رحلتك.", fr: "Les résumés approuvés tournent sur les écrans publics.", es: "Los resúmenes aprobados rotan en las pantallas públicas.", de: "Zugelassene Zusammenfassungen laufen auf den öffentlichen Screens.", hi: "स्वीकृत सारांश पब्लिक डिस्प्ले पर घूमते हैं।", ur: "منظور خلاصے پبلک ڈسپلے پر گھومتے ہیں۔", zh: "已批准的摘要将在公共显示屏轮播。" }
+  { k: ["hall a1","qaa","a1","main stage","where","venue","location"], en: "Hall A1 Main Stage is straight ahead past registration — the keynote starts there." },
+  { k: ["food","lunch","coffee","cafeteria","restaurant","catering"], en: "The cafeteria is in Hall B concourse; coffee stations are on every floor." },
+  { k: ["wifi","internet","network","password"], en: "Connect to 'WPS-Guest' — password is your badge number." },
+  { k: ["summary","recap","keynote","highlights"], en: "Approved session summaries rotate on the public displays and in your journey feed." },
+  { k: ["toilet","restroom","bathroom"], en: "Restrooms are at the rear of every hall, next to the service elevators." },
+  { k: ["parking","taxi","shuttle","transport"], en: "Free delegate parking is in Garage 2; shuttles to the metro leave every 15 minutes from Gate 4." },
+  { k: ["prayer","quiet room","meditation"], en: "The prayer & quiet room is between Halls A1 and A2, signposted in green." },
+  { k: ["schedule","timetable","agenda","programme","program"], en: "Open the Agenda tab to browse all tracks, or ask me for sessions matching your interests." },
+  { k: ["sponsor","exhibitor","booth","partner"], en: "Visit our partners in the Expo zone — their booths and tiers are listed under Partners on your Home tab." },
+  { k: ["help","emergency","first aid","security","lost"], en: "For assistance, approach any staff member in a blue vest or dial extension 111 from event phones. First aid is at Gate 1." }
 ];
 function kbAnswer(q) {
   const ql = q.toLowerCase();
   const hit = KB.find(e => e.k.some(k => ql.includes(k)));
-  const lang = (ZXStore.state.voiceLang || "en-US").split("-")[0];
-  if (!hit) return { text: "جرّب: «أين قاعة A1؟» أو «WiFi؟» أو «الطعام؟» — try: \"Where is Hall A1?\", \"WiFi?\", \"Food?\"", lang: "ar-AE" };
-  return { text: hit[lang] || hit.en, lang: ZXStore.state.voiceLang };
+  if (!hit) return { text: "Try asking: \"Where is Hall A1?\", \"WiFi?\", \"Food?\", \"Parking?\" or \"Agenda?\"", lang: "en-US" };
+  return { text: hit.en, lang: ZXStore.state.voiceLang || "en-US" };
 }
 function speak(text, lang) {
   if (!ZXStore.feature("multiLanguageVoice")) return;
@@ -305,7 +352,7 @@ function speak(text, lang) {
 let recog = null;
 document.getElementById("orb").onclick = () => {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { addChat("You", "أين قاعة A1؟", true); respond("أين قاعة A1؟"); zxToast("Speech recognition not supported here — used typed demo input."); return; }
+  if (!SR) { addChat("You", "Where is Hall A1?", true); respond("Where is Hall A1?"); zxToast("Speech recognition not supported here — used typed demo input."); return; }
   if (recog) { recog.stop(); return; }
   recog = new SR();
   recog.lang = ZXStore.state.voiceLang; recog.interimResults = false;
@@ -337,7 +384,7 @@ function render() {
   document.getElementById("entryEventName").textContent = t.name;
   applyI18n();
 
-  const pool = (t.tenantLangs && t.tenantLangs.length ? t.tenantLangs : ["en-US"]);
+  const pool = ZXStore.langPool(t.tenantLangs);
   const vs = document.getElementById("gVoiceLang");
   if (vs.options.length !== pool.length || vs.dataset.pool !== pool.join(",")) {
     vs.innerHTML = pool.map(c => `<option value="${c}" ${c===ZXStore.state.voiceLang?"selected":""}>🎤 ${ZX_LANGS.find(l=>l.code===c)?.label||c}</option>`).join("");
@@ -347,39 +394,56 @@ function render() {
 
   if (!SESSION) return; // still on entry / interests / scanning
 
-  // Hello card
+  // Hello card + quick actions (new UX)
   document.getElementById("helloCard").innerHTML =
     `<b style="font-size:16px">👋 ${zxesc(SESSION.name)}</b>
-     <div class="dim" style="font-size:12px;margin-top:4px">${SESSION.kind === "badge" ? `Badge ${zxesc(SESSION.badgeId)} · ${ZXStore.t("checked_in")} ✅` : "جلسة مؤقتة — Temporary session"}</div>
-     <div style="margin-top:8px">${(SESSION.interests||[]).map(i=>`<span class="chip">${zxesc(i)}</span>`).join("")}</div>`;
+     <div class="dim" style="font-size:12px;margin-top:4px">${SESSION.kind === "badge" ? `Badge ${zxesc(SESSION.badgeId)} · ${ZXStore.t("checked_in")} ✅` : `${ZXStore.t("temp_session")} · ${ZXStore.t("checked_in")}`}</div>
+     <div style="margin-top:8px">${(SESSION.interests||[]).map(i=>`<span class="chip">${zxesc(i)}</span>`).join("")}</div>
+     <div class="quick-actions">
+       <button class="qa-btn" onclick="showScreen('agenda')">📅 ${ZXStore.t("agenda")}</button>
+       <button class="qa-btn" onclick="showScreen('voice')">🎙️ ${ZXStore.t("concierge")}</button>
+       <button class="qa-btn" onclick="showScreen('journey')">🧭 ${ZXStore.t("journey")}</button>
+     </div>`;
 
   // Live / Next
   const live = ZXStore.meetings(t.id).filter(m => m.status === "Recording");
-  document.getElementById("homeLive").innerHTML = live.map(m => `<div class="session-card"><b>${zxesc(m.title)}</b><div class="dim" style="font-size:11px">${m.podId} · since ${m.startTime}</div></div>`).join("") || `<div class="session-card dim">لا توجد جلسات مباشرة الآن.</div>`;
+  document.getElementById("homeLive").innerHTML = live.map(m => `<div class="session-card"><span class="live-count">● LIVE</span><b>${zxesc(m.title)}</b><div class="dim" style="font-size:11px">${m.podId} · since ${m.startTime}</div></div>`).join("") || `<div class="empty-state"><span class="big">😌</span>${zxesc(ZXStore.t("no_live"))}</div>`;
   const next = ZXStore.schedule(t.id).find(s => s.status === "Scheduled");
-  document.getElementById("homeNext").innerHTML = next ? `<div class="session-card"><b>${zxesc(next.title)}</b><div class="dim" style="font-size:11px">${next.podId} · ${next.startTime}–${next.endTime} · ${zxesc(next.speakerHost)}</div><button class="btn btn-green btn-sm" onclick="joinSession('${next.id}')"><span data-i18n="join">Join</span> 🎟️</button></div>` : `<div class="session-card dim">Nothing scheduled.</div>`;
+  document.getElementById("homeNext").innerHTML = next ? `<div class="session-card"><span class="track-badge">${zxesc(next.track || "Session")}</span><b>${zxesc(next.title)}</b><div class="dim" style="font-size:11px">${next.room ? zxesc(next.room) + " · " : ""}${next.podId} · ${next.startTime}–${next.endTime} · ${zxesc(next.speakerHost)}</div><button class="btn btn-green btn-sm" onclick="joinSession('${next.id}')"><span data-i18n="join">${zxesc(ZXStore.t("join"))}</span> 🎟️</button></div>` : `<div class="empty-state"><span class="big">🗓️</span>${zxesc(ZXStore.t("nothing_scheduled"))}</div>`;
 
-  // Interest-matched recommendations
-  const matched = ZXStore.schedule(t.id).filter(s => (SESSION.interests || []).some(i => (s.title + " " + (s.speakerHost||"")).includes(i.split(" ")[0])));
-  document.getElementById("homeInterest").innerHTML = matched.length ? `<h4 style="margin-bottom:8px">🎯 For You — based on your interests</h4>` + matched.map(s =>
-    `<div class="session-card"><b>${zxesc(s.title)}</b><div class="dim" style="font-size:11px">${s.podId} · ${s.startTime}–${s.endTime}</div><button class="btn btn-blue btn-sm" style="margin-top:6px" onclick="joinSession('${s.id}')">Add to Journey 🎟️</button></div>`).join("") : "";
+  // Interest-matched recommendations (now also matches session tags & track)
+  const matched = ZXStore.schedule(t.id).filter(s => (SESSION.interests || []).some(i => ((s.tags || []).includes(i)) || (s.title + " " + (s.speakerHost || "") + " " + (s.track || "")).toLowerCase().includes(i.toLowerCase())));
+  document.getElementById("homeInterest").innerHTML = matched.length ? `<h4 style="margin-bottom:8px">🎯 ${zxesc(ZXStore.t("for_you"))}</h4>` + matched.map(s =>
+    `<div class="session-card"><span class="track-badge">${zxesc(s.track || "Session")}</span><b>${zxesc(s.title)}</b><div class="dim" style="font-size:11px">${s.podId} · ${s.startTime}–${s.endTime}</div><button class="btn btn-blue btn-sm" style="margin-top:6px" onclick="joinSession('${s.id}')">${zxesc(ZXStore.t("add_journey"))} 🎟️</button></div>`).join("") : "";
 
-  // Agenda full
-  document.getElementById("agendaFull").innerHTML = ZXStore.schedule(t.id).map(s => `
-    <div class="session-card"><b>${zxesc(s.title)}</b><div class="dim" style="font-size:11px">${s.podId} · ${s.startTime}–${s.endTime} · ${zxesc(s.speakerHost)}</div>
-    <span class="badge ${s.status==='Completed'?'badge-green':s.status==='Live'?'badge-red':'badge-blue'}">${s.status}</span></div>`).join("");
+  // Agenda full — with track filter chips & favourites (new UX)
+  const allSched = ZXStore.schedule(t.id);
+  const tracks = ["All", ...[...new Set(allSched.map(s => s.track).filter(Boolean))]];
+  if (!tracks.includes(agendaTrackFilter)) agendaTrackFilter = "All";
+  document.getElementById("agendaFilterBar").innerHTML = tracks.map(tr =>
+    `<span class="chip ${tr === agendaTrackFilter ? "sel" : ""}" data-tr="${zxesc(tr)}">${tr === "All" ? "🗂 All" : zxesc(tr)}</span>`).join("");
+  const shown = allSched.filter(s => agendaTrackFilter === "All" || s.track === agendaTrackFilter);
+  document.getElementById("agendaFull").innerHTML = shown.map(s => `
+    <div class="session-card">
+      <button class="fav-btn" title="${favSet.has(s.id) ? "Remove from shortlist" : "Add to shortlist"}" onclick="toggleFav('${s.id}')">${favSet.has(s.id) ? "⭐" : "☆"}</button>
+      <span class="track-badge">${zxesc(s.track || "Session")}</span><b>${zxesc(s.title)}</b>
+      <div class="dim" style="font-size:11px">${s.room ? zxesc(s.room) + " · " : ""}${s.podId} · ${s.startTime}–${s.endTime} · ${zxesc(s.speakerHost)}</div>
+      ${(s.tags || []).map(tg => `<span class="chip" style="cursor:default;font-size:11px;padding:3px 10px">${zxesc(tg)}</span>`).join("")}
+      <span class="badge ${s.status==='Completed'?'badge-green':s.status==='Live'?'badge-red':'badge-blue'}">${s.status}</span>
+    </div>`).join("") || `<div class="empty-state"><span class="big">🔍</span>No sessions in this track.</div>`;
 
   // Announcements
   const anns = [...ZXStore.state.broadcasts.guestPortal, ...ZXStore.state.broadcasts.loggedInUsers].filter(b => b.tenantId === t.id && b.active);
-  document.getElementById("homeAnnounce").innerHTML = anns.length ? `<h4 style="margin-bottom:8px">🔔 <span data-i18n="announcements">Announcements</span></h4>` + anns.map(b => `<div class="session-card" style="border-color:var(--amber)"><b>${zxesc(b.message)}</b><div class="dim" style="font-size:11px">${b.timestamp}</div></div>`).join("") : "";
+  document.getElementById("homeAnnounce").innerHTML = anns.length ? `<h4 style="margin-bottom:8px">🔔 <span data-i18n="announcements">${zxesc(ZXStore.t("announcements"))}</span></h4>` + anns.map(b => `<div class="session-card" style="border-color:var(--amber)"><b>${zxesc(b.message)}</b><div class="dim" style="font-size:11px">${b.timestamp}</div></div>`).join("") : "";
 
-  // Sponsors
-  document.getElementById("homeSponsors").innerHTML = ZXStore.feature("sponsorInjection") ? `<h4 style="margin-bottom:8px">🤝 Partners</h4>` + ZXStore.state.sponsors.map(sp => `<div class="session-card"><b style="color:var(--tenant-accent)">${zxesc(sp.name)}</b><div class="dim" style="font-size:12px">${zxesc(sp.message)}</div></div>`).join("") : "";
+  // Sponsors — tier badges & booth numbers (new UX using mock-data fields)
+  const tierOrder = { Diamond: 0, Platinum: 1, Gold: 2, Silver: 3 };
+  document.getElementById("homeSponsors").innerHTML = ZXStore.feature("sponsorInjection") ? `<h4 style="margin-bottom:8px">🤝 ${zxesc(ZXStore.t("partners"))}</h4>` + [...ZXStore.state.sponsors].sort((a, b) => (tierOrder[a.tier] ?? 9) - (tierOrder[b.tier] ?? 9)).map(sp => `<div class="session-card"><span class="sponsor-booth">${zxesc(sp.booth || "")}</span><b style="color:var(--tenant-accent)">${zxesc(sp.name)}</b> <span class="badge tier-${(sp.tier || "").toLowerCase()}">${zxesc(sp.tier || "Partner")}</span><div class="dim" style="font-size:12px">${zxesc(sp.message)}</div></div>`).join("") : "";
 
   // Send-to-self (badge users get prefilled contact; guests can still use it)
   document.getElementById("sendToSelfBox").innerHTML = `
     <div class="badge-card" style="text-align:left">
-      <b>📩 أرسل التفاصيل لنفسك — Send my details to myself</b>
+      <b>📩 ${zxesc(ZXStore.t("send_details"))}</b>
       <div class="dim" style="font-size:12px;margin:6px 0 10px">${SESSION.email || SESSION.phone ? `Will go to ${zxesc(SESSION.email || SESSION.phone)}` : "Enter contact in Profile first (optional)."}</div>
       <div style="display:flex;gap:10px">
         <button class="btn btn-blue" style="flex:1;justify-content:center" onclick="sendDetailsToSelf('email')"><svg class="icon"><use href="#i-mail"/></svg> Email</button>
@@ -387,19 +451,30 @@ function render() {
       </div>
     </div>`;
 
-  // Journey
+  // Journey — includes shortlisted (⭐) sessions too (new UX)
   const joinedRefs = SESSION.kind === "badge"
     ? (ZXStore.state.guestProfiles.find(g => g.badgeId === SESSION.badgeId)?.joinedSessions || [])
     : (ZXStore.getActiveTempGuest()?.joinedSessions || []);
-  const joinedMeetings = joinedRefs.map(mid => ZXStore.state.meetings.find(m => m.id === mid)).filter(Boolean);
-  const joinedScheds = joinedRefs.map(mid => ZXStore.state.schedule.find(s => s.id === mid)).filter(Boolean);
-  const journeyItems = [
-    ...joinedMeetings.map(m => ({ title: m.title, pod: m.podId, time: `${m.startTime}–${m.endTime||"—"}`, summary: m.hitlStatus==="Approved" ? m.aiSummary : null, actions: m.actionItems })),
-    ...joinedScheds.map(s => ({ title: s.title, pod: s.podId, time: `${s.startTime}–${s.endTime}`, summary: null, actions: [] }))
-  ];
-  const list = journeyItems.length ? journeyItems : ZXStore.meetings(t.id).map(m => ({ title: m.title, pod: m.podId, time: `${m.startTime}–${m.endTime||"—"}`, summary: m.hitlStatus==="Approved"?m.aiSummary:null, actions: m.actionItems }));
-  document.getElementById("journeyList").innerHTML = list.map(m => `
-    <div class="session-card"><b>${zxesc(m.title)}</b>
+  const favRefs = [...favSet].filter(id => !joinedRefs.includes(id));
+  const refToItem = (id) => {
+    const m = ZXStore.state.meetings.find(x => x.id === id);
+    if (m) return { title: m.title, pod: m.podId, time: `${m.startTime}–${m.endTime||"—"}`, summary: m.hitlStatus==="Approved" ? m.aiSummary : null, actions: m.actionItems };
+    const s = ZXStore.state.schedule.find(x => x.id === id);
+    if (s) return { title: s.title, pod: s.podId, time: `${s.startTime}–${s.endTime}`, summary: null, actions: [], track: s.track };
+    return null;
+  };
+  let journeyItems = joinedRefs.map(refToItem).filter(Boolean);
+  const favItems = favRefs.map(refToItem).filter(Boolean);
+  const browseFallback = ZXStore.meetings(t.id).map(m => ({ id: m.id, title: m.title, pod: m.podId, time: `${m.startTime}–${m.endTime||"—"}`, summary: m.hitlStatus==="Approved"?m.aiSummary:null, actions: m.actionItems }));
+  const list = journeyItems.length || favItems.length
+    ? [...journeyItems, ...favItems.map(it => ({ ...it, fav: true }))]
+    : browseFallback;
+  document.getElementById("journeyList").innerHTML = `
+    <div class="dim" style="font-size:12px;margin-bottom:10px">${journeyItems.length ? `${journeyItems.length} session(s) joined` : "Browsing event insights"}${favItems.length ? ` · ${favItems.length} shortlisted ⭐` : ""}</div>` +
+    list.map(m => `
+    <div class="session-card">
+      ${m.id ? `<button class="fav-btn" title="${favSet.has(m.id) ? "Remove from shortlist" : "Add to shortlist"}" onclick="toggleFav('${m.id}')">${favSet.has(m.id) ? "⭐" : "☆"}</button>` : ""}
+      ${m.track ? `<span class="track-badge">${zxesc(m.track)}</span>` : ""}<b>${zxesc(m.title)}</b>
     <div class="dim" style="font-size:11px">${m.pod} · ${m.time}</div>
     ${m.summary ? `<div style="margin-top:8px;font-size:12.5px">📝 ${zxesc(m.summary)}</div>` : `<div class="dim" style="font-size:11px;margin-top:6px">⏳ Summary pending organizer approval</div>`}
     ${ZXStore.feature("actionItemExtraction") && m.actions?.length ? `<div style="margin-top:8px">${m.actions.map(a=>`<span class="chip" style="cursor:default">☑ ${zxesc(a)}</span>`).join("")}</div>` : ""}
@@ -413,8 +488,8 @@ function render() {
       <div class="form-grid">
         <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="pfName" value="${zxesc(g.name||SESSION.name)}"></div>
         <div class="form-group"><label class="form-label">Badge ID</label><input class="form-input mono" value="${zxesc(SESSION.badgeId)}" readonly></div>
-        <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="pfEmail" value="${zxesc(g.email||"")}"></div>
-        <div class="form-group"><label class="form-label">Phone (WhatsApp)</label><input class="form-input" id="pfPhone" value="${zxesc(g.phone||"")}"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="pfEmail" value="${zxesc(g.email||"")}" inputmode="email"></div>
+        <div class="form-group"><label class="form-label">Phone (WhatsApp)</label><input class="form-input" id="pfPhone" value="${zxesc(g.phone||"")}" inputmode="tel"></div>
         <div class="form-group full"><label class="form-label">Interests (comma separated)</label><input class="form-input" id="pfInterests" value="${zxesc((g.interests||[]).join(", "))}"></div>
         <div class="form-group full"><button class="btn btn-blue" id="btnSaveProfile"><svg class="icon"><use href="#i-check"/></svg> Save Profile</button></div>
       </div>`;
@@ -424,11 +499,11 @@ function render() {
       zxToast("Profile saved ✅", "success"); render();
     };
   } else {
-    pb.innerHTML = `<b>جلسة مؤقتة — Temporary Guest Session</b>
+    pb.innerHTML = `<b>${zxesc(ZXStore.t("temp_session"))}</b>
       <div class="dim" style="font-size:12px;margin:6px 0">Name: ${zxesc(SESSION.name)} · ${SESSION.interests.length} interests selected</div>
       <div>${SESSION.interests.map(i=>`<span class="chip" style="cursor:default">${zxesc(i)}</span>`).join("")}</div>
-      <button class="btn btn-ghost" id="btnEndTemp" style="margin-top:12px">End session &amp; start over</button>`;
-    document.getElementById("btnEndTemp").onclick = () => { try { sessionStorage.removeItem("zx-temp-guest"); } catch(_){} SESSION = null; showScreen("entry"); };
+      <button class="btn btn-ghost" id="btnEndTemp" style="margin-top:12px">${zxesc(ZXStore.t("end_session"))}</button>`;
+    document.getElementById("btnEndTemp").onclick = () => { try { sessionStorage.removeItem("zx-temp-guest"); } catch(_){} SESSION = null; selInterests.clear(); agendaTrackFilter = "All"; showScreen("entry"); };
   }
 
   // Push banner
