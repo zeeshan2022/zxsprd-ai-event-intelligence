@@ -52,7 +52,7 @@
 <header class="topbar">
   <div class="brand">
     <div class="brand-mark"><svg class="icon"><use href="#i-shield"/></svg></div>
-    <div><div class="brand-name">ZXSPRD<span style="color:var(--tenant-accent)"> AI</span></div><div class="brand-sub">Super Admin Console · Platform Owner</div></div>
+    <div><div class="brand-name" id="saBrandName">ZXSPRD<span style="color:var(--tenant-accent)"> AI</span></div><div class="brand-sub" id="saBrandSub">Super Admin Console · Platform Owner</div></div>
   </div>
   <button class="btn btn-ghost btn-sm menu-toggle no-ripple" id="btnMenuToggle" aria-expanded="false" aria-controls="saMenu" title="Show / hide the platform menu (M)"><svg class="icon"><use href="#i-menu"/></svg> Menu</button>
   <nav class="role-switch">
@@ -252,6 +252,17 @@ const MENU = [
   { id: "languages", label: "Languages Control", icon: "i-globe" },
   { id: "impersonate", label: "Impersonation", icon: "i-eye" }
 ];
+/* Installed-app identity: when this page runs as an installed PWA (or is opened
+   directly as its own app on a dedicated server), the header must show the
+   per-view platform name — never fall back to pointing at the launcher. */
+(function applyViewIdentity() {
+  const app = typeof zxDetectViewApp === "function" ? zxDetectViewApp() : null;
+  if (!app) return;
+  document.title = app.name;
+  const sub = document.getElementById("saBrandSub");
+  if (sub) sub.textContent = app.name;
+  try { localStorage.setItem("zx-last-view", "super-admin.html"); } catch (_) {}
+})();
 /* Menu builder with guaranteed buttons:
    - builds immediately; retries until DOM ready (max ~4s)
    - verifies the sidebar actually contains .side-link buttons; if not, falls back
