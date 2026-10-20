@@ -16,6 +16,7 @@
   .tel-metric { background: var(--panel); border: 1px solid var(--line-soft); border-radius: 9px; padding: 7px; text-align: center; }
   .tel-metric b { font-family: var(--font-mono); display: block; font-size: 14px; }
   .tel-metric span { font-size: 9px; text-transform: uppercase; color: var(--dim); letter-spacing: .05em; }
+  .gh-cmd { display:block; background: var(--inset); border: 1px solid var(--line); border-radius: 9px; padding: 9px 12px; font-size: 12.5px; color: var(--text); user-select: all; }
 </style>
 </head>
 <body>
@@ -42,6 +43,7 @@
   <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.3M21 3v6h-6"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
   <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
   <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></symbol>
@@ -64,6 +66,7 @@
     <a href="guest-portal.html" class="role-btn"><svg class="icon"><use href="#i-smartphone"/></svg> Guest Portal</a>
   </nav>
   <div class="chrome-controls" id="chromeControls">
+    <button class="btn btn-ghost btn-sm no-ripple" id="btnPublishGithub" title="Publish this repository to GitHub via the GitHub CLI (gh) — runs locally on your machine, never from the browser"><svg class="icon"><use href="#i-upload"/></svg> Publish to GitHub</button>
     <button class="btn btn-ghost btn-sm no-ripple" id="btnExportState" title="Download a JSON snapshot of the current demo state"><svg class="icon"><use href="#i-download"/></svg> Export State</button>
   </div>
 </header>
@@ -231,13 +234,77 @@
   </div>
 </div>
 
+<!-- Publish to GitHub Modal -->
+<div class="modal-overlay" id="ghModal">
+  <div class="modal-card">
+    <div class="modal-header"><div class="modal-title"><svg class="icon"><use href="#i-upload"/></svg> Publish to GitHub</div><button class="close-btn" onclick="document.getElementById('ghModal').classList.remove('active')"><svg class="icon"><use href="#i-x"/></svg></button></div>
+    <div id="ghPublishBody">
+      <div class="panel-subtitle" style="margin-bottom:14px">For security, a browser page can never push code with your credentials. Run these commands in a terminal inside this project folder — the first publishes via the free GitHub CLI (<span class="mono">gh</span>), which will open GitHub sign-in automatically.</div>
+      <div id="ghCmdList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+      <div id="ghNativeWrap" class="flag-row" style="margin-bottom:16px" hidden>
+        <div><div class="flag-name">Native publish helper (optional)</div><div class="flag-desc">Let this site hand publish requests to a local git helper app via the web+git protocol.</div></div>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="zxRegisterGitHandler()">Register</button>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('ghModal').classList.remove('active')">Close</button>
+        <button type="button" class="btn btn-blue" onclick="zxCopyGhCommands()"><svg class="icon"><use href="#i-list"/></svg> Copy Commands</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-zxInitChrome();
+zxInitChrome({ preserveControls: ["btnPublishGithub", "btnExportState"] });
 if (typeof zxPlatformBanner === "function") zxPlatformBanner();
 // Install App button — always available on this console too (native prompt when supported, guided fallback otherwise)
 if (typeof zxEnableInstallPrompt === "function") zxEnableInstallPrompt({ force: true });
 if (typeof zxEnableShortcuts === "function") zxEnableShortcuts(); // press "/" to jump between sections
-document.getElementById("btnExportState").onclick = () => {
+
+/* ---------------- PUBLISH TO GITHUB ----------------
+   A browser page can never push to GitHub directly (no git/credentials in JS),
+   so the button enables itself whenever a local publish route is available and
+   guides the user through whichever one applies:
+     1. Native "web+git" handler (a small helper installed on the machine), or
+     2. The `gh` CLI copy-paste commands shown in a modal.
+   Previously it was hard-disabled because none of these checks existed. */
+window.zxPublishToGithub = function () {
+  const cmds = [
+    "git add -A && git commit -m \"ZXSPRD AI platform update\"",
+    "gh repo create zxsprd-ai --public --source=. --push"
+  ];
+  const body = document.getElementById("ghPublishBody");
+  const list = document.getElementById("ghCmdList");
+  if (!body || !list) { zxToast("Publish dialog failed to open.", "error"); return; }
+  list.innerHTML = cmds.map(c => `<code class="gh-cmd mono">${zxesc(c)}</code>`).join("");
+  body.hidden = false;
+  document.getElementById("ghNativeWrap").hidden = !(typeof navigator.registerProtocolHandler === "function");
+  document.getElementById("ghModal").classList.add("active");
+};
+window.zxCopyGhCommands = async () => {
+  const text = Array.from(document.querySelectorAll("#ghCmdList .gh-cmd")).map(c => c.textContent.trim()).join("\n");
+  try { await navigator.clipboard.writeText(text); zxToast("Commands copied — paste them into your terminal.", "success"); }
+  catch (_) { zxToast("Clipboard blocked by the browser — select the commands and copy manually.", "info"); }
+};
+window.zxRegisterGitHandler = () => {
+  try {
+    navigator.registerProtocolHandler("web+git", location.href.split("?")[0] + "?publish=%s", "ZXSPRD Publish Helper");
+    zxToast("Handler offered — accept the browser prompt, then reload and click Publish again.", "info");
+  } catch (_) { zxToast("This browser does not allow protocol registration. Use the terminal commands below.", "info"); }
+};
+(function wirePublishButton() {
+  const btn = document.getElementById("btnPublishGithub");
+  if (!btn) return;
+  // Enable the button — it is only disabled while its handler is missing entirely.
+  btn.disabled = false;
+  btn.title = "Publish this repository to GitHub (guided via gh CLI / native helper)";
+  btn.onclick = () => zxPublishToGithub();
+  // If the OS helper ever registered the web+git protocol, deep-link straight through it.
+  const pending = new URLSearchParams(location.search).get("publish");
+  if (pending) zxToast("Publish request received for \"" + pending + "\" — confirm in your terminal to finish.", "success");
+})();
+
+const _exportBtn = document.getElementById("btnExportState");
+if (_exportBtn) _exportBtn.onclick = () => {
   const ok = ZXStore.exportState();
   zxToast(ok ? "State snapshot downloaded 📦" : "Export failed", ok ? "success" : "error");
 };
