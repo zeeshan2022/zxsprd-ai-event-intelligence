@@ -93,6 +93,16 @@ svg.icon { width: 18px; height: 18px; flex-shrink: 0; stroke: currentColor; fill
   .side-link { white-space: nowrap; }
   .content-area { padding: 14px; }
 }
+/* Tablet portrait & phones: sidebar becomes a slide-in drawer toggled by the hamburger */
+@media (max-width: 768px) {
+  .side-nav {
+    position: fixed; top: 0; left: 0; bottom: 0; width: min(260px, 80vw); height: 100vh;
+    flex-direction: column; overflow-y: auto; z-index: 140; border-right: 1px solid var(--line);
+    transform: translateX(-105%); transition: transform .25s var(--ease); padding: 18px 12px;
+  }
+  .side-nav-title { display: block; }
+  .side-link { white-space: normal; }
+}
 
 /* ---------- PANELS / CARDS ---------- */
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 22px; margin-bottom: 22px; }
@@ -291,9 +301,20 @@ html.theme-anim, html.theme-anim * { transition: background-color .35s var(--eas
 /* Sun icon sizing consistency */
 .icon-btn svg.icon { width: 17px; height: 17px; }
 
-/* PWA install floating button */
-.install-fab { position: fixed; bottom: 22px; left: 22px; z-index: 150; box-shadow: var(--shadow-md); border-radius: 999px; padding: 12px 18px; }
+/* PWA install floating button — slides in, auto-fades after 10s (see data.js) */
+.install-fab { position: fixed; bottom: 22px; left: 22px; z-index: 150; box-shadow: var(--shadow-md); border-radius: 999px; padding: 12px 18px; opacity: 0; transform: translateY(14px); transition: opacity .4s var(--ease), transform .4s var(--ease); }
+.install-fab.show { opacity: 1; transform: translateY(0); }
+.install-fab.hide { opacity: 0; transform: translateY(14px); pointer-events: none; }
 @media (max-width: 640px) { .install-fab { bottom: 78px; left: 12px; } }
+
+/* Mobile sidebar drawer + hamburger (Super Admin / Client Admin menus) */
+.menu-toggle { display: none; }
+.nav-scrim { display: none; }
+@media (max-width: 900px) {
+  .menu-toggle { display: grid; }
+  body.nav-open .side-nav { transform: translateX(0); box-shadow: var(--shadow-lg, 0 12px 40px rgba(0,0,0,.45)); }
+  body.nav-open .nav-scrim { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 130; }
+}
 
 /* Telemetry threshold colors (used by Super Admin) */
 .tel-metric b.crit { color: var(--red); }

@@ -570,20 +570,43 @@ window.ZX_I18N = ZX_I18N;
   window.ZXMenu = {
     build(containerSel, items, onSelect) {
       const c = $(containerSel); if (!c) return;
-      c.innerHTML = items.map((it, i) => `
-        <button class="side-link ${i === 0 ? "active" : ""}" data-view="${it.id}">
-          <svg class="icon"><use href="#${it.icon || "i-grid"}"/></svg><span>${it.label}</span>
+      c.innerHTML = (c.querySelector(".side-nav-title")?.outerHTML || "") + items.map((it, i) => `
+        <button type="button" class="side-link ${i === 0 ? "active" : ""}" data-view="${it.id}" aria-pressed="${i === 0}">
+          <svg class="icon" aria-hidden="true"><use href="#${it.icon || "i-grid"}"/></svg><span>${it.label}</span>
           ${it.badge ? `<em class="side-badge">${it.badge}</em>` : ""}
         </button>`).join("");
       c.addEventListener("click", e => {
         const b = e.target.closest(".side-link"); if (!b) return;
-        $$(".side-link", c).forEach(x => x.classList.toggle("active", x === b));
+        $$(".side-link", c).forEach(x => { x.classList.toggle("active", x === b); x.setAttribute("aria-pressed", String(x === b)); });
         onSelect && onSelect(b.dataset.view);
+        document.body.classList.remove("nav-open"); // close mobile drawer after picking an item
       });
     },
     show(viewId) {
       $$("[data-panel]").forEach(p => p.hidden = p.dataset.panel !== viewId);
     }
+  };
+
+  // Mobile hamburger for sidebar menus — injected automatically when a .side-nav exists.
+  // On desktop it is hidden by CSS; on small screens it toggles the menu as a slide-in drawer.
+  window.zxInitMobileNav = function () {
+    const nav = $(".side-nav"); if (!nav) return;
+    if (document.getElementById("btnMenuToggle")) return;
+    const btn = document.createElement("button");
+    btn.id = "btnMenuToggle"; btn.className = "icon-btn menu-toggle no-ripple";
+    btn.setAttribute("aria-label", "Toggle navigation menu"); btn.setAttribute("aria-expanded", "false");
+    btn.innerHTML = '<svg class="icon" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const open = document.body.classList.toggle("nav-open");
+      btn.setAttribute("aria-expanded", String(open));
+    };
+    (document.getElementById("chromeControls") || document.querySelector(".topbar"))?.appendChild(btn);
+    const scrim = document.createElement("div");
+    scrim.className = "nav-scrim"; scrim.id = "navScrim";
+    scrim.onclick = () => { document.body.classList.remove("nav-open"); btn.setAttribute("aria-expanded", "false"); };
+    document.body.appendChild(scrim);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") { document.body.classList.remove("nav-open"); btn.setAttribute("aria-expanded", "false"); } });
   };
 
   // Theme + Language toolbar injection
@@ -592,13 +615,16 @@ window.ZX_I18N = ZX_I18N;
   window.zxInitChrome = function (opts = {}) {
     const tb = $("#chromeControls");
     if (!tb) return;
+    // Preserve any buttons already declared in the page's chrome area (e.g. Export State)
+    const preserved = tb.innerHTML.trim();
     const langs = (opts.chromeLangs && opts.chromeLangs.length ? ZX_LANGS.filter(l => opts.chromeLangs.includes(l.code)) : ZX_LANGS);
     tb.innerHTML = `
       <button id="btnTheme" class="icon-btn" title="Toggle Dark / Light theme"><svg class="icon"><use href="#i-moon"/></svg></button>
       ${opts.hideLang ? "" : `
       <select id="selUiLang" class="mini-select" title="Interface language">${langs.map(l => `<option value="${l.code}">${l.label}</option>`).join("")}</select>
       <select id="selVoiceLang" class="mini-select" title="Voice language (STT/TTS)">${langs.map(l => `<option value="${l.code}">🎤 ${l.label}</option>`).join("")}</select>`}
-      <button id="btnOffline" class="icon-btn" title="Offline / connection status"><svg class="icon"><use href="#i-wifi"/></svg></button>`;
+      <button id="btnOffline" class="icon-btn" title="Offline / connection status"><svg class="icon"><use href="#i-wifi"/></svg></button>
+      ${preserved}`;
     if (!opts.hideLang) {
       $("#selUiLang").value = ZXStore.state.uiLang;
       $("#selVoiceLang").value = ZXStore.state.voiceLang;
@@ -697,34 +723,54 @@ window.ZX_I18N = ZX_I18N;
 (function installEnhancements() {
   if (!location.protocol.startsWith("http")) return; // file:// — SW unavailable
 
-  // PWA install prompt → floating "Install App" button + badge state
+  // PWA install prompt → floating "Install App" button + badge state.
+  // The button appears on every view (Launcher, Super Admin, Client Admin, Edge Kiosk,
+  // Public Display, Guest Portal), stays visible for 10 seconds, then auto-hides.
+  // A sessionStorage flag keeps it from re-nagging on every page of the same session.
   window.zxEnableInstallPrompt = function () {
     let deferred = null;
+    const SHOW_MS = 10000; // visible for 10 seconds, then disappear
     const setBadge = (txt, cls) => {
       const b = document.getElementById("pwaBadge");
       if (b) { b.textContent = txt; b.className = "badge " + cls; }
+    };
+    const alreadyShown = () => { try { return sessionStorage.getItem("zx_install_prompt_shown") === "1"; } catch (_) { return false; } };
+    const markShown = () => { try { sessionStorage.setItem("zx_install_prompt_shown", "1"); } catch (_) {} };
+    const revealFab = () => {
+      if (alreadyShown() || document.getElementById("btnInstallPwa")) return;
+      markShown();
+      const btn = document.createElement("button");
+      btn.id = "btnInstallPwa";
+      btn.className = "btn btn-blue install-fab";
+      btn.innerHTML = `<svg class="icon"><use href="#i-download"/></svg> Install App`;
+      let hideTimer = null;
+      const hide = () => {
+        clearTimeout(hideTimer);
+        btn.classList.add("hide");
+        setTimeout(() => btn.remove(), 450); // let the fade/slide-out animation finish
+      };
+      btn.onclick = async () => {
+        clearTimeout(hideTimer);
+        if (!deferred) { zxToast("Already installed or not supported here."); return hide(); }
+        deferred.prompt();
+        const res = await deferred.userChoice.catch(() => ({ outcome: "dismissed" }));
+        zxToast(res.outcome === "accepted" ? "Installing ZXSPRD AI 🎉" : "Install dismissed", res.outcome === "accepted" ? "success" : "info");
+        deferred = null;
+        if (res.outcome !== "accepted") hide(); else btn.remove();
+        setBadge("Installed / Offline-ready", "badge-green");
+      };
+      document.body.appendChild(btn);
+      requestAnimationFrame(() => btn.classList.add("show"));
+      hideTimer = setTimeout(hide, SHOW_MS); // auto-disappear after 10 seconds
     };
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
       deferred = e;
       setBadge("Installable · tap Install", "badge-blue");
-      if (!document.getElementById("btnInstallPwa")) {
-        const btn = document.createElement("button");
-        btn.id = "btnInstallPwa";
-        btn.className = "btn btn-blue install-fab";
-        btn.innerHTML = `<svg class="icon"><use href="#i-download"/></svg> Install App`;
-        btn.onclick = async () => {
-          if (!deferred) return zxToast("Already installed or not supported here.");
-          deferred.prompt();
-          const res = await deferred.userChoice.catch(() => ({ outcome: "dismissed" }));
-          zxToast(res.outcome === "accepted" ? "Installing ZXSPRD AI 🎉" : "Install dismissed", res.outcome === "accepted" ? "success" : "info");
-          deferred = null;
-          btn.remove();
-          setBadge("Installed / Offline-ready", "badge-green");
-        };
-        document.body.appendChild(btn);
-      }
+      revealFab();
     });
+    // On kiosk/display/guest views the event may have fired before navigation — still surface the FAB briefly
+    if (deferred) revealFab();
     window.addEventListener("appinstalled", () => {
       document.getElementById("btnInstallPwa")?.remove();
       setBadge("Installed ✓", "badge-green");

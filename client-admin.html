@@ -262,6 +262,7 @@ const MENU_ALL = [
 function buildMenu() {
   const items = MENU_ALL.filter(m => !m.flag || ZXStore.feature(m.flag));
   ZXMenu.build("#caMenu", items, v => ZXMenu.show(v));
+  if (typeof zxInitMobileNav === "function") zxInitMobileNav(); // hamburger + drawer on small screens
   ZXMenu.show(items[0].id);
 }
 buildMenu();

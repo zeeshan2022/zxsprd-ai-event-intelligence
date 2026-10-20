@@ -62,7 +62,7 @@
     <a href="guest-portal.html" class="role-btn"><svg class="icon"><use href="#i-smartphone"/></svg> Guest Portal</a>
   </nav>
   <div class="chrome-controls" id="chromeControls">
-    <button class="btn btn-ghost btn-sm no-ripple" id="btnExportState" title="Download a JSON snapshot of the current demo state"><svg class="icon"><use href="#i-download"/></svg> Export State</button>
+    <button type="button" class="btn btn-ghost btn-sm no-ripple" id="btnExportState" title="Download a JSON snapshot of the current demo state"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg> Export State</button>
   </div>
 </header>
 
@@ -233,10 +233,6 @@
 zxInitChrome();
 if (typeof zxPlatformBanner === "function") zxPlatformBanner();
 if (typeof zxEnableInstallPrompt === "function") zxEnableInstallPrompt();
-document.getElementById("btnExportState").onclick = () => {
-  const ok = ZXStore.exportState();
-  zxToast(ok ? "State snapshot downloaded 📦" : "Export failed", ok ? "success" : "error");
-};
 const MENU = [
   { id: "dashboard", label: "Dashboard", icon: "i-grid" },
   { id: "tenants", label: "Tenants", icon: "i-database" },
@@ -249,7 +245,12 @@ const MENU = [
   { id: "impersonate", label: "Impersonation", icon: "i-eye" }
 ];
 ZXMenu.build("#saMenu", MENU, v => ZXMenu.show(v));
+if (typeof zxInitMobileNav === "function") zxInitMobileNav(); // hamburger + drawer on small screens
 ZXMenu.show("dashboard");
+document.getElementById("btnExportState").onclick = () => {
+  const ok = ZXStore.exportState();
+  zxToast(ok ? "State snapshot downloaded 📦" : "Export failed", ok ? "success" : "error");
+};
 
 const FLAG_DESC = {
   voiceConcierge: ["Voice Concierge", "Interactive AI voice assistant on kiosk & guest portal"],
