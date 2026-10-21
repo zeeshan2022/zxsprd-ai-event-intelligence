@@ -441,7 +441,7 @@ function render() {
   document.getElementById("homeAnnounce").innerHTML = anns.length ? `<h4 style="margin-bottom:8px">🔔 <span data-i18n="announcements">Announcements</span></h4>` + anns.map(b => `<div class="session-card" style="border-color:var(--amber)"><b>${zxesc(b.message)}</b><div class="dim" style="font-size:11px">${b.timestamp}</div></div>`).join("") : "";
 
   // Sponsors
-  document.getElementById("homeSponsors").innerHTML = ZXStore.feature("sponsorInjection") ? `<h4 style="margin-bottom:8px">🤝 Partners</h4>` + ZXStore.state.sponsors.map(sp => `<div class="session-card"><b style="color:var(--tenant-accent)">${zxesc(sp.name)}</b><div class="dim" style="font-size:12px">${zxesc(sp.message)}</div></div>`).join("") : "";
+  document.getElementById("homeSponsors").innerHTML = ZXStore.feature("sponsorInjection") ? `<h4 style="margin-bottom:8px">🤝 Partners</h4>` + ZXStore.sponsors().map(sp => `<div class="session-card"><b style="color:var(--tenant-accent)">${zxesc(sp.name)}</b><div class="dim" style="font-size:12px">${zxesc(sp.message)}</div></div>`).join("") : "";
 
   // Send-to-self (badge users get prefilled contact; guests can still use it)
   document.getElementById("sendToSelfBox").innerHTML = `

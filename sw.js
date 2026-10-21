@@ -5,7 +5,7 @@
  *  - cache-first for same-origin static files, network-first with cache fallback
  *    for navigations, stale-while-revalidate for everything else.
  */
-const CACHE = "zxsprd-ai-v8";
+const CACHE = "zxsprd-ai-v9";
 const SHELL = [
   "./",
   "index.html",
