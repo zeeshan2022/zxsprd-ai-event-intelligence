@@ -1,0 +1,43 @@
+import json
+m = {
+ "id":"mtg-103","tenantId":"tenant-airport-show","podId":"POD-05",
+ "title":"Biometric Corridors: One Digital Identity Across Terminals",
+ "startTime":"09:00 AM","endTime":"09:45 AM","hostName":"Sarah Whitmore","status":"Ended","hitlStatus":"Approved",
+ "guests":[{"id":"g1","badgeId":"BDG-7710","name":"Rashid Al Suwaidi","email":"rashid@gcaa.gov.ae","phone":"+971501234567","role":"VIP","checkedInAt":"08:52 AM"}],
+ "rawTranscript":[
+  {"time":"09:00:14","speaker":"Sarah Whitmore","text":"Good morning everyone. Welcome to the Biometric Corridors session. Today we are looking at how a single digital identity can move a passenger from check-in all the way to the lounge without touching a boarding pass again."},
+  {"time":"09:01:52","speaker":"Rashid Al Suwaidi","text":"Thank you Sarah. The premise is simple but the engineering is not. We are talking about stitching together airline systems, airport systems and border control under one consented biometric token."},
+  {"time":"09:03:31","speaker":"Sarah Whitmore","text":"Let us start with adoption numbers. Where does the current corridor actually stand across terminals today?"},
+  {"time":"09:04:47","speaker":"Rashid Al Suwaidi","text":"Roughly sixty-eight percent of eligible departing passengers have enrolled. But enrollment is not the bottleneck — reuse is. Only about forty-one percent of enrolled passengers actually use the lane on every trip."},
+  {"time":"09:06:20","speaker":"Sarah Whitmore","text":"That gap usually comes down to trust and friction at first touch. What is being done at the front of the funnel?"},
+  {"time":"09:07:58","speaker":"Rashid Al Suwaidi","text":"We moved enrollment to app-based pre-capture. Passengers opt in at booking, the face template is encrypted on device, and the airport never stores the raw image — only a matched/unmatched decision per journey."},
+  {"time":"09:09:33","speaker":"Sarah Whitmore","text":"Privacy by design. That is the phrase regulators keep repeating. How is the retention policy enforced technically?"},
+  {"time":"09:11:02","speaker":"Rashid Al Suwaidi","text":"Templates live for seventy-two hours after travel completes, then keys are destroyed through crypto-shredding. An independent auditor verifies the destruction logs monthly."},
+  {"time":"09:12:40","speaker":"Sarah Whitmore","text":"Monthly audits are good, but I would push for continuous attestation. If the destruction pipeline lags, you want to know within minutes, not weeks."},
+  {"time":"09:14:15","speaker":"Rashid Al Suwaidi","text":"Agreed. We are piloting a canary system — synthetic identities seeded into the store that must disappear on schedule. If a canary survives past its TTL, an alert fires immediately."},
+  {"time":"09:15:50","speaker":"Attendee — Airlines IT Lead","text":"From the airline side, the question is interoperability. If I enroll with carrier A, can my partner at the same terminal use it for a codeshare flight tomorrow?"},
+  {"time":"09:17:22","speaker":"Rashid Al Suwaidi","text":"Today, no — tokens are carrier-scoped. The roadmap item for this forum is a shared airport-level token so any participating carrier honours the same enrollment. That requires a common governance board."},
+  {"time":"09:19:01","speaker":"Sarah Whitmore","text":"Which brings us to cost sharing. Who funds the common infrastructure when benefits accrue mostly to carriers?"},
+  {"time":"09:20:35","speaker":"Attendee — Finance, Terminal Operator","text":"Our working model is a per-touchpoint transaction fee, capped monthly per carrier. Small carriers get a floor waiver so the economics do not exclude them."},
+  {"time":"09:22:10","speaker":"Attendee — Border Control Liaison","text":"One caution from our side: any shared token must not blur the legal separation between commercial identity verification and border verification. Two different mandates."},
+  {"time":"09:23:44","speaker":"Rashid Al Suwaidi","text":"Absolutely. The architecture keeps them as separate verifiers against the same template — the border system issues its own decision and never inherits the commercial one."},
+  {"time":"09:25:18","speaker":"Sarah Whitmore","text":"What about peak-hour throughput? Sixty-eight percent enrollment means the lanes still mix enrolled and manual travellers."},
+  {"time":"09:26:55","speaker":"Attendee — Operations Manager","text":"At the 06:30 wave arrivals we saw queue times drop from eleven minutes to four in the pilot terminal. The win came from signage plus staff redirecting unenrolled passengers before the document check."},
+  {"time":"09:28:30","speaker":"Sarah Whitmore","text":"So half the improvement is process, not technology. That should be the headline for operators who cannot rip out infrastructure."},
+  {"time":"09:30:05","speaker":"Rashid Al Suwaidi","text":"Exactly. Before buying a single camera, fix the redirect flow and the measurement. We instrumented every touchpoint before changing anything."},
+  {"time":"09:31:40","speaker":"Attendee — Accessibility Advocate","text":"How do these lanes behave for travellers who cannot present a stable face — post-surgery patients, or neurodivergent children?"},
+  {"time":"09:33:12","speaker":"Rashid Al Suwaidi","text":"Fair challenge. Every lane has a guaranteed manual fallback within twenty metres, and enrolment staff carry assisted-process training. No traveller may be turned away for failing biometric matching."},
+  {"time":"09:34:48","speaker":"Attendee — Accessibility Advocate","text":"Then publish that guarantee at the point of enrolment, not buried in policy. Trust collapses when people fear a dead end."},
+  {"time":"09:36:20","speaker":"Sarah Whitmore","text":"Noted and added to the action list. Let us close on governance timing. When does the shared-token board get chartered?"},
+  {"time":"09:37:55","speaker":"Rashid Al Suwaidi","text":"Draft charter goes to the GALF steering committee at the end of October. First pilots targeted for Q2 next year, two terminals, three carriers."},
+  {"time":"09:39:30","speaker":"Sarah Whitmore","text":"And continuous destruction attestation via canaries — that becomes a standing metric reported to the board?"},
+  {"time":"09:41:02","speaker":"Rashid Al Suwaidi","text":"Yes. Canary survival rate, zero tolerance target, reviewed weekly during pilot phase."},
+  {"time":"09:42:35","speaker":"Sarah Whitmore","text":"Excellent. To summarise: app-based pre-capture, carrier-scoped tokens moving to an airport-level shared token, transaction-fee funding with small-carrier waivers, guaranteed manual fallback, and canary-based destruction attestation."},
+  {"time":"09:43:58","speaker":"Attendee — Airlines IT Lead","text":"One addition — please include API latency SLAs in the charter. Our apps cannot block on a slow verifier."},
+  {"time":"09:44:40","speaker":"Sarah Whitmore","text":"Added. Thank you Rashid, and thank you all. Session recording and summary will follow approval workflow."}
+ ],
+ "aiSummary":"The session mapped the path from carrier-scoped biometric tokens to a shared airport-level digital identity. Key findings: 68% enrollment but only 41% reuse, indicating trust and first-touch friction are the real bottlenecks. Architecture decisions confirmed: on-device encrypted pre-capture at booking, 72-hour template retention with crypto-shredding, and strict separation of commercial vs border verification against the same template. Operational data from the pilot terminal showed queue times falling from 11 to 4 minutes at peak waves, largely through process redesign (redirect + signage) rather than new hardware. New commitments: canary-based continuous destruction attestation reviewed weekly, guaranteed manual fallback published at enrolment for accessibility, a per-touchpoint transaction fee with small-carrier waivers, and a governance board charter going to the GALF steering committee at end of October with two-terminal, three-carrier pilots targeted for Q2.",
+ "sentimentScore":84,
+ "actionItems":["Charter the shared-token governance board; submit draft to GALF steering committee by end of October.","Deploy canary-based destruction attestation and report canary survival weekly during pilot.","Publish the guaranteed-manual-fallback commitment at every enrolment touchpoint.","Include API latency SLAs for airline app integrations in the charter.","Prepare Q2 pilot plan: two terminals, three carriers."]
+}
+json.dump(m, open("/tmp/m103.json","w"), ensure_ascii=False); print("ok", len(m["rawTranscript"]))
