@@ -134,7 +134,7 @@ zxApplyViewAppIdentity();
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", zxApplyViewAppIdentity);
 
 const ZXSeed = {
-  version: 8, // Final Demo schema v8 — Arabic demo data, venue map, crowd history, temp sessions
+  version: 9, // Final Demo schema v9 — multi-tenant event portfolio (Airport Show, HR Summit, Accessabilities, WETEX, Najah, Arablab+), long realistic transcripts, per-category demo reset, state import/export
   activeRole: "SUPER_ADMIN",
   activeTenantId: "tenant-wps-2026",
   activePodId: "POD-01",
@@ -181,7 +181,7 @@ const ZXSeed = {
     {
       id: "tenant-wps-2026", name: "World Police Summit 2026", subdomain: "wps2026", tier: "Enterprise",
       maxPods: 20, assignedPods: 3, status: "Active", createdDate: "2026-01-14",
-      logoUrl: "", primaryColor: "#2563EB", headerText: "WPS 2026 Secure Intelligence Hub", footerText: "© 2026 World Police Summit.",
+      logoUrl: "", primaryColor: "#2563EB", headerText: "WPS 2026 Secure Intelligence Hub", footerText: "© 2026 World Police Summit · Event Intelligence Platform.",
       defaultLlm: "OCI Llama 3 70B (Private)", defaultTts: "ElevenLabs Neural v2", temperature: 0.4, cloudFallback: false,
       venueCapacity: 5000, currentOccupancy: 3420,
       tenantTheme: "dark", tenantLangs: ["en-US", "ar-AE", "fr-FR"], allowTenantTheme: true, allowTenantLangs: true
@@ -189,10 +189,58 @@ const ZXSeed = {
     {
       id: "tenant-tech-expo", name: "Global Tech Innovation Expo", subdomain: "techexpo", tier: "Pro",
       maxPods: 5, assignedPods: 1, status: "Active", createdDate: "2026-02-02",
-      logoUrl: "", primaryColor: "#10B981", headerText: "Tech Expo Live Intelligence", footerText: "Powered by ZXSPRD AI",
+      logoUrl: "", primaryColor: "#10B981", headerText: "Tech Expo Live Intelligence", footerText: "Powered by Event Intelligence Platform AI",
       defaultLlm: "OpenAI GPT-4o", defaultTts: "Azure Neural TTS", temperature: 0.7, cloudFallback: true,
       venueCapacity: 2000, currentOccupancy: 1150,
       tenantTheme: "light", tenantLangs: ["en-US", "es-ES", "zh-CN"], allowTenantTheme: true, allowTenantLangs: false
+    },
+    {
+      id: "tenant-airport-show", name: "Airport Show & Global Airport Leaders Forum", subdomain: "airportshow", tier: "Enterprise",
+      maxPods: 12, assignedPods: 2, status: "Active", createdDate: "2026-05-11", eventDates: "October 12–14, 2026",
+      logoUrl: "", primaryColor: "#F59E0B", headerText: "Airport Show · Dubai Live Intelligence", footerText: "© 2026 Airport Show & Global Airport Leaders Forum · Event Intelligence Platform.",
+      defaultLlm: "Mistral Large (EU Sovereign)", defaultTts: "Azure Neural TTS", temperature: 0.5, cloudFallback: false,
+      venueCapacity: 3200, currentOccupancy: 2050,
+      tenantTheme: "dark", tenantLangs: ["en-US", "ar-AE"], allowTenantTheme: true, allowTenantLangs: true
+    },
+    {
+      id: "tenant-hr-summit", name: "HR Summit 2026", subdomain: "hrsummit", tier: "Pro",
+      maxPods: 8, assignedPods: 2, status: "Active", createdDate: "2026-06-02", eventDates: "October 14–15, 2026",
+      logoUrl: "", primaryColor: "#8B5CF6", headerText: "HR Summit 2026 · People Intelligence Hub", footerText: "© 2026 HR Summit · Event Intelligence Platform.",
+      defaultLlm: "OpenAI GPT-4o", defaultTts: "Google Cloud TTS Chirp3", temperature: 0.6, cloudFallback: true,
+      venueCapacity: 1500, currentOccupancy: 870,
+      tenantTheme: "light", tenantLangs: ["en-US", "ar-AE"], allowTenantTheme: true, allowTenantLangs: true
+    },
+    {
+      id: "tenant-accessabilities", name: "Accessabilities Expo", subdomain: "accessabilities", tier: "Standard",
+      maxPods: 6, assignedPods: 1, status: "Active", createdDate: "2026-06-18", eventDates: "October 19–21, 2026",
+      logoUrl: "", primaryColor: "#EC4899", headerText: "Accessabilities Expo · Inclusive Intelligence", footerText: "© 2026 Accessabilities Expo · Event Intelligence Platform.",
+      defaultLlm: "Azure OpenAI GPT-4o-mini", defaultTts: "Amazon Polly Standard", temperature: 0.5, cloudFallback: true,
+      venueCapacity: 1200, currentOccupancy: 640,
+      tenantTheme: "light", tenantLangs: ["en-US", "ar-AE"], allowTenantTheme: true, allowTenantLangs: true
+    },
+    {
+      id: "tenant-wetex", name: "Water, Energy, Technology, and Environment Exhibition (WETEX)", subdomain: "wetex", tier: "Enterprise",
+      maxPods: 15, assignedPods: 2, status: "Active", createdDate: "2026-05-27", eventDates: "October 20–22, 2026",
+      logoUrl: "", primaryColor: "#0EA5E9", headerText: "WETEX · Green Intelligence Hub", footerText: "© 2026 WETEX · Dubai DEWA · Event Intelligence Platform.",
+      defaultLlm: "OCI Llama 3 70B (Private)", defaultTts: "ElevenLabs Neural v2", temperature: 0.4, cloudFallback: false,
+      venueCapacity: 4200, currentOccupancy: 2780,
+      tenantTheme: "dark", tenantLangs: ["en-US", "ar-AE", "fr-FR"], allowTenantTheme: true, allowTenantLangs: true
+    },
+    {
+      id: "tenant-najah", name: "Najah Exhibition", subdomain: "najah", tier: "Standard",
+      maxPods: 6, assignedPods: 1, status: "Active", createdDate: "2026-07-08", eventDates: "October 25–27, 2026",
+      logoUrl: "", primaryColor: "#22C55E", headerText: "Najah · Career Intelligence Zone", footerText: "© 2026 Najah Exhibition · Event Intelligence Platform.",
+      defaultLlm: "Anthropic Claude 3.5 Sonnet", defaultTts: "Azure Neural TTS", temperature: 0.6, cloudFallback: true,
+      venueCapacity: 1800, currentOccupancy: 930,
+      tenantTheme: "dark", tenantLangs: ["ar-AE", "en-US"], allowTenantTheme: true, allowTenantLangs: true
+    },
+    {
+      id: "tenant-arablab", name: "Arablab+", subdomain: "arablab", tier: "Pro",
+      maxPods: 10, assignedPods: 2, status: "Active", createdDate: "2026-07-15", eventDates: "October 26–28, 2026",
+      logoUrl: "", primaryColor: "#14B8A6", headerText: "Arablab+ · Lab Intelligence Network", footerText: "© 2026 Arablab+ · Event Intelligence Platform.",
+      defaultLlm: "Mistral Large (EU Sovereign)", defaultTts: "Google Cloud TTS Chirp3", temperature: 0.5, cloudFallback: false,
+      venueCapacity: 2200, currentOccupancy: 1310,
+      tenantTheme: "dark", tenantLangs: ["en-US", "ar-AE", "fr-FR"], allowTenantTheme: true, allowTenantLangs: true
     }
   ],
 
@@ -209,14 +257,35 @@ const ZXSeed = {
     { id: "POD-01", tenantId: "tenant-wps-2026", macAddress: "AC:DE:48:00:11:22", location: "DWTC Hall A1 — Zone 1", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 15, status: "Online", currentMeetingId: null, densityLevel: "High", currentHeadcount: 145, mic1Role: "Host (Speaker 1)", mic2Role: "Guest (Speaker 2)", mic1Gain: 65, mic2Gain: 42 },
     { id: "POD-02", tenantId: "tenant-wps-2026", macAddress: "AC:DE:48:00:11:23", location: "DWTC Hall A1 — Zone 2", llmOverride: "OpenAI GPT-4o", ttsOverride: null, standbyTimeoutMins: 5, status: "Online", currentMeetingId: null, densityLevel: "Medium", currentHeadcount: 82, mic1Role: "Host (Speaker 1)", mic2Role: "Audience Q&A", mic1Gain: 70, mic2Gain: 12 },
     { id: "POD-03", tenantId: "tenant-wps-2026", macAddress: "AC:DE:48:00:11:24", location: "DWTC Hall B2 — VIP", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 10, status: "Online", currentMeetingId: "mtg-101", densityLevel: "Low", currentHeadcount: 12, mic1Role: "Host (Speaker 1)", mic2Role: "Guest (Speaker 2)", mic1Gain: 50, mic2Gain: 50 },
-    { id: "POD-04", tenantId: "tenant-tech-expo", macAddress: "AC:DE:48:00:22:01", location: "Expo Hall 3 — Startup Stage", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 10, status: "Online", currentMeetingId: null, densityLevel: "Medium", currentHeadcount: 60, mic1Role: "Host (Speaker 1)", mic2Role: "Guest (Speaker 2)", mic1Gain: 55, mic2Gain: 55 }
+    { id: "POD-04", tenantId: "tenant-tech-expo", macAddress: "AC:DE:48:00:22:01", location: "Expo Hall 3 — Startup Stage", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 10, status: "Online", currentMeetingId: null, densityLevel: "Medium", currentHeadcount: 60, mic1Role: "Host (Speaker 1)", mic2Role: "Guest (Speaker 2)", mic1Gain: 55, mic2Gain: 55 },
+    { id: "POD-05", tenantId: "tenant-airport-show", macAddress: "AC:DE:48:00:31:01", location: "Dubai World Centre — Hall 1, Forum Stage", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 10, status: "Online", currentMeetingId: null, densityLevel: "High", currentHeadcount: 120, mic1Role: "Host (Speaker 1)", mic2Role: "Guest (Speaker 2)", mic1Gain: 60, mic2Gain: 48 },
+    { id: "POD-06", tenantId: "tenant-airport-show", macAddress: "AC:DE:48:00:31:02", location: "Dubai World Centre — Hall 2, Leaders Lounge", llmOverride: "Mistral Large (EU Sovereign)", ttsOverride: null, standbyTimeoutMins: 8, status: "Online", currentMeetingId: null, densityLevel: "Medium", currentHeadcount: 55, mic1Role: "Panel Moderator", mic2Role: "Audience Q&A", mic1Gain: 62, mic2Gain: 20 },
+    { id: "POD-07", tenantId: "tenant-hr-summit", macAddress: "AC:DE:48:00:32:01", location: "DIFC Conference City — Main Auditorium", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 10, status: "Online", currentMeetingId: null, densityLevel: "Medium", currentHeadcount: 90, mic1Role: "Keynote Speaker", mic2Role: "Guest (Speaker 2)", mic1Gain: 68, mic2Gain: 45 },
+    { id: "POD-08", tenantId: "tenant-hr-summit", macAddress: "AC:DE:48:00:32:02", location: "DIFC Conference City — Workshop Room 2", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 12, status: "Standby", currentMeetingId: null, densityLevel: "Low", currentHeadcount: 25, mic1Role: "Host (Speaker 1)", mic2Role: "Guest (Speaker 2)", mic1Gain: 50, mic2Gain: 50 },
+    { id: "POD-09", tenantId: "tenant-accessabilities", macAddress: "AC:DE:48:00:33:01", location: "Dubai Festival Arena — Inclusion Pavilion", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 10, status: "Online", currentMeetingId: null, densityLevel: "Medium", currentHeadcount: 48, mic1Role: "Host (Speaker 1)", mic2Role: "Interpreter", mic1Gain: 55, mic2Gain: 55 },
+    { id: "POD-10", tenantId: "tenant-wetex", macAddress: "AC:DE:48:00:34:01", location: "Dubbie DEWA HQ — Green Tech Hall A", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 10, status: "Online", currentMeetingId: null, densityLevel: "High", currentHeadcount: 130, mic1Role: "Host (Speaker 1)", mic2Role: "Guest (Speaker 2)", mic1Gain: 64, mic2Gain: 40 },
+    { id: "POD-11", tenantId: "tenant-wetex", macAddress: "AC:DE:48:00:34:02", location: "DEWA HQ — Water & Energy Roundtable", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 15, status: "Online", currentMeetingId: null, densityLevel: "Low", currentHeadcount: 18, mic1Role: "Panel Moderator", mic2Role: "Audience Q&A", mic1Gain: 58, mic2Gain: 15 },
+    { id: "POD-12", tenantId: "tenant-najah", macAddress: "AC:DE:48:00:35:01", location: "Sharjah Expo Centre — Career Zone", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 10, status: "Online", currentMeetingId: null, densityLevel: "Medium", currentHeadcount: 70, mic1Role: "Host (Speaker 1)", mic2Role: "Guest (Speaker 2)", mic1Gain: 52, mic2Gain: 52 },
+    { id: "POD-13", tenantId: "tenant-arablab", macAddress: "AC:DE:48:00:36:01", location: "InterContinental Dubai — Lab Innovation Stage", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 10, status: "Online", currentMeetingId: null, densityLevel: "Medium", currentHeadcount: 65, mic1Role: "Keynote Speaker", mic2Role: "Guest (Speaker 2)", mic1Gain: 66, mic2Gain: 44 },
+    { id: "POD-14", tenantId: "tenant-arablab", macAddress: "AC:DE:48:00:36:02", location: "InterContinental Dubai — Regulators Roundtable", llmOverride: null, ttsOverride: null, standbyTimeoutMins: 10, status: "Standby", currentMeetingId: null, densityLevel: "Low", currentHeadcount: 14, mic1Role: "Panel Moderator", mic2Role: "Interpreter", mic1Gain: 50, mic2Gain: 50 }
   ],
 
   schedule: [
     { id: "sch-1", tenantId: "tenant-wps-2026", podId: "POD-01", title: "حوكمة الذكاء الاصطناعي في إنفاذ القانون السيادي", startTime: "10:00 AM", endTime: "10:45 AM", speakerHost: "عبدالله المطيري", speakerGuest: "فاطمة الظاهري", status: "Scheduled" },
     { id: "sch-2", tenantId: "tenant-wps-2026", podId: "POD-02", title: "الاستدلال على الحافة لتحليلات الحدود الفورية", startTime: "11:00 AM", endTime: "11:45 AM", speakerHost: "العقيد ماجد السويدي", speakerGuest: "نورة القحطاني", status: "Scheduled" },
     { id: "sch-3", tenantId: "tenant-wps-2026", podId: "POD-03", title: "كلمة افتتاحية مغلقة: سلامة الذكاء الاصطناعي الوطنية", startTime: "09:00 AM", endTime: "09:40 AM", speakerHost: "معالي سيف المنصوري", speakerGuest: "خالد الشامسي", status: "Completed" },
-    { id: "sch-4", tenantId: "tenant-tech-expo", podId: "POD-04", title: "الكلمة الرئيسية: المؤسسة الوكيلة", startTime: "02:00 PM", endTime: "02:45 PM", speakerHost: "مريم الكتبي", speakerGuest: "سلطان الدوسري", status: "Scheduled" }
+    { id: "sch-4", tenantId: "tenant-tech-expo", podId: "POD-04", title: "الكلمة الرئيسية: المؤسسة الوكيلة", startTime: "02:00 PM", endTime: "02:45 PM", speakerHost: "مريم الكتبي", speakerGuest: "سلطان الدوسري", status: "Scheduled" },
+    { id: "sch-5", tenantId: "tenant-airport-show", podId: "POD-05", title: "Biometric Corridors: One Digital Identity Across Terminals", startTime: "10:00 AM", endTime: "10:50 AM", speakerHost: "Sarah Whitmore", speakerGuest: "Rashid Al Suwaidi", status: "Completed" },
+    { id: "sch-6", tenantId: "tenant-airport-show", podId: "POD-06", title: "Global Airport Leaders Forum: Net-Zero 2030 Commitments", startTime: "11:15 AM", endTime: "12:00 PM", speakerHost: "Daniel Koffi", speakerGuest: "Layla Hassan", status: "Scheduled" },
+    { id: "sch-7", tenantId: "tenant-airport-show", podId: "POD-05", title: "Retail & Duty-Free Revenue Intelligence", startTime: "02:00 PM", endTime: "02:40 PM", speakerHost: "Emma Larsen", speakerGuest: "Tarik Mansour", status: "Scheduled" },
+    { id: "sch-8", tenantId: "tenant-hr-summit", podId: "POD-07", title: "Emiratisation in a Hybrid World: Metrics that Matter", startTime: "09:30 AM", endTime: "10:15 AM", speakerHost: "Mona Al Zaabi", speakerGuest: "Khalid Bin Sultan", status: "Completed" },
+    { id: "sch-9", tenantId: "tenant-hr-summit", podId: "POD-08", title: "Workshop: AI-Assisted Talent Review Without Bias", startTime: "11:00 AM", endTime: "12:30 PM", speakerHost: "Dr. Huda Rashed", speakerGuest: "James O'Connor", status: "Scheduled" },
+    { id: "sch-10", tenantId: "tenant-accessabilities", podId: "POD-09", title: "دورة الحياة الرقمية: تقنيات المساعدة لذوي الهمم", startTime: "10:00 AM", endTime: "10:45 AM", speakerHost: "شيخة المنصوري", speakerGuest: "عمر الفيصل", status: "Scheduled" },
+    { id: "sch-11", tenantId: "tenant-wetex", podId: "POD-10", title: "Desalination Decarbonised: Green Hydrogen at Scale", startTime: "09:00 AM", endTime: "09:50 AM", speakerHost: "Dr. Abdulla Al Habtoor", speakerGuest: "Ingrid Solberg", status: "Completed" },
+    { id: "sch-12", tenantId: "tenant-wetex", podId: "POD-11", title: "Smart Water Grids and Leak Analytics Roundtable", startTime: "12:00 PM", endTime: "12:45 PM", speakerHost: "Fatima Al Nuaimi", speakerGuest: "Vikram Mehta", status: "Scheduled" },
+    { id: "sch-13", tenantId: "tenant-najah", podId: "POD-12", title: "مسار المهنة: من الجامعة إلى سوق العمل", startTime: "10:30 AM", endTime: "11:15 AM", speakerHost: "د. حمدة الشامسي", speakerGuest: "يوسف كارم", status: "Scheduled" },
+    { id: "sch-14", tenantId: "tenant-arablab", podId: "POD-13", title: "Keynote: Lab Automation & AI-assisted Method Validation", startTime: "09:45 AM", endTime: "10:30 AM", speakerHost: "Dr. Nasser Al Qubaisi", speakerGuest: "Claire Dubois", status: "Completed" },
+    { id: "sch-15", tenantId: "tenant-arablab", podId: "POD-14", title: "Regulators Roundtable: ISO 17025 Compliance in the Gulf", startTime: "01:00 PM", endTime: "01:50 PM", speakerHost: "Ahmed Farouk", speakerGuest: "Sara Lindqvist", status: "Scheduled" }
   ],
 
   meetings: [
@@ -331,7 +400,7 @@ const ZXSeed = {
 
 /* ---------------- STORE ENGINE ---------------- */
 const ZXStore = (() => {
-  const KEY = "zxsprd-global-state-v8";
+  const KEY = "zxsprd-global-state-v9";
   const clone = (o) => JSON.parse(JSON.stringify(o));
   const listeners = new Set();
   let channel = null, storageOK = true;
@@ -357,7 +426,7 @@ const ZXStore = (() => {
 
   try {
     if ("BroadcastChannel" in window) {
-      channel = new BroadcastChannel("zxsprd-state-v8");
+      channel = new BroadcastChannel("zxsprd-state-v9");
       channel.onmessage = (e) => { if (e.data?.type === "state") { state = e.data.state; notify("cross-tab"); } };
     }
   } catch (e) {}
