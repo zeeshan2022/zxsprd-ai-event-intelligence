@@ -1,0 +1,42 @@
+import json
+m = {
+ "id":"mtg-104","tenantId":"tenant-hr-summit","podId":"POD-07",
+ "title":"Emiratisation Metrics That Actually Predict Retention",
+ "startTime":"10:00 AM","endTime":"10:45 AM","hostName":"Layla Haddad","status":"Ended","hitlStatus":"PendingApproval",
+ "guests":[{"id":"g1","badgeId":"BDG-8802","name":"Omar Benali","email":"omar.b@talent.gov.ae","phone":"+971527788990","role":"Speaker","checkedInAt":"09:54 AM"}],
+ "rawTranscript":[
+  {"time":"10:00:10","speaker":"Layla Haddad","text":"Welcome back. Our topic this morning is why Emiratisation dashboards measure hiring but fail to predict who stays."},
+  {"time":"10:01:45","speaker":"Omar Benali","text":"Because compliance metrics reward the intake, not the outcome. Nobody sanctions you for attrition at month fourteen; everybody sanctions you for missing the quarterly hire count."},
+  {"time":"10:03:20","speaker":"Layla Haddad","text":"So what does predict retention? Your team ran the longitudinal study across forty firms."},
+  {"time":"10:04:58","speaker":"Omar Benali","text":"Three signals beat everything else. First: whether the new hire's direct manager is also an Emirati with more than three years tenure. That single factor moved twelve-month retention by nineteen points."},
+  {"time":"10:06:30","speaker":"Attendee — CHRO, Retail Group","text":"Nineteen points is enormous. Was that causation or just good teams having both?"},
+  {"time":"10:08:05","speaker":"Omar Benali","text":"We controlled for firm, sector and cohort year using a difference-in-differences design around manager transitions. Still roughly fifteen to eighteen points net. Selection effects exist but they do not explain the whole gap."},
+  {"time":"10:09:40","speaker":"Layla Haddad","text":"Second signal?"},
+  {"time":"10:11:12","speaker":"Omar Benali","text":"Access to a technical certification within the first six months. Not promised — actually started. Firms that front-loaded certification saw the private-sector retention curve bend from a thirty percent cliff at month nine to something closer to flat."},
+  {"time":"10:12:50","speaker":"Attendee — HR Director, Banking","text":"We struggle there. Our programmes gate certifications until probation ends at six months. By then half the disengagement has already happened."},
+  {"time":"10:14:25","speaker":"Omar Benali","text":"That is exactly the finding. Disengagement spikes at months four to six when work feels clerical. Certification gives a visible horizon. Three banks moved exam sponsorship to week two and self-reported engagement jumped immediately."},
+  {"time":"10:16:00","speaker":"Attendee — HR Director, Banking","text":"Cost was our blocker. Can you quantify it?"},
+  {"time":"10:17:35","speaker":"Omar Benali","text":"Roughly eight thousand dirhams per certification versus replacement cost studies pegging early attrition at ninety to one hundred twenty thousand. Even a modest retention gain pays for the entire programme twice over."},
+  {"time":"10:19:10","speaker":"Layla Haddad","text":"And the third signal?"},
+  {"time":"10:20:42","speaker":"Omar Benali","text":"Mobility transparency. Employees who can see two credible internal next roles stay. Those who cannot see a path leave to find one. It was the strongest predictor of intention-to-leave at survey time."},
+  {"time":"10:22:20","speaker":"Attendee — Talent Partner, Consultancy","text":"Transparency is cheap. Why does nobody do it?"},
+  {"time":"10:23:55","speaker":"Omar Benali","text":"Because it forces managers to stop hoarding. Internal mobility cannibalises team stability, so middle management quietly resists. Any policy that ignores the manager's incentive fails."},
+  {"time":"10:25:30","speaker":"Layla Haddad","text":"Then tie mobility to manager KPIs. Reward successful internal placements like external hires."},
+  {"time":"10:27:05","speaker":"Omar Benali","text":"Two firms in the sample did exactly that last year. Their placement rate tripled and their compliance numbers improved anyway — the dashboard fear was misplaced."},
+  {"time":"10:28:40","speaker":"Attendee — Government HR Representative","text":"For public sector entities the constraint is grade structures, not willingness. Mobility across entities breaks seniority calculations."},
+  {"time":"10:30:15","speaker":"Omar Benali","text":"True, and that needs a policy answer, not an HR-tool answer. But within-entity mobility is fully in your control and covers most of the effect size."},
+  {"time":"10:31:50","speaker":"Layla Haddad","text":"Let me test a composite metric proposal: a Retention Readiness Index — manager match rate, certification-started rate at month three, and visible-pathway coverage. Publish it alongside the compliance number."},
+  {"time":"10:33:25","speaker":"Omar Benali","text":"I would support that, with one warning: the moment it is sanctioned, gaming starts. Keep it diagnostic first, punitive later, and audit definitions annually."},
+  {"time":"10:35:00","speaker":"Attendee — People Analytics Lead","text":"Can we get the de-identified dataset? We want to validate against our own turnover models before endorsing publicly."},
+  {"time":"10:36:35","speaker":"Omar Benali","text":"It will be available through the summit research portal next week, under a data-use agreement. Methodology appendix included — the diff-in-diff code is in the repo."},
+  {"time":"10:38:10","speaker":"Layla Haddad","text":"Wonderful. Actions: pilot the index with the five volunteer firms, move certification sponsorship to week two in banking partners, and put manager mobility KPIs into next cycle's scorecards."},
+  {"time":"10:39:45","speaker":"Attendee — CHRO, Retail Group","text":"Retail volunteers for the index pilot. Our month-nine cliff is exactly the problem you described."},
+  {"time":"10:41:15","speaker":"Omar Benali","text":"Perfect — high-volume cohorts make the clearest signal. I will reach out after the portal release."},
+  {"time":"10:42:50","speaker":"Layla Haddad","text":"Recording goes to approval. Thank you Omar — this was the most evidence-dense session we have run here."},
+  {"time":"10:44:10","speaker":"Omar Benali","text":"Thank you. The data exists; we just have to look at the right months."}
+ ],
+ "aiSummary":"This session examined why Emiratisation dashboards track hiring but fail to predict retention, drawing on a forty-firm longitudinal study. Three signals dominated: (1) having an Emirati direct manager with 3+ years tenure raised 12-month retention by ~19 points (15–18 net after difference-in-differences controls); (2) starting — not merely promising — a technical certification within the first six months flattened the typical month-nine attrition cliff, with costs (~AED 8k per certification) dwarfed by replacement costs (AED 90–120k); (3) visible internal career pathways were the strongest predictor of intention-to-leave, though resisted by middle management due to hoarding incentives. Proposed next steps: a diagnostic 'Retention Readiness Index' (manager match rate, certification-started rate at month three, visible-pathway coverage) published alongside compliance figures, manager mobility KPIs, moving certification sponsorship to week two, and a five-firm pilot including retail and banking volunteers. De-identified dataset and methodology to be released via the summit research portal under a data-use agreement.",
+ "sentimentScore":88,
+ "actionItems":["Pilot the Retention Readiness Index with five volunteer firms.","Move certification sponsorship to week two with banking partners.","Add internal-mobility KPIs to manager scorecards next cycle.","Release de-identified dataset and diff-in-diff code via research portal.","Follow up with retail group on the month-nine attrition cohort."]
+}
+json.dump(m, open("/tmp/m104.json","w"), ensure_ascii=False); print("ok", len(m["rawTranscript"]))
