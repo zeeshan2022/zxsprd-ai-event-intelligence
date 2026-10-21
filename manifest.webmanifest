@@ -1,6 +1,6 @@
 {
-  "name": "ZXSPRD AI — Event Intelligence",
-  "short_name": "ZXSPRD AI",
+  "name": "Event Intelligence Platform",
+  "short_name": "EIP",
   "description": "Offline-capable multi-tenant AI event intelligence platform: Super Admin, Client Admin, Edge Kiosk, Public Display & Guest Portal.",
   "start_url": "./index.html",
   "scope": "./",

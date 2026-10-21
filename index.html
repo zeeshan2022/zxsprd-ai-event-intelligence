@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ZXSPRD AI — Event Intelligence Launcher</title>
+<title>Event Intelligence Platform — Launcher</title>
 <meta name="description" content="Offline-capable PWA demo: multi-tenant AI event intelligence platform." />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" href="icon.svg" type="image/svg+xml" />
@@ -33,8 +33,8 @@
   <div class="brand">
     <div class="brand-mark"><svg class="icon"><use href="#i-activity"/></svg></div>
     <div>
-      <div class="brand-name">ZXSPRD<span style="color:var(--tenant-accent)"> AI</span></div>
-      <div class="brand-sub">Event Intelligence Platform · Final Demo v8</div>
+      <div class="brand-name">Event Intelligence<span style="color:var(--tenant-accent)"> Platform</span></div>
+      <div class="brand-sub">Event Intelligence Platform · Final Demo v10</div>
     </div>
   </div>
   <div class="chrome-controls" id="chromeControls"></div>
@@ -44,7 +44,7 @@
   <section class="hero-band panel" style="margin:22px 0 6px;padding:22px 24px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">
       <div>
-        <b style="font-size:17px">Welcome to the ZXSPRD AI control room 🎛️</b>
+        <b style="font-size:17px">Welcome to the Event Intelligence Platform control room 🎛️</b>
         <div class="dim" style="margin-top:4px;font-size:12.5px">Everything below is one shared live state — open two views side by side and watch them sync instantly.</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -62,7 +62,11 @@
         <div class="panel-title"><svg class="icon"><use href="#i-building"/></svg> Select Tenant Context</div>
         <div class="panel-subtitle">All views below operate inside the selected tenant (white-label branding, pods &amp; data).</div>
       </div>
-      <button class="btn btn-ghost" id="btnReset">Reset Demo Data</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-ghost" id="btnResetAr" title="Reset demo data to Arabic-only meetings & content (includes the فاطمة الظاهري demo guest)">Reset Demo Data · العربية</button>
+        <button class="btn btn-ghost" id="btnResetBoth" title="Reset demo data to the full bilingual (Arabic & English) dataset">Reset Demo Data · AR + EN</button>
+        <button class="btn btn-ghost" id="btnResetEn" title="Reset demo data to English-only meetings & content">Reset Demo Data · English</button>
+      </div>
     </div>
     <div class="launch-grid" id="tenantGrid"></div>
   </section>
@@ -144,7 +148,20 @@ function selectTenantCard(c) {
 }
 grid.addEventListener("click", e => selectTenantCard(e.target.closest("[data-t]")));
 grid.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectTenantCard(e.target.closest("[data-t]")); } });
-document.getElementById("btnReset").onclick = () => { if (confirm("Reset all demo data?")) { ZXStore.reset(); location.reload(); } };
+/* Three Reset Demo Data buttons — Arabic only / Arabic & English / English only.
+   Each resets Meetings, Sponsors, Schedule, Pods, Approvals, Interests (demo user
+   فاطمة الظاهري) and Ad-Hoc meetings back to the seeded demo dataset for that category. */
+const _resetMap = { btnResetAr: "ar", btnResetBoth: "all", btnResetEn: "en" };
+Object.entries(_resetMap).forEach(([id, cat]) => {
+  const b = document.getElementById(id);
+  if (!b) return;
+  b.onclick = () => {
+    const label = cat === "ar" ? "Arabic-only" : cat === "en" ? "English-only" : "Arabic & English";
+    if (confirm(`Reset all demo data to the ${label} dataset? This restores seed meetings, sponsors, schedule, pods, approvals, interests and ad-hoc sessions.`)) {
+      ZXStore.resetDemoCategory(cat); location.reload();
+    }
+  };
+});
 ZXStore.subscribe(() => { paintTenants(); paintPulse(); });
 
 // Scroll-reveal animation for cards (graceful fallback if unsupported)

@@ -1,6 +1,6 @@
 /**
  * ============================================================
- * ZXSPRD AI — UNIFIED DATA & STATE ENGINE (Final Demo)
+ * Event Intelligence Platform — UNIFIED DATA & STATE ENGINE (Final Demo)
  * Single source of truth for ALL data, variables & actions.
  * Merges every function from v3.5 / v4.2 / v5.6 / v6.9 and adds
  * Final-Demo enhancements: Themes, Multilingual Voice, Feature
@@ -67,7 +67,7 @@ window.zxDemoPassword = zxDemoPassword;
  * "Kiosk Event Intelligence Platform", etc. Query params & hash are ignored
  * when detecting the view. */
 const ZX_VIEW_APPS = {
-  "index":          { key: "launcher",   name: "ZXSPRD AI — Event Intelligence Launcher", short: "ZXSPRD Launcher", theme: "#2563EB", hue: 222 },
+  "index":          { key: "launcher",   name: "Event Intelligence Platform — Launcher", short: "EIP Launcher", theme: "#2563EB", hue: 222 },
   "super-admin":    { key: "superadmin", name: "Super Admin Event Intelligence Platform", short: "Super Admin EIP", theme: "#8B5CF6", hue: 263 },
   "client-admin":   { key: "clientadmin",name: "Admin Event Intelligence Platform",       short: "Admin EIP",       theme: "#10B981", hue: 158 },
   "edge-kiosk":     { key: "kiosk",      name: "Kiosk Event Intelligence Platform",       short: "Kiosk EIP",       theme: "#F59E0B", hue: 38  },
@@ -180,7 +180,7 @@ const ZXSeed = {
   tenants: [
     {
       id: "tenant-wps-2026", name: "World Police Summit 2026", subdomain: "wps2026", tier: "Enterprise",
-      maxPods: 20, assignedPods: 3, status: "Active", createdDate: "2026-01-14",
+      maxPods: 20, assignedPods: 3, status: "Active", createdDate: "2026-01-14", eventDates: "February 9–11, 2026",
       logoUrl: "", primaryColor: "#2563EB", headerText: "WPS 2026 Secure Intelligence Hub", footerText: "© 2026 World Police Summit · Event Intelligence Platform.",
       defaultLlm: "OCI Llama 3 70B (Private)", defaultTts: "ElevenLabs Neural v2", temperature: 0.4, cloudFallback: false,
       venueCapacity: 5000, currentOccupancy: 3420,
@@ -188,7 +188,7 @@ const ZXSeed = {
     },
     {
       id: "tenant-tech-expo", name: "Global Tech Innovation Expo", subdomain: "techexpo", tier: "Pro",
-      maxPods: 5, assignedPods: 1, status: "Active", createdDate: "2026-02-02",
+      maxPods: 5, assignedPods: 1, status: "Active", createdDate: "2026-02-02", eventDates: "March 10–12, 2026",
       logoUrl: "", primaryColor: "#10B981", headerText: "Tech Expo Live Intelligence", footerText: "Powered by Event Intelligence Platform AI",
       defaultLlm: "OpenAI GPT-4o", defaultTts: "Azure Neural TTS", temperature: 0.7, cloudFallback: true,
       venueCapacity: 2000, currentOccupancy: 1150,
@@ -1472,7 +1472,7 @@ window.ZX_I18N = ZX_I18N;
         if (!deferred) { zxToast('To install: open browser menu → "Install app / Add to Home screen"', "info"); return; }
         deferred.prompt();
         const res = await deferred.userChoice.catch(() => ({ outcome: "dismissed" }));
-        zxToast(res.outcome === "accepted" ? "Installing ZXSPRD AI 🎉" : "Install dismissed", res.outcome === "accepted" ? "success" : "info");
+        zxToast(res.outcome === "accepted" ? "Installing Event Intelligence Platform 🎉" : "Install dismissed", res.outcome === "accepted" ? "success" : "info");
         deferred = null;
         btn.remove();
         setBadge("Installed / Offline-ready", "badge-green");

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ZXSPRD AI — Client Admin Console</title>
+<title>Event Intelligence Platform — Client Admin Console</title>
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" href="icon.svg" type="image/svg+xml" />
 <meta name="theme-color" content="#2563EB" />
@@ -55,9 +55,8 @@
 <header class="topbar">
   <div class="brand">
     <div class="brand-mark" style="background:var(--tenant-accent)"><svg class="icon"><use href="#i-building"/></svg></div>
-    <div><div class="brand-name" id="brandName">ZXSPRD<span style="color:var(--tenant-accent)"> AI</span></div><div class="brand-sub">Client Admin · <span id="brandTenant">—</span></div></div>
+    <div><div class="brand-name" id="brandName">Event Intelligence<span style="color:var(--tenant-accent)"> Platform</span></div><div class="brand-sub">Client Admin · <span id="brandTenant">—</span></div></div>
   </div>
-  <button class="btn btn-ghost btn-sm menu-toggle no-ripple" id="btnMenuToggle" aria-expanded="false" aria-controls="caMenu" title="Show / hide the event menu (M)"><svg class="icon"><use href="#i-menu"/></svg> Menu</button>
   <nav class="role-switch">
     <a href="index.html" class="role-btn"><svg class="icon"><use href="#i-grid"/></svg> Launcher</a>
     <a href="super-admin.html" class="role-btn"><svg class="icon"><use href="#i-shield"/></svg> Super Admin</a>
@@ -66,7 +65,11 @@
     <a href="public-display.html" class="role-btn"><svg class="icon"><use href="#i-tv"/></svg> Public Display</a>
     <a href="guest-portal.html" class="role-btn"><svg class="icon"><use href="#i-smartphone"/></svg> Guest Portal</a>
   </nav>
-  <div class="chrome-controls" id="chromeControls"></div>
+  <div class="chrome-controls" id="chromeControls">
+    <button class="btn btn-ghost btn-sm no-ripple" id="btnExportState" title="Download a JSON snapshot of the current state (all tenants, meetings, sponsors, schedule & settings)"><svg class="icon"><use href="#i-download"/></svg> Export State</button>
+    <button class="btn btn-ghost btn-sm no-ripple" id="btnImportState" title="Import a previously exported JSON snapshot and restore all saved data"><svg class="icon"><use href="#i-upload"/></svg> Import State</button>
+    <input type="file" id="importStateFile" accept=".json,application/json" hidden>
+  </div>
 </header>
 
 <div class="app-shell">
@@ -245,7 +248,31 @@
 </div>
 
 <script>
-zxInitChrome();
+zxInitChrome({ preserveControls: ["btnExportState", "btnImportState"] });
+
+/* ---------------- STATE EXPORT / IMPORT ---------------- */
+document.getElementById("btnExportState").onclick = () => {
+  const ok = ZXStore.exportState();
+  zxToast(ok ? "State snapshot downloaded \ud83d\udce6" : "Export failed", ok ? "success" : "error");
+};
+(function wireImportButton() {
+  const btn = document.getElementById("btnImportState");
+  const file = document.getElementById("importStateFile");
+  if (!btn || !file) return;
+  btn.onclick = () => file.click();
+  file.onchange = () => {
+    const f = file.files && file.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const ok = ZXStore.importState(reader.result);
+      zxToast(ok ? "State imported \u2014 all saved data restored \u2705" : "Import failed: not a valid state snapshot", ok ? "success" : "error");
+    };
+    reader.onerror = () => zxToast("Could not read the selected file.", "error");
+    reader.readAsText(f);
+    file.value = "";
+  };
+})();
 if (typeof zxPlatformBanner === "function") zxPlatformBanner();
 if (typeof zxEnableInstallPrompt === "function") zxEnableInstallPrompt({ force: true, autoHideMs: 10000 }); // show Install App for 10s, then fade away
 if (typeof zxEnableShortcuts === "function") zxEnableShortcuts(); // press "/" to jump between sections
@@ -282,6 +309,13 @@ function render() {
   paintImpBar();
   const t = ZXStore.tenant(); if (!t) return;
   document.getElementById("brandTenant").textContent = t.name;
+  // Tenant branding: logo URL (Appearance & Branding) replaces the default brand mark/name
+  {
+    const bName = document.getElementById("brandName");
+    if (bName) bName.innerHTML = t.logoUrl
+      ? `<img src="${zxesc(t.logoUrl)}" alt="Logo" style="height:26px;max-width:150px;object-fit:contain" onerror="this.outerHTML='Event Intelligence<span style=&quot;color:var(--tenant-accent)&quot;> Platform</span>'">`
+      : `Event Intelligence<span style="color:var(--tenant-accent)"> Platform</span>`;
+  }
   const pods = ZXStore.pods(t.id), meetings = ZXStore.meetings(t.id), sched = ZXStore.schedule(t.id);
   const pend = meetings.filter(m => m.hitlStatus === "PendingApproval").length;
 
@@ -409,6 +443,7 @@ function render() {
       <div class="form-group"><label class="form-label">Header Text</label><input class="form-input" id="apHeader" value="${zxesc(t.headerText)}"></div>
       <div class="form-group"><label class="form-label">Footer Text</label><input class="form-input" id="apFooter" value="${zxesc(t.footerText)}"></div>
       <div class="form-group"><label class="form-label">Brand Color</label><input type="color" id="apColor" value="${t.primaryColor}"></div>
+      <div class="form-group full"><label class="form-label">Logo (URL)</label><input class="form-input" id="apLogo" value="${zxesc(t.logoUrl || "")}" placeholder="https://example.com/logo.png — leave empty for the default mark"><div class="flag-desc">Shown in the Guest Portal header, admin sidebar and public displays.</div></div>
       <div class="form-group"><label class="form-label">Event Theme</label>
         <select class="form-select" id="apTheme" ${lockTheme ? "disabled" : ""}>
           <option value="dark" ${t.tenantTheme==="dark"?"selected":""}>Dark</option>
@@ -421,7 +456,7 @@ function render() {
       <div class="form-group full"><button class="btn btn-blue" id="apSave">Save Appearance</button></div>
     </div>`;
   document.getElementById("apSave").onclick = () => {
-    ZXStore.updateTenant(t.id, { headerText: apHeader.value, footerText: apFooter.value, primaryColor: apColor.value });
+    ZXStore.updateTenant(t.id, { headerText: apHeader.value, footerText: apFooter.value, primaryColor: apColor.value, logoUrl: apLogo.value.trim() });
     if (!lockTheme) { ZXStore.updateTenant(t.id, { tenantTheme: apTheme.value }); zxStoreSetTheme(apTheme.value); }
     zxToast("Appearance saved", "success");
   };
@@ -475,22 +510,6 @@ ZXStore.subscribe(() => {
   const pend = ZXStore.meetings().filter(m => m.hitlStatus === "PendingApproval").length;
   ZXMenu.setBadge("pend", pend || null);
 });
-// Mobile / narrow screens: Menu toggle button + "M" shortcut
-(function wireMenuToggle() {
-  const btn = document.getElementById("btnMenuToggle");
-  if (!btn) return;
-  const toggle = (force) => {
-    const nav = document.getElementById("caMenu");
-    if (!nav) return;
-    const open = force !== undefined ? force : !nav.classList.contains("open");
-    nav.classList.toggle("open", open);
-    btn.setAttribute("aria-expanded", String(open));
-  };
-  btn.onclick = () => toggle();
-  document.addEventListener("keydown", e => {
-    if ((e.key === "m" || e.key === "M") && !/input|select|textarea/i.test((document.activeElement || {}).tagName || "")) toggle();
-  });
-})();
 </script>
 </body>
 </html>
