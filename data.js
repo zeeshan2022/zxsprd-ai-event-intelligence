@@ -134,7 +134,7 @@ zxApplyViewAppIdentity();
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", zxApplyViewAppIdentity);
 
 const ZXSeed = {
-  version: 10, // Final Demo schema v10 — adds ended-meeting records for Airport Show, HR Summit, Accessabilities, WETEX, Najah and Arablab+ (mtg-103..mtg-108); v9 multi-tenant event portfolio (Airport Show, HR Summit, Accessabilities, WETEX, Najah, Arablab+), long realistic transcripts, per-category demo reset, state import/export
+  version: 11, // Demo schema v11 — adds ended-meeting records for Airport Show, HR Summit, Accessabilities, WETEX, Najah and Arablab+ (mtg-103..mtg-108); v9 multi-tenant event portfolio (Airport Show, HR Summit, Accessabilities, WETEX, Najah, Arablab+), long realistic transcripts, per-category demo reset, state import/export
   activeRole: "SUPER_ADMIN",
   activeTenantId: "tenant-wps-2026",
   activePodId: "POD-01",
@@ -525,12 +525,35 @@ const ZXSeed = {
       hostName: "معالي سيف المنصوري", status: "Ended", hitlStatus: "PendingApproval",
       guests: [{ id: "g1", badgeId: "BDG-9941", name: "فاطمة الظاهري", email: "fatima@zxsprd.ae", phone: "+971500000000", role: "VIP", checkedInAt: "08:55 AM" }],
       rawTranscript: [
-        { time: "09:00:12", speaker: "معالي سيف المنصوري", text: "أهلاً بالجميع. نستعرض اليوم مصفوفة الامتثال للسحابة السيادية للبيانات." },
-        { time: "09:02:45", speaker: "خالد الشامسي", text: "كيف يتحقق التدمير الآلي للبيانات خلال ثلاثين يوماً من الامتثال للأنظمة الوطنية؟" },
-        { time: "09:05:10", speaker: "معالي سيف المنصوري", text: "يعتمد النظام على التقطيع التشفيري؛ بمجرد إغلاق النافذة تُتلف المفاتيح نهائياً." }
+        { time: "09:00:12", speaker: "معالي سيف المنصوري", text: "أهلاً بالجميع. نفتح اليوم الجلسة المغلقة لمراجعة مصفوفة الامتثال للسحابة السيادية قبل رفعها لمجلس الأمن الوطني الأسبوع القادم." },
+        { time: "09:01:48", speaker: "فاطمة الظاهري", text: "شكراً معالي الوزير. أبدأ بملاحظة سريعة: ثلاثة من بنود المصفوفة ما تزال تحمل عبارة (قيد المراجعة) منذ دورة يوليو، وهذا يضعف موقفنا أمام المدققين." },
+        { time: "09:03:25", speaker: "معالي سيف المنصوري", text: "أتفق تماماً. لذلك طلبت حضور الفرق الفنية اليوم. خالد، كيف يتحقق التدمير الآلي للبيانات خلال ثلاثين يوماً من انتهاء الغرض وفق الأنظمة الوطنية؟" },
+        { time: "09:05:10", speaker: "خالد الشامسي", text: "نعتمد التقطيع التشفيري؛ عند إغلاق نافذة الاحتفاظ تُتلف المفاتيح نهائياً فلا تبقى أي نسخة قابلة للفك. لكن لدي تحفّظ: عملية الإتلاف نفسها تحتاج إثباتاً مستقلاً وليس سجلاً داخلياً فقط." },
+        { time: "09:07:02", speaker: "فاطمة الظاهري", text: "اقترح مفتاحاً عاماً للإثبات يرسل تقرير إتلاف موقّع إلى الجهة الرقابية خلال أربع وعشرين ساعة من التنفيذ. هذا يرفع عن كاهلنا عبء التدقيق اللاحق." },
+        { time: "09:08:55", speaker: "معالي سيف المنصوري", text: "جيد. وماذا عن البيانات الوصفية؟ كثير من التسريبات لا تأتي من المحتوى بل من الميتاداتا: من كلّم من، ومتى، وأين." },
+        { time: "09:10:40", speaker: "خالد الشامسي", text: "الميتاداتا تخضع حالياً لنفس سياسة الاحتفاظ، لكن ليس لنفس سياسة الوصول. أنصح بفصل أدوار الضباط: من يكتب التقارير لا يجب أن يرى سجلات الاتصالات الكاملة." },
+        { time: "09:12:18", speaker: "فاطمة الظاهري", text: "هذا يقودنا لبند الصلاحيات. لدينا أربعة عشر ضابطاً بصلاحية مدير النظام على العينة السيادية. الرقم مرتفع جداً ولا يوجد مبرر توثيقي لسبعة منهم على الأقل." },
+        { time: "09:14:05", speaker: "معالي سيف المنصوري", text: "قلّصوها إلى أربعة خلال أسبوع، والباقي صلاحية قراءة محدودة بالتذكرة. وأريد تقريراً بما تم سحبه ولماذا." },
+        { time: "09:15:52", speaker: "خالد الشامسي", text: "مباشرةً سيدي. نقطة ثانية مهمة: نماذج الذكاء الاصطناعي المساعدة التي تجري فرق التحليل اختباراتها — أين تُخزَّن الاستعلامات أثناء التجربة؟" },
+        { time: "09:17:38", speaker: "فاطمة الظاهري", text: "الاستعلامات تُسجَّل مؤقتاً في منطقة عازلة داخل الدولة، وتُمسح آلياً بعد سبعة أيام. لكن لا يوجد حتى الآن اعتماد رسمي للنموذج نفسه من هيئة الاعتماد الوطنية." },
+        { time: "09:19:20", speaker: "معالي سيف المنصوري", text: "فلا تُوسَّع التجربة قبل الاعتماد. اجعلوا نطاقها الحالي مقصوراً على المسودات غير السرّية، وقدّموا ملف الاعتماد خلال أسبوعين." },
+        { time: "09:21:02", speaker: "خالد الشامسي", text: "أؤيد، وأضيف ضماناً تقنياً: حجب إدخال أي رمز سري أو رقم قضية سرّي إلى النموذج عبر مرشح تلقائي قبل الإرسال، مع تنبيه الضابط." },
+        { time: "09:22:50", speaker: "فاطمة الظاهري", text: "المرشح سهل التنفيذ على مستوى البوابة. الأهم من ذلك: نتائج النماذج يجب ألا تُستخدم كدليل مباشر في المحاكم، بل كمساعدة تحليلية فقط — وهذا يُكتب صراحة في دليل الاستخدام." },
+        { time: "09:24:35", speaker: "معالي سيف المنصوري", text: "سجل هذا كمبدأ أساسي. الآن بند الطوارئ: ماذا لو تعطّلت السحابة السيادية أثناء حدث أمني كبير؟ هل خطة التعافي مجرّبة فعلاً؟" },
+        { time: "09:26:20", speaker: "خالد الشامسي", text: "جرّبناها مرة واحدة في مايو على مستوى منطقة واحدة فقط. زمن الاسترجاع كان أربع ساعات وسبع عشرة دقيقة — أعلى بكثير من الهدف المحدد بساعتين." },
+        { time: "09:28:05", speaker: "فاطمة الظاهري", text: "السبب كان تسلسل استرجاع قواعد البيانات. أقترح بيئة ساخنة موازية في موقع جغرافي ثانٍ داخل الدولة، مع تحويل تدريبي ربع سنوي كامل بدل الاختزال الجزئي." },
+        { time: "09:29:50", speaker: "معالي سيف المنصوري", text: "قدّموا التكلفة والمقارنة مع خيار التحويل اليدوي. إن كانت البيئة الساخنة تعالج فجوة الأربع ساعات فهي تستحق المناقشة مع المالية." },
+        { time: "09:31:35", speaker: "خالد الشامسي", text: "عنصر أخير لا يقل حساسية: وصول المقاولين. لدينا أحد عشر حساب مقاول نشط، آخر مراجعة لأعمار كلمات المرور كانت قبل خمسة أشهر." },
+        { time: "09:33:22", speaker: "فاطمة الظاهري", text: "أوصي بإلغاء الحسابات الدائمة للمقاولين كلياً والتحول لتفويض جلسة واحد مدته أربع ساعات كحد أقصى، مشروط بموافقة ضابط أمن لكل جلسة." },
+        { time: "09:35:08", speaker: "معالي سيف المنصوري", text: "قرّر: لا حسابات دائمة للمقاولين بعد نهاية أكتوبر. ونقطة أخيرة قبل الإغلاق — سجلات الأحداث الحالية تُحفظ تسعين يوماً. أرى أنها قصيرة أمام متطلبات التحقيق الجنائي الرقمي." },
+        { time: "09:36:52", speaker: "خالد الشامسي", text: "أوافق، لكن التخزين الكامل مكلف. الحل الوسط: تسعة أشهر للأحداث الحرجة أمنياً، وتسعون يوماً للبقية، مع أرشفة مضغوطة موقّقة." },
+        { time: "09:38:30", speaker: "فاطمة الظاهري", text: "مقبول بشرط أن تكون الأرشفة قابلة للبحث مباشرة للنيابة دون عملية استرجاع يدوي تستغرق أياماً." },
+        { time: "09:39:45", speaker: "معالي سيف المنصوري", text: "إذاً نُخرج المصفوفة بنسخة نهائية بهذه القرارات. فاطمة، جهّزي ملخصاً تنفيذياً من صفحتين لمجلس الأمن الوطني، وخالد، قائمة المهام التقنية قبل الخميس." },
+        { time: "09:40:20", speaker: "فاطمة الظاهري", text: "حاضر معالي الوزير، سيكون الملخص جاهزاً صباح الأحد بإذن الله." },
+        { time: "09:40:48", speaker: "معالي سيف المنصوري", text: "شكراً للجميع. تُرفع هذه الجلسة إلى مسار الموافقة النهائية قبل النشر الداخلي." }
       ],
-      aiSummary: "تناولت الجلسة امتثال السحابة السيادية للبيانات مع التركيز على آلية التدمير الآلي للبيانات خلال ثلاثين يوماً باستخدام التقطيع التشفيري لضمان الامتثال للأنظمة الوطنية.",
-      sentimentScore: 85, actionItems: ["مراجعة وثائق التقطيع التشفيري.", "التحقق من سجلات الإتلاف."]
+      aiSummary: "ترأس معالي سيف المنصوري جلسة مغلقة لمراجعة مصفوفة الامتثال للسحابة السيادية قبل رفعها لمجلس الأمن الوطني. أبرز القرارات: (1) اعتماد إثبات إتلاف مستقل بتقرير موقّع للجهة الرقابية خلال ٢٤ ساعة بدلاً من السجلات الداخلية فقط؛ (2) فصل أدوار الضباط والحد من صلاحية مدير النظام من أربعة عشر ضابطاً إلى أربعة خلال أسبوع؛ (3) تجميد توسّع تجارب النماذج المساعدة حتى الحصول على اعتماد هيئة الاعتماد الوطنية، مع قصرها على المسودات غير السرّية وكتابة مبدأ عدم استخدام مخرجات النماذج كأدلة محاكم مباشرة في دليل الاستخدام؛ (4) إلزام بوابة بمرشح تلقائي يمنع إدخال الرموز السرية وأرقام القضايا السرّية للنموذج؛ (5) معالجة ضعف خطة التعافي (استرجاع فعلي ٤:١٧ مقابل هدف ساعتين) بدراسة بيئة ساخنة موازية في موقع ثانٍ داخل الدولة مع تحويل تدريبي ربع سنوي كامل؛ (6) إلغاء جميع حسابات المقاولين الدائمة (١١ حساباً نشطاً) والتحول لتفويض جلسة واحد بأربع ساعات بموافقة ضابط أمن؛ (7) تعديل حفظ السجلات إلى تسعة أشهر للأحداث الحرجة أمنياً مع أرشفة مضغوطة قابلة للبحث المباشر من النيابة.",
+      sentimentScore: 82, actionItems: ["تقليص صلاحيات مدير النظام إلى أربعة ضباط ورفع تقرير بالسحوبات وأسبابها خلال أسبوع.", "إعداد ملف اعتماد نموذج الذكاء الاصطناعي المساعد لهيئة الاعتماد الوطنية خلال أسبوعين.", "دراسة تكلفة البيئة الساخنة الموازية ومقارنتها بخيار التحويل اليدوي قبل العرض على المالية.", "إلغاء الحسابات الدائمة للمقاولين مع تطبيق تفويض الجلسة الواحد قبل نهاية أكتوبر.", "تحديث سياسة حفظ السجلات (٩ أشهر للحرجة + أرشفة قابلة للبحث) وصياغة دليل استخدام النماذج.", "إعداد ملخص تنفيذي من صفحتين لمجلس الأمن الوطني (فاطمة الظاهري — صباح الأحد)."]
     },
     {
       id: "mtg-102", tenantId: "tenant-wps-2026", podId: "POD-01",
@@ -538,11 +561,28 @@ const ZXSeed = {
       hostName: "العقيد ماجد السويدي", status: "Ended", hitlStatus: "Approved",
       guests: [],
       rawTranscript: [
-        { time: "08:15:40", speaker: "العقيد ماجد السويدي", text: "نحتاج دليل استجابة مشترك للحوادث يستهدف البنية التحتية للموانئ." },
-        { time: "08:22:03", speaker: "نورة القحطاني", text: "متفقون. لنبدأ تجريب مشاركة الإشارات الفورية بين مراكز العمليات في دبي وأبوظبي." }
+        { time: "08:15:40", speaker: "العقيد ماجد السويدي", text: "افتُتحت هذه الجلسة الطارئة بسبب سلسلة هجمات الفدية على ثلاثة مشغّلي موانئ إقليميين خلال أسبوعين. نحتاج دليلاً مشتركاً للاستجابة وخطوات فورية." },
+        { time: "08:17:25", speaker: "نورة القحطاني", text: "متفقون. أولاً الأرقام: الهجمات الثلاث استخدمت العينة نفسها — تصيّد عبر رسائل تزعم تحديث جداول الشحن، ثم تسلّل عبر حسابات VPN غير محمية بالمصادقة الثنائية." },
+        { time: "08:19:10", speaker: "العقيد ماجد السويدي", text: "وهذا يعني أن الدفاع بسيط نظرياً لكنه مؤسسياً مهمل. كم نسبة الحسابات الإدارية بلا مصادقة ثنائية لدى المشغّلين الثلاثة؟" },
+        { time: "08:21:02", speaker: "نورة القحطاني", text: "اثنان من كل ثلاثة تقريباً في المشغّل المتضرر الأول، وربعها في الثاني. الثالث كان مستهدفاً لكن الاعتراض نجح لأن بوابته البريدية طبّقت عزل الروابط." },
+        { time: "08:23:00", speaker: "العقيد ماجد السويدي", text: "اذكري ذلك كمعيار ناجح. الخطوة الثالثة: هل رصدتم نمطاً مشتركاً في توقيت التنفيذ؟" },
+        { time: "08:24:48", speaker: "نورة القحطاني", text: "أعتذر، أكمل بالعربية: الخطوة الثالثة، نعم — كلها بدأت بعد منتصف الليل بتوقيت المنطقة، خلال مناوبات الوردية الليلية حيث يقل المراقبون البشريون إلى شخصين." },
+        { time: "08:26:40", speaker: "العقيد ماجد السويدي", text: "إذاً التوصية التشغيلية الأولى: تعزيز المراقبة الآلية الليلية بكاشفات سلوكية، لا مجرد توقيعيات. متى يمكن تشغيل التجريب؟" },
+        { time: "08:28:22", speaker: "نورة القحطاني", text: "جاهز خلال أسبوعين على مشغّل واحد متطوع، شرط أن نتشارك إشارات التهديد فوراً بين مركزَي عمليات دبي وأبوظبي بدل تبادل يومي مؤجل." },
+        { time: "08:30:10", speaker: "العقيد ماجد السويدي", text: "موافق على المشاركة الفورية، لكن احرصي على تصنيف الإشارات: بعض المصادر التجارية تسمح بالمشاركة داخل الدولة فقط، والمؤشرات المشتركة دولياً تحتاج إذناً قانونياً." },
+        { time: "08:32:05", speaker: "نورة القحطاني", text: "نقطة دقيقة. سأطلب من المستشار القانوني وضع مصفوفة تصنيف ثلاثية المستويات: محلي، خليجي، ودولي، مع قناة إسناد لكل مستوى." },
+        { time: "08:34:00", speaker: "العقيد ماجد السويدي", text: "وبخصوص التتبع: هل حددنا الجهة المنفذة؟ تقارير الحوادث تشير لوسيط تفاوض واحد يظهر في الثلاث حالات." },
+        { time: "08:36:10", speaker: "نورة القحطاني", text: "نعم، عنوان الدفع ونمط الوسيط يتطابقان بنسبة عالية، لكن هذا لا يعني مجموعة واحدة بالضرورة — قد يكون عدة عملاء يبيعون لنفس الوسيط. لا أستنتج قبل تأكيد السلسلة." },
+        { time: "08:38:00", speaker: "العقيد ماجد السويدي", text: "التزم الحذر أمام الإعلام. ماذا عن البلاغات المقدمة للعملة المشفرة؟ كم قيمة فُدية دُفعت فعلياً؟" },
+        { time: "08:40:05", speaker: "نورة القحطاني", text: "لم يدفع أي مشغّل. اثنان استعادا من النسخ الاحتياطية خلال ست وثماني ساعات، والثالث ما يزال يعيد بناء بيئات التشغيل — وهذه هي المشكلة الحقيقية: النسخ موجودة لكنها غير مختبرة للاستعادة." },
+        { time: "08:42:00", speaker: "العقيد ماجد السويدي", text: "إذاً بند إلزامي في الدليل المشترك: اختبار استيراد دوري موثّق شهرياً، وإلا لا تعتبر منظومة نسخك صالحة. ومن يملك الدليل بعد الاتفاق؟" },
+        { time: "08:44:02", speaker: "نورة القحطاني", text: "أقترح لجنة ثلاثية من المركزين وهيئة الموانئ بمسودة مشتركة، ومراجعة كل ستة أشهر. وأضيف تمرين طاولة نصفي سنوي يحاكي هجوم ميناء مزدوج." },
+        { time: "08:46:00", speaker: "العقيد ماجد السويدي", text: "جيد. جهّزا مسودة الدليل خلال عشرة أيام لعرضها على قادة الأجهزة. وأي اتصال مباشر بالانتربول عبر قناة التعاون القائمة لإبلاغ الوسيط المشترك." },
+        { time: "08:48:05", speaker: "نورة القحطاني", text: "سيُرسل البلاغ اليوم عبر القناة الخضراء مع حزمة الأدلة المجهّلة. وأوصي بتحذير عاجل للمشغّلين الآخرين بنفس نمط رسالة التصيّد." },
+        { time: "08:49:40", speaker: "العقيد ماجد السويدي", text: "صدرِا التحذير خلال ساعة بصيغة تشغيلية واضحة. شكراً نورة — الجلسة تُرفع للمسار المعتمد، والحالة Approved." }
       ],
-      aiSummary: "اتفق المشاركون على صياغة دليل مشترك للاستجابة لحوادث البنية التحتية للموانئ، وعلى بدء تجربة مشاركة الإشارات الفورية بين مركزي عمليات دبي وأبوظبي.",
-      sentimentScore: 72, actionItems: ["إعداد الدليل المشترك.", "جدولة تكامل مراكز العمليات."]
+      aiSummary: "عُقدت جلسة طارئة بعد ثلاث هجمات فدية على مشغّلي موانئ إقليميين خلال أسبوعين. كشفت التحقيقات نمطاً موحداً: تصيّد برسائل مزيفة حول تحديث جداول شحن، ثم تسلل عبر حسابات VPN إدارية بلا مصادقة ثنائية (ثلثا الحسابات الإدارية لدى أول مشغّل)، وتنفيذ ليلي خلال مناوبات ضعيفة المراقبة. لم تُدفع أي فدية؛ استعاد مشغّلان الخدمة خلال ٦–٨ ساعات بينما ما يزال الثالث يعيد البناء لأن نسخاته الاحتياطية غير مختبرة الاستعادة. القرارات: تفعيل مشاركة فورية لإشارات التهديد بين مركزَي عمليات دبي وأبوظبي مع مصفوفة تصنيف ثلاثية (محلي/خليجي/دولي) لقواعد الإسناد القانوني؛ تشغيل كاشفات سلوكية آلية ليلاً خلال أسبوعين على مشغّل متطوع؛ إلزام الدليل المشترك باختبار شهري موثّق لاستعادة النسخ؛ ملكية الدليل للجنة ثلاثية (المركزان + هيئة الموانئ) مع تمرين طاولة نصفي سنوي؛ إبلاغ الانتربول عبر قناة التعاون بحزمة أدلة مجهّلة (عنوان الدفع والوسيط يتطابقان لكن لا يُستنتج توحيد المجموعة قبل تأكيد السلسلة)؛ وإصدار تحذير عاجل للمشغّلين بنمط رسالة التصيّد خلال ساعة.",
+      sentimentScore: 68, actionItems: ["إصدار تحذير تشغيلي عاجل لجميع مشغّلي الموانئ خلال ساعة.", "تفعيل مشاركة الإشارات الفورية بين مركزَي دبي وأبوظبي مع مصفوفة التصنيف القانوني.", "تشغيل التجريب السلوكي الليلي على مشغّل متطوع خلال أسبوعين.", "مسودة الدليل المشترك للاستجابة خلال عشرة أيام وعرضها على قادة الأجهزة.", "إلزام اختبار شهري موثّق لاستعادة النسخ الاحتياطية ضمن الدليل.", "إبلاغ الانتربول عبر قناة التعاون وحفظ حزمة الأدلة المجهّلة."]
     }
   ],
 
@@ -594,9 +634,12 @@ const ZXSeed = {
   },
 
   sponsors: [
-    { id: "sp-1", name: "البنك الأهلي", logoUrl: "", message: "زوروا الجناح ٤٢ لتجربة الحلول المصرفية المدعومة بالذكاء الاصطناعي." },
-    { id: "sp-2", name: "اتصالات", logoUrl: "", message: "شبكة الجيل الخامس الحصرية للفعالية تغطي جميع القاعات." },
-    { id: "sp-3", name: "مجموعة الإمارات الجوية", logoUrl: "", message: "سافر معنا — خصومات خاصة لجميع المشاركين في القمة." }
+    { id: "sp-1", tenantId: "tenant-wps-2026", name: "البنك الأهلي", logoUrl: "", message: "زوروا الجناح ٤٢ لتجربة الحلول المصرفية المدعومة بالذكاء الاصطناعي." },
+    { id: "sp-2", tenantId: "tenant-wps-2026", name: "اتصالات", logoUrl: "", message: "شبكة الجيل الخامس الحصرية للفعالية تغطي جميع القاعات." },
+    { id: "sp-3", tenantId: "tenant-wps-2026", name: "مجموعة الإمارات الجوية", logoUrl: "", message: "سافر معنا — خصومات خاصة لجميع المشاركين في القمة." },
+    { id: "sp-4", tenantId: "tenant-airport-show", name: "SkyLine Retail Group", logoUrl: "", message: "Visit Stand 12 — duty-free revenue intelligence demos hourly." },
+    { id: "sp-5", tenantId: "tenant-hr-summit", name: "TalentGate AI", logoUrl: "", message: "Book a live Emiratisation analytics demo at Booth 7." },
+    { id: "sp-6", tenantId: "tenant-arablab", name: "GulfLab Instruments", logoUrl: "", message: "New ICP-MS platform launch on Thursday — Hall 5." }
   ],
 
   broadcasts: { internalPod: [], allScreens: [], guestPortal: [], loggedInUsers: [] },
@@ -610,9 +653,11 @@ const ZXSeed = {
   ],
 
   guestProfiles: [
-    { id: "usr-1", badgeId: "BDG-9941", name: "فاطمة الظاهري", email: "fatima@zxsprd.ae", phone: "+971500000000", interests: ["حوكمة الذكاء الاصطناعي", "أمن السحابة"], joinedSessions: ["mtg-101"] },
-    { id: "usr-2", badgeId: "BDG-4823", name: "خالد الشامسي", email: "khaled@zxsprd.ae", phone: "+971501112233", interests: ["الاستدلال على الحافة", "الأمن السيبراني"], joinedSessions: ["mtg-102"] },
-    { id: "usr-3", badgeId: "BDG-7702", name: "نورة القحطاني", email: "noura@zxsprd.ae", phone: "+971504445566", interests: ["تحليلات الحدود", "المدن الذكية"], joinedSessions: [] }
+    { id: "usr-1", lang: "ar", badgeId: "BDG-9941", name: "فاطمة الظاهري", email: "fatima@zxsprd.ae", phone: "+971500000000", interests: ["حوكمة الذكاء الاصطناعي", "أمن السحابة"], joinedSessions: ["mtg-101"] },
+    { id: "usr-2", lang: "ar", badgeId: "BDG-4823", name: "خالد الشامسي", email: "khaled@zxsprd.ae", phone: "+971501112233", interests: ["الاستدلال على الحافة", "الأمن السيبراني"], joinedSessions: ["mtg-102"] },
+    { id: "usr-3", lang: "ar", badgeId: "BDG-7702", name: "نورة القحطاني", email: "noura@zxsprd.ae", phone: "+971504445566", interests: ["تحليلات الحدود", "المدن الذكية"], joinedSessions: [] },
+    { id: "usr-4", lang: "en", badgeId: "BDG-7710", name: "Rashid Al Suwaidi", email: "rashid@gcaa.gov.ae", phone: "+971501234567", interests: ["Biometrics & Digital Identity", "Smart Airports"], joinedSessions: ["mtg-103"] },
+    { id: "usr-5", lang: "en", badgeId: "BDG-8802", name: "Omar Benali", email: "omar.b@talent.gov.ae", phone: "+971527788990", interests: ["AI Governance", "Edge Inference"], joinedSessions: ["mtg-104"] }
   ],
 
   tempGuestSessions: [],
@@ -628,9 +673,15 @@ const ZXSeed = {
   ]
 };
 
+/* Demo-data language tags: WPS Summit + Accessabilities + Najah are Arabic
+   events; everything else in the demo portfolio is English. English interest
+   topics mirror the Arabic ones for the English-only reset. */
+const AR_TENANTS = ["tenant-wps-2026", "tenant-accessabilities", "tenant-najah"];
+const EN_INTEREST_TOPICS = ["AI Governance", "Cybersecurity", "Cloud Security", "Edge Inference", "Border Analytics", "Smart Cities", "Blockchain", "IoT", "Big Data", "Generative AI", "Biometrics & Digital Identity", "Smart Airports"];
+
 /* ---------------- STORE ENGINE ---------------- */
 const ZXStore = (() => {
-  const KEY = "zxsprd-global-state-v10";
+  const KEY = "zxsprd-global-state-v11";
   const clone = (o) => JSON.parse(JSON.stringify(o));
   const listeners = new Set();
   let channel = null, storageOK = true;
@@ -640,7 +691,12 @@ const ZXStore = (() => {
       const raw = localStorage.getItem(KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed && parsed.version === ZXSeed.version) return { ...clone(ZXSeed), ...parsed };
+        if (parsed && typeof parsed === "object") {
+          // Overlay the saved snapshot on the LATEST seed shape so that fields
+          // added in newer schema versions always exist (fixes stale-cache gaps).
+          const merged = { ...clone(ZXSeed), ...parsed, version: ZXSeed.version };
+          return merged;
+        }
       }
     } catch (e) { storageOK = false; }
     return clone(ZXSeed);
@@ -656,7 +712,7 @@ const ZXStore = (() => {
 
   try {
     if ("BroadcastChannel" in window) {
-      channel = new BroadcastChannel("zxsprd-state-v10");
+      channel = new BroadcastChannel("zxsprd-state-v11");
       channel.onmessage = (e) => { if (e.data?.type === "state") { state = e.data.state; notify("cross-tab"); } };
     }
   } catch (e) {}
@@ -686,6 +742,7 @@ const ZXStore = (() => {
     pods(tid = state.activeTenantId) { return state.pods.filter(p => p.tenantId === tid); },
     schedule(tid = state.activeTenantId) { return state.schedule.filter(s => s.tenantId === tid); },
     meetings(tid = state.activeTenantId) { return state.meetings.filter(m => m.tenantId === tid); },
+    sponsors(tid = state.activeTenantId) { return (state.sponsors || []).filter(sp => !sp.tenantId || sp.tenantId === tid); },
     apiKeys(tid = state.activeTenantId) { return state.apiKeys.filter(k => k.tenantId === tid); },
     t(key) { return (ZX_I18N[state.uiLang] || ZX_I18N["en-US"])[key] || ZX_I18N["en-US"][key] || key; },
     feature(name) { return !!state.featureFlags[name]; },
@@ -993,26 +1050,56 @@ const ZXStore = (() => {
       this.set({ tempGuestSessions: (state.tempGuestSessions || []).map(s => s.id === sgId ? { ...s, joinedSessions: [...new Set([...s.joinedSessions, refId])] } : s) });
     },
 
-    reset() { try { sessionStorage.removeItem("zx-temp-guest"); } catch (_) {} state = clone(ZXSeed); persist(); try { channel?.postMessage({ type: "state", state }); } catch (_) {} notify("reset"); },
+    reset() { this.resetDemoCategory("all"); },
 
-    /* Category-scoped demo resets (used by the three Reset Demo Data buttons):
-       "ar" — Arabic-only meetings, "en" — English-only meetings, "all" — full seed. */
+        /* ---- DEMO DATA LANGUAGE ENGINE (single source of truth) ----
+       Every user-addable demo record carries lang: "ar" | "en", or inherits it
+       from its tenant (AR_TENANTS above). The three Reset Demo Data buttons just
+       re-seed EVERYTHING — meetings & transcripts, schedule, sponsors, guest
+       profiles / demo users (e.g. فاطمة الظاهري), interest topics, API keys and
+       tenant settings — filtered to one language:
+         "ar" → Arabic only   "en" → English only   "all" → Arabic + English */
+    _langOf(rec) { return rec.lang || (AR_TENANTS.includes(rec.tenantId) ? "ar" : "en"); },
+    _seedFor(category) {
+      const fresh = clone(ZXSeed);
+      if (category === "all") return fresh;
+      const want = category; // "ar" or "en"
+      const meetings = fresh.meetings.filter(m => this._langOf(m) === want);
+      return {
+        ...fresh,
+        meetings,
+        schedule: fresh.schedule.filter(x => this._langOf(x) === want),
+        sponsors: fresh.sponsors.filter(x => this._langOf(x) === want),
+        guestProfiles: fresh.guestProfiles.filter(g => this._langOf(g) === want),
+        interestTopics: want === "ar" ? fresh.interestTopics : EN_INTEREST_TOPICS,
+        apiKeys: fresh.apiKeys.filter(k => this._langOf(k) === want),
+        tenantSettings: Object.fromEntries(Object.entries(fresh.tenantSettings).filter(([tid]) => (AR_TENANTS.includes(tid) ? "ar" : "en") === want)),
+        tempGuestSessions: [],
+        activeTenantId: want === "ar" ? "tenant-wps-2026" : "tenant-airport-show",
+        activePodId: want === "ar" ? "POD-01" : "POD-05"
+      };
+    },
     resetDemoCategory(category) {
       try { sessionStorage.removeItem("zx-temp-guest"); } catch (_) {}
-      const fresh = clone(ZXSeed);
-      if (category === "all") { state = fresh; }
-      else {
-        const AR_IDS = ["mtg-101", "mtg-102", "mtg-105", "mtg-107"];   // Arabic transcripts (incl. فاطمة الظاهري sessions)
-        const keepIds = category === "ar" ? AR_IDS : fresh.meetings.filter(m => !AR_IDS.includes(m.id)).map(m => m.id);
-        state = { ...state, meetings: fresh.meetings.filter(m => keepIds.includes(m.id)) };
-      }
+      state = this._seedFor(category);
       persist();
       try { channel?.postMessage({ type: "state", state }); } catch (_) {}
       log("admin", `Reset demo data (${category})`);
       notify("reset");
     },
+    clearAllDemoData() {
+      try { sessionStorage.removeItem("zx-temp-guest"); } catch (_) {}
+      const fresh = clone(ZXSeed);
+      state = { ...fresh,
+        meetings: [], schedule: [], sponsors: [], guestProfiles: [], tempGuestSessions: [], documents: [], voiceQueries: [],
+        auditLog: [{ ts: new Date().toISOString().slice(0, 16).replace("T", " "), actor: "admin", action: "Cleared all demo data" }]
+      };
+      persist();
+      try { channel?.postMessage({ type: "state", state }); } catch (_) {}
+      notify("reset");
+    },
 
-    addSponsor(data) { this.set({ sponsors: [...state.sponsors, { ...data, id: `sp-${Date.now()}` }] }); },
+    addSponsor(data) { this.set({ sponsors: [...state.sponsors, { tenantId: state.activeTenantId, ...data, id: `sp-${Date.now()}` }] }); },
     removeSponsor(id) { this.set({ sponsors: state.sponsors.filter(s => s.id !== id) }); },
 
     addGuestProfile(data) {
@@ -1049,10 +1136,10 @@ const ZXStore = (() => {
       try {
         const obj = typeof jsonOrObj === "string" ? JSON.parse(jsonOrObj) : jsonOrObj;
         if (!obj || typeof obj !== "object") return false;
-        // sanity: must look like one of our snapshots
+        // sanity: must look like one of our snapshots (version is not enforced —
+        // any export from this app can be imported, then re-stamped to current)
         if (!obj.tenants && !obj.meetings && !obj.version) return false;
-        obj.version = ZXSeed.version; // re-stamp so the restored state loads after refresh
-        state = { ...clone(ZXSeed), ...obj };
+        state = { ...clone(ZXSeed), ...obj, version: ZXSeed.version };
         persist();
         try { channel?.postMessage({ type: "state", state }); } catch (_) {}
         log("admin", "Imported state snapshot (all data restored)");

@@ -63,9 +63,10 @@
         <div class="panel-subtitle">All views below operate inside the selected tenant (white-label branding, pods &amp; data).</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <button class="btn btn-ghost" id="btnResetAr" title="Reset demo data to Arabic-only meetings & content (includes the فاطمة الظاهري demo guest)">Reset Demo Data · العربية</button>
-        <button class="btn btn-ghost" id="btnResetBoth" title="Reset demo data to the full bilingual (Arabic & English) dataset">Reset Demo Data · AR + EN</button>
-        <button class="btn btn-ghost" id="btnResetEn" title="Reset demo data to English-only meetings & content">Reset Demo Data · English</button>
+        <button class="btn btn-ghost" id="btnResetAr" title="Reset ALL demo data (meetings, schedule, sponsors, pods, approvals, interests, ad-hoc sessions & users like فاطمة الظاهري) to the Arabic-only dataset">Reset Demo Data · عربي فقط</button>
+        <button class="btn btn-ghost" id="btnResetBoth" title="Reset ALL demo data to the full bilingual (Arabic & English) dataset">Reset Demo Data · عربي + إنجليزي</button>
+        <button class="btn btn-ghost" id="btnResetEn" title="Reset ALL demo data (meetings, schedule, sponsors, pods, approvals, interests, ad-hoc sessions & users) to the English-only dataset">Reset Demo Data · English Only</button>
+        <button class="btn btn-red" id="btnClearDemo" title="Remove every demo record: meetings, transcripts, schedule, sponsors, approvals, interests and users — leaves an empty platform with tenants &amp; pods only">🗑 Clear All Demo Data</button>
       </div>
     </div>
     <div class="launch-grid" id="tenantGrid"></div>
@@ -162,6 +163,13 @@ Object.entries(_resetMap).forEach(([id, cat]) => {
     }
   };
 });
+/* Clear All Demo Data — empties every user-addable collection */
+const _clearBtn = document.getElementById("btnClearDemo");
+if (_clearBtn) _clearBtn.onclick = () => {
+  if (confirm("Clear ALL demo data? This removes every meeting, transcript, scheduled session, sponsor, approval, interest and demo user. Tenants and pods remain. You can restore any dataset with the Reset buttons or reload a saved snapshot via Import State.")) {
+    ZXStore.clearAllDemoData(); location.reload();
+  }
+};
 ZXStore.subscribe(() => { paintTenants(); paintPulse(); });
 
 // Scroll-reveal animation for cards (graceful fallback if unsupported)

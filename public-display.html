@@ -179,7 +179,7 @@ function renderContent() {
 
   // Sponsors (respect injection flag)
   document.getElementById("sponsorStrip").style.display = ZXStore.feature("sponsorInjection") ? "flex" : "none";
-  document.getElementById("sponsorStrip").innerHTML = ZXStore.state.sponsors.map(sp => `
+  document.getElementById("sponsorStrip").innerHTML = ZXStore.sponsors().map(sp => `
     <div class="sponsor-chip" style="font-size:clamp(13px,1.5vw,20px)"><b style="color:var(--tenant-accent)">${zxesc(sp.name)}</b><span class="muted">${zxesc(sp.message)}</span></div>`).join("");
 
   // Ticker = approved summaries + crowd note
