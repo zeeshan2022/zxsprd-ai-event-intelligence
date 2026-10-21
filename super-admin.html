@@ -54,9 +54,8 @@
 <header class="topbar">
   <div class="brand">
     <div class="brand-mark"><svg class="icon"><use href="#i-shield"/></svg></div>
-    <div><div class="brand-name" id="saBrandName">ZXSPRD<span style="color:var(--tenant-accent)"> AI</span></div><div class="brand-sub" id="saBrandSub">Super Admin Console · Platform Owner</div></div>
+    <div><div class="brand-name" id="saBrandName">Event Intelligence<span style="color:var(--tenant-accent)"> Platform AI</span></div><div class="brand-sub" id="saBrandSub">Super Admin Console · Platform Owner</div></div>
   </div>
-  <button class="btn btn-ghost btn-sm menu-toggle no-ripple" id="btnMenuToggle" aria-expanded="false" aria-controls="saMenu" title="Show / hide the platform menu (M)"><svg class="icon"><use href="#i-menu"/></svg> Menu</button>
   <nav class="role-switch">
     <a href="index.html" class="role-btn"><svg class="icon"><use href="#i-grid"/></svg> Launcher</a>
     <a href="super-admin.html" class="role-btn active"><svg class="icon"><use href="#i-shield"/></svg> Super Admin</a>
@@ -66,8 +65,9 @@
     <a href="guest-portal.html" class="role-btn"><svg class="icon"><use href="#i-smartphone"/></svg> Guest Portal</a>
   </nav>
   <div class="chrome-controls" id="chromeControls">
-    <button class="btn btn-ghost btn-sm no-ripple" id="btnPublishGithub" title="Publish this repository to GitHub via the GitHub CLI (gh) — runs locally on your machine, never from the browser"><svg class="icon"><use href="#i-upload"/></svg> Publish to GitHub</button>
-    <button class="btn btn-ghost btn-sm no-ripple" id="btnExportState" title="Download a JSON snapshot of the current demo state"><svg class="icon"><use href="#i-download"/></svg> Export State</button>
+    <button class="btn btn-ghost btn-sm no-ripple" id="btnExportState" title="Download a JSON snapshot of the current state (all tenants, meetings, sponsors, schedule & settings)"><svg class="icon"><use href="#i-download"/></svg> Export State</button>
+    <button class="btn btn-ghost btn-sm no-ripple" id="btnImportState" title="Import a previously exported JSON snapshot and restore all saved data"><svg class="icon"><use href="#i-upload"/></svg> Import State</button>
+    <input type="file" id="importStateFile" accept=".json,application/json" hidden>
   </div>
 </header>
 
@@ -234,80 +234,37 @@
   </div>
 </div>
 
-<!-- Publish to GitHub Modal -->
-<div class="modal-overlay" id="ghModal">
-  <div class="modal-card">
-    <div class="modal-header"><div class="modal-title"><svg class="icon"><use href="#i-upload"/></svg> Publish to GitHub</div><button class="close-btn" onclick="document.getElementById('ghModal').classList.remove('active')"><svg class="icon"><use href="#i-x"/></svg></button></div>
-    <div id="ghPublishBody">
-      <div class="panel-subtitle" style="margin-bottom:14px">For security, a browser page can never push code with your credentials. Run these commands in a terminal inside this project folder — the first publishes via the free GitHub CLI (<span class="mono">gh</span>), which will open GitHub sign-in automatically.</div>
-      <div id="ghCmdList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
-      <div id="ghNativeWrap" class="flag-row" style="margin-bottom:16px" hidden>
-        <div><div class="flag-name">Native publish helper (optional)</div><div class="flag-desc">Let this site hand publish requests to a local git helper app via the web+git protocol.</div></div>
-        <button type="button" class="btn btn-ghost btn-sm" onclick="zxRegisterGitHandler()">Register</button>
-      </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end">
-        <button type="button" class="btn btn-ghost" onclick="document.getElementById('ghModal').classList.remove('active')">Close</button>
-        <button type="button" class="btn btn-blue" onclick="zxCopyGhCommands()"><svg class="icon"><use href="#i-list"/></svg> Copy Commands</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <script>
-zxInitChrome({ preserveControls: ["btnPublishGithub", "btnExportState"] });
+zxInitChrome({ preserveControls: ["btnExportState", "btnImportState"] });
 if (typeof zxPlatformBanner === "function") zxPlatformBanner();
 // Install App button — always available on this console too (native prompt when supported, guided fallback otherwise)
 if (typeof zxEnableInstallPrompt === "function") zxEnableInstallPrompt({ force: true });
 if (typeof zxEnableShortcuts === "function") zxEnableShortcuts(); // press "/" to jump between sections
 
-/* ---------------- PUBLISH TO GITHUB ----------------
-   A browser page can never push to GitHub directly (no git/credentials in JS),
-   so the button enables itself whenever a local publish route is available and
-   guides the user through whichever one applies:
-     1. Native "web+git" handler (a small helper installed on the machine), or
-     2. The `gh` CLI copy-paste commands shown in a modal.
-   Previously it was hard-disabled because none of these checks existed. */
-window.zxPublishToGithub = function () {
-  const cmds = [
-    "git add -A && git commit -m \"ZXSPRD AI platform update\"",
-    "gh repo create zxsprd-ai --public --source=. --push"
-  ];
-  const body = document.getElementById("ghPublishBody");
-  const list = document.getElementById("ghCmdList");
-  if (!body || !list) { zxToast("Publish dialog failed to open.", "error"); return; }
-  list.innerHTML = cmds.map(c => `<code class="gh-cmd mono">${zxesc(c)}</code>`).join("");
-  body.hidden = false;
-  document.getElementById("ghNativeWrap").hidden = !(typeof navigator.registerProtocolHandler === "function");
-  document.getElementById("ghModal").classList.add("active");
-};
-window.zxCopyGhCommands = async () => {
-  const text = Array.from(document.querySelectorAll("#ghCmdList .gh-cmd")).map(c => c.textContent.trim()).join("\n");
-  try { await navigator.clipboard.writeText(text); zxToast("Commands copied — paste them into your terminal.", "success"); }
-  catch (_) { zxToast("Clipboard blocked by the browser — select the commands and copy manually.", "info"); }
-};
-window.zxRegisterGitHandler = () => {
-  try {
-    navigator.registerProtocolHandler("web+git", location.href.split("?")[0] + "?publish=%s", "ZXSPRD Publish Helper");
-    zxToast("Handler offered — accept the browser prompt, then reload and click Publish again.", "info");
-  } catch (_) { zxToast("This browser does not allow protocol registration. Use the terminal commands below.", "info"); }
-};
-(function wirePublishButton() {
-  const btn = document.getElementById("btnPublishGithub");
-  if (!btn) return;
-  // Enable the button — it is only disabled while its handler is missing entirely.
-  btn.disabled = false;
-  btn.title = "Publish this repository to GitHub (guided via gh CLI / native helper)";
-  btn.onclick = () => zxPublishToGithub();
-  // If the OS helper ever registered the web+git protocol, deep-link straight through it.
-  const pending = new URLSearchParams(location.search).get("publish");
-  if (pending) zxToast("Publish request received for \"" + pending + "\" — confirm in your terminal to finish.", "success");
-})();
-
+/* ---------------- STATE EXPORT / IMPORT ---------------- */
 const _exportBtn = document.getElementById("btnExportState");
 if (_exportBtn) _exportBtn.onclick = () => {
   const ok = ZXStore.exportState();
-  zxToast(ok ? "State snapshot downloaded 📦" : "Export failed", ok ? "success" : "error");
+  zxToast(ok ? "State snapshot downloaded \ud83d\udce6" : "Export failed", ok ? "success" : "error");
 };
+(function wireImportButton() {
+  const btn = document.getElementById("btnImportState");
+  const file = document.getElementById("importStateFile");
+  if (!btn || !file) return;
+  btn.onclick = () => file.click();
+  file.onchange = () => {
+    const f = file.files && file.files[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const ok = ZXStore.importState(reader.result);
+      zxToast(ok ? "State imported \u2014 all saved data restored \u2705" : "Import failed: not a valid state snapshot", ok ? "success" : "error");
+    };
+    reader.onerror = () => zxToast("Could not read the selected file.", "error");
+    reader.readAsText(f);
+    file.value = "";
+  };
+})();
 const MENU = [
   { id: "dashboard", label: "Dashboard", icon: "i-grid" },
   { id: "tenants", label: "Tenants", icon: "i-database" },
@@ -373,21 +330,7 @@ const saTry = setInterval(() => {
   }
 }, 50);
 // Mobile / narrow screens: Menu toggle button + "M" shortcut
-(function wireMenuToggle() {
-  const btn = document.getElementById("btnMenuToggle");
-  if (!btn) return;
-  const toggle = (force) => {
-    const nav = document.getElementById("saMenu");
-    if (!nav) return;
-    const open = force !== undefined ? force : !nav.classList.contains("open");
-    nav.classList.toggle("open", open);
-    btn.setAttribute("aria-expanded", String(open));
-  };
-  btn.onclick = () => toggle();
-  document.addEventListener("keydown", e => {
-    if ((e.key === "m" || e.key === "M") && !/input|select|textarea/i.test((document.activeElement || {}).tagName || "")) toggle();
-  });
-})();
+/* Menu toggle button removed per product request — sidebar navigation is always visible. */
 
 const FLAG_DESC = {
   voiceConcierge: ["Voice Concierge", "Interactive AI voice assistant on kiosk & guest portal"],

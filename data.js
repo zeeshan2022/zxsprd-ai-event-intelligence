@@ -995,6 +995,23 @@ const ZXStore = (() => {
 
     reset() { try { sessionStorage.removeItem("zx-temp-guest"); } catch (_) {} state = clone(ZXSeed); persist(); try { channel?.postMessage({ type: "state", state }); } catch (_) {} notify("reset"); },
 
+    /* Category-scoped demo resets (used by the three Reset Demo Data buttons):
+       "ar" — Arabic-only meetings, "en" — English-only meetings, "all" — full seed. */
+    resetDemoCategory(category) {
+      try { sessionStorage.removeItem("zx-temp-guest"); } catch (_) {}
+      const fresh = clone(ZXSeed);
+      if (category === "all") { state = fresh; }
+      else {
+        const AR_IDS = ["mtg-101", "mtg-102", "mtg-105", "mtg-107"];   // Arabic transcripts (incl. فاطمة الظاهري sessions)
+        const keepIds = category === "ar" ? AR_IDS : fresh.meetings.filter(m => !AR_IDS.includes(m.id)).map(m => m.id);
+        state = { ...state, meetings: fresh.meetings.filter(m => keepIds.includes(m.id)) };
+      }
+      persist();
+      try { channel?.postMessage({ type: "state", state }); } catch (_) {}
+      log("admin", `Reset demo data (${category})`);
+      notify("reset");
+    },
+
     addSponsor(data) { this.set({ sponsors: [...state.sponsors, { ...data, id: `sp-${Date.now()}` }] }); },
     removeSponsor(id) { this.set({ sponsors: state.sponsors.filter(s => s.id !== id) }); },
 
@@ -1020,6 +1037,26 @@ const ZXStore = (() => {
         a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 4000);
         log("admin", "Exported state snapshot");
+        return true;
+      } catch (e) { return false; }
+    },
+
+    /* Import a previously exported JSON snapshot — restores ALL saved data
+       (tenants, pods, meetings & transcripts, sponsors, approvals, interests /
+       guest profiles, schedule, crowd metrics, API keys, logs). Accepts the raw
+       JSON string or a parsed object. Returns true on success. */
+    importState(jsonOrObj) {
+      try {
+        const obj = typeof jsonOrObj === "string" ? JSON.parse(jsonOrObj) : jsonOrObj;
+        if (!obj || typeof obj !== "object") return false;
+        // sanity: must look like one of our snapshots
+        if (!obj.tenants && !obj.meetings && !obj.version) return false;
+        obj.version = ZXSeed.version; // re-stamp so the restored state loads after refresh
+        state = { ...clone(ZXSeed), ...obj };
+        persist();
+        try { channel?.postMessage({ type: "state", state }); } catch (_) {}
+        log("admin", "Imported state snapshot (all data restored)");
+        notify("import");
         return true;
       } catch (e) { return false; }
     }
