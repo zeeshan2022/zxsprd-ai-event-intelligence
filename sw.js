@@ -1,5 +1,5 @@
 /**
- * ZXSPRD AI — Service Worker (Offline-First PWA)
+ * Event Intelligence Platform — Service Worker (Offline-First PWA)
  * Strategy:
  *  - Precache all app shell assets on install.
  *  - cache-first for same-origin static files, network-first with cache fallback

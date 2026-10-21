@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ZXSPRD AI — Super Admin Console</title>
+<title>Event Intelligence Platform — Super Admin Console</title>
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" href="icon.svg" type="image/svg+xml" />
 <meta name="theme-color" content="#2563EB" />
@@ -458,7 +458,7 @@ document.getElementById("tenantForm").onsubmit = (e) => {
   e.preventDefault();
   const data = { name: tfName.value.trim(), subdomain: tfSub.value.trim(), tier: tfTier.value, maxPods: +tfMax.value, venueCapacity: +tfCap.value, primaryColor: tfColor.value, tenantTheme: tfTheme.value, headerText: tfHeader.value.trim() || tfName.value };
   if (editingId) { ZXStore.updateTenant(editingId, data); zxToast("Tenant updated", "success"); }
-  else { ZXStore.addTenant({ ...data, footerText: "Powered by ZXSPRD AI", defaultLlm: ZXStore.state.llmCatalog[0], defaultTts: ZXStore.state.ttsCatalog[0], temperature: 0.5, cloudFallback: false, tenantLangs: ["en-US"], allowTenantTheme: true, allowTenantLangs: true }); zxToast("Tenant provisioned", "success"); }
+  else { ZXStore.addTenant({ ...data, footerText: "Powered by Event Intelligence Platform", defaultLlm: ZXStore.state.llmCatalog[0], defaultTts: ZXStore.state.ttsCatalog[0], temperature: 0.5, cloudFallback: false, tenantLangs: ["en-US"], allowTenantTheme: true, allowTenantLangs: true }); zxToast("Tenant provisioned", "success"); }
   document.getElementById("tenantModal").classList.remove("active");
 };
 document.getElementById("btnAddKey").onclick = () => document.getElementById("keyModal").classList.add("active");
